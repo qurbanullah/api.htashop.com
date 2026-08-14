@@ -1,0 +1,27 @@
+name: Deploy to api.volvicon.com on Contabo
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Configure SSH
+      run: |
+        mkdir -p ~/.ssh/
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+        cat ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+        ssh-keyscan -H -t ed25519 -p ${{ secrets.SSH_PORT }} ${{ secrets.IP_ADDRESS }} >> ~/.ssh/known_hosts
+
+    - name: Deploy to Contabo
+      run: |
+        ssh -p ${{ secrets.SSH_PORT }}  -i ~/.ssh/id_ed25519 ${{ secrets.SSH_USERNAME }}@${{ secrets.IP_ADDRESS }} 'cd /home/${{ secrets.SSH_USERNAME }}/app/api && ./deploy.sh'
+
+    - name: Clear SSH key
+      run: rm ~/.ssh/id_ed25519
