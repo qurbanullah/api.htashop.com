@@ -112,17 +112,14 @@ class Category extends Model
         return $this->morphedByMany(Tag::class, 'categorizable');
     }
 
-    /**
-     * Get reviews in this category (polymorphic)
-     */
-    public function reviews(): MorphToMany
-    {
-        return $this->morphedByMany(Review::class, 'categorizable');
-    }
-
     public function products(): MorphToMany
     {
         return $this->morphedByMany(Product::class, 'categorizable');
+    }
+
+    public function highlights(): MorphToMany
+    {
+        return $this->morphedByMany(Highlight::class, 'categorizable');
     }
 
     public function variants(): MorphToMany

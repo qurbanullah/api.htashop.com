@@ -278,11 +278,19 @@ class User extends Authenticatable implements HasMedia
     }
 
     /**
-     * Get reviews written by this user
+     * Get product reviews written by this user
      */
     public function reviews(): HasMany
     {
-        return $this->hasMany(Review::class);
+        return $this->hasMany(Review::class, 'user_id');
+    }
+
+    /**
+     * Get helpful/not-helpful votes cast by this user
+     */
+    public function reviewVotes(): HasMany
+    {
+        return $this->hasMany(ReviewVote::class, 'user_id');
     }
 
     /**
@@ -307,16 +315,6 @@ class User extends Authenticatable implements HasMedia
     public function assignmentsMade(): HasMany
     {
         return $this->hasMany(Assignment::class, 'assigned_by');
-    }
-
-    /**
-     * Get reviews this user found helpful
-     */
-    public function helpfulReviews(): MorphToMany
-    {
-        return $this->morphToMany(Review::class, 'reviewable')
-            ->wherePivot('type', 'helpful_vote')
-            ->withTimestamps();
     }
 
     /**

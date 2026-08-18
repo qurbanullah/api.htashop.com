@@ -14,7 +14,6 @@ use App\Http\Controllers\V1\Label\LabelController;
 use App\Http\Controllers\V1\Measurement\MeasurementController;
 use App\Http\Controllers\V1\Unit\UnitController;
 use App\Http\Controllers\V1\Ticket\TicketController;
-use App\Http\Controllers\V1\Software\SoftwareController;
 use App\Http\Controllers\V1\Package\PackageController;
 use App\Http\Controllers\V1\Product\ProductController;
 use App\Http\Controllers\V1\Product\ProductRevisionController;
@@ -44,6 +43,11 @@ use App\Http\Controllers\V1\Currency\CurrencyController;
 use App\Http\Controllers\V1\Warehouse\WarehouseController;
 use App\Http\Controllers\V1\Inventory\InventoryController;
 use App\Http\Controllers\V1\SellerDashboard\SellerDashboardController;
+use App\Http\Controllers\V1\Catalog\CatalogController;
+use App\Http\Controllers\V1\Cart\CartController;
+use App\Http\Controllers\V1\ProductReview\ProductReviewController;
+use App\Http\Controllers\V1\Highlight\HighlightController;
+use App\Http\Controllers\V1\Highlight\ProductHighlightController;
 use Illuminate\Http\Request;
 use Illuminate\Fasades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -90,6 +94,13 @@ Route::prefix('v1')->group(function () {
     // ADMIN-ONLY ROUTES - Requires super-admin or admin role
     // ====================================================================================
     Route::middleware(['auth.api', 'admin'])->prefix('admin')->group(function () {
+
+        // Admin Highlight routes
+        Route::get('/highlights', [HighlightController::class, 'index']);
+        Route::post('/highlights', [HighlightController::class, 'store']);
+        Route::get('/highlights/{highlight}', [HighlightController::class, 'show']);
+        Route::put('/highlights/{highlight}', [HighlightController::class, 'update']);
+        Route::delete('/highlights/{highlight}', [HighlightController::class, 'destroy']);
 
         // Admin Ticket routes
         Route::get('/tickets', [TicketController::class, 'adminIndex']);
@@ -261,6 +272,23 @@ Route::prefix('v1')->group(function () {
     Route::get('/categories/tree', [CategoryController::class, 'tree']);
     Route::get('/categories/{category}', [CategoryController::class, 'show']);
 
+    // Public catalog (storefront) routes
+    Route::get('/catalog/products', [CatalogController::class, 'products']);
+    Route::get('/catalog/products/{key}', [CatalogController::class, 'show']);
+    Route::get('/catalog/filters', [CatalogController::class, 'filters']);
+    Route::get('/catalog/top-nav', [CatalogController::class, 'topNav']);
+
+    // Public product review routes
+    Route::get('/catalog/products/{key}/reviews', [ProductReviewController::class, 'index']);
+    Route::get('/catalog/products/{key}/reviews/summary', [ProductReviewController::class, 'summary']);
+
+    // Public cart routes (session + authenticated)
+    Route::get('/cart', [CartController::class, 'index']);
+    Route::post('/cart/items', [CartController::class, 'store']);
+    Route::patch('/cart/items/{uuid}', [CartController::class, 'update']);
+    Route::delete('/cart/items/{uuid}', [CartController::class, 'destroy']);
+    Route::delete('/cart', [CartController::class, 'clear']);
+
 
     // Profiles - Public routes
     Route::get('/profiles', [ProfileController::class, 'index']);
@@ -272,6 +300,16 @@ Route::prefix('v1')->group(function () {
 
     // Management - Protected routes
     Route::middleware('auth.api')->group(function () {
+
+        // Product reviews (authenticated writes)
+        Route::post('/catalog/products/{key}/reviews', [ProductReviewController::class, 'store']);
+        Route::post('/reviews/{uuid}/helpful', [ProductReviewController::class, 'toggleHelpful']);
+
+        // Product highlights (manage override)
+        Route::get('/products/{uuid}/highlights', [ProductHighlightController::class, 'show']);
+        Route::put('/products/{uuid}/highlights', [ProductHighlightController::class, 'sync']);
+        Route::get('/highlights', [HighlightController::class, 'available']);
+        Route::post('/highlights', [HighlightController::class, 'storeForMerchant']);
 
         // ====================================================================================
         // COMMUNITY FORUM - Authenticated user routes
@@ -319,9 +357,6 @@ Route::prefix('v1')->group(function () {
         Route::post('/tickets/{uuid}/upload', [TicketController::class, 'upload']);
 
         // Dropdown data endpoints
-        Route::apiResource('softwares', SoftwareController::class);
-        Route::post('/softwares/upload', [\App\Http\Controllers\V1\Software\SoftwareUploadController::class, 'upload']);
-        Route::delete('/softwares/upload', [\App\Http\Controllers\V1\Software\SoftwareUploadController::class, 'delete']);
         Route::get('/packages', [PackageController::class, 'index']);
         Route::get('/products', [ProductController::class, 'index']);
         Route::post('/products', [ProductController::class, 'store']);

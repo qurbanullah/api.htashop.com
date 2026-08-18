@@ -46,6 +46,8 @@ class DatabaseSeeder extends Seeder
             PackageSeeder::class,
             FeatureSeeder::class,
             CategorySeeder::class,
+            CategoryTopNavSeeder::class,
+            HighlightSeeder::class,
             TagSeeder::class,
             TicketSeeder::class,
             MeasurementSeeder::class,

@@ -133,4 +133,16 @@ class Variant extends Model
     {
         return $this->morphMany(Inventory::class, 'stockable');
     }
+
+    public function reviews(): MorphMany
+    {
+        return $this->morphMany(Review::class, 'reviewable');
+    }
+
+    public function highlights(): MorphToMany
+    {
+        return $this->morphToMany(Highlight::class, 'highlightable')
+            ->withPivot(['sort_order', 'heading_override', 'body_override'])
+            ->orderByPivot('sort_order');
+    }
 }
