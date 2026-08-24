@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasApprovalWorkflow;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,13 +12,20 @@ use Illuminate\Support\Str;
 
 class Brand extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasApprovalWorkflow, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'uuid',
         'manufacturer_id',
         'name',
         'slug',
+        'origin',
+        'is_approved',
+        'tenant_id',
+        'organization_id',
+        'approved_at',
+        'rejected_at',
+        'rejection_reason',
         'logo',
         'website',
         'description',
@@ -26,6 +34,9 @@ class Brand extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_approved' => 'boolean',
+        'approved_at' => 'datetime',
+        'rejected_at' => 'datetime',
     ];
 
     protected static function booted(): void

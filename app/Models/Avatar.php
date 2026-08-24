@@ -56,4 +56,65 @@ class Avatar extends Model
     {
         return $this->morphTo();
     }
+
+    /**
+     * Get the most recent avatar of a given type for an entity.
+     */
+    public static function getByType(int|string $modelId, string $modelType, string $type): ?self
+    {
+        return static::query()
+            ->where('avatareable_id', $modelId)
+            ->where('avatareable_type', $modelType)
+            ->where('type', $type)
+            ->latest('id')
+            ->first();
+    }
+
+    /**
+     * Get a map of type → path for all avatars of an entity.
+     *
+     * @return array<string, string>
+     */
+    public static function getAllPaths(int|string $modelId, string $modelType): array
+    {
+        return static::query()
+            ->where('avatareable_id', $modelId)
+            ->where('avatareable_type', $modelType)
+            ->whereNotNull('path')
+            ->pluck('path', 'type')
+            ->all();
+    }
+
+    /**
+     * Delete all avatars (database + storage) for an entity.
+     */
+    public static function deleteAllForAvatareable(int|string $modelId, string $modelType): bool
+    {
+        app(\App\Actions\Avatar\DeleteAvatarsAction::class)->handle($modelId, $modelType);
+
+        return true;
+    }
+
+    /**
+     * Create avatar records from uploaded variant paths (replaces existing).
+     *
+     * @param array<string, string> $variantPaths
+     */
+    public static function createFromUpload(
+        \Illuminate\Database\Eloquent\Model $model,
+        array $variantPaths,
+        string $filename,
+        string $mimeType = 'image/jpeg',
+        ?array $metadata = null
+    ): bool {
+        app(\App\Actions\Avatar\CreateAvatarsFromUploadAction::class)->handle(
+            $model,
+            $variantPaths,
+            $filename,
+            $mimeType,
+            $metadata
+        );
+
+        return true;
+    }
 }

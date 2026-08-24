@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('subscriptions', function (Blueprint $table) {
+        Schema::create('newsletter_subscriptions', function (Blueprint $table) {
             $table->id();
             $table->string('type'); // newsletter, announcement, etc.
             $table->morphs('subscribeable'); // polymorphic relation
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('subscriptions');
+        Schema::dropIfExists('newsletter_subscriptions');
     }
 };

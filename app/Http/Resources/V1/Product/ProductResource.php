@@ -27,6 +27,10 @@ class ProductResource extends JsonResource
             'summary' => $this->summary,
             'description' => $this->description,
             'is_active' => $this->is_active,
+            'image_url' => $this->resolveImageUrl(),
+            'price' => data_get($this->metadata, 'price'),
+            'sale_price' => data_get($this->metadata, 'sale_price'),
+            'currency' => data_get($this->metadata, 'currency', 'USD'),
             'metadata' => $this->metadata,
             'tenant_id' => $this->tenant_id,
             'organization_id' => $this->organization_id,
@@ -39,5 +43,21 @@ class ProductResource extends JsonResource
             'brands' => $this->whenLoaded('brands'),
             'variants' => $this->whenLoaded('variants'),
         ];
+    }
+
+    private function resolveImageUrl(): ?string
+    {
+        if (! $this->relationLoaded('dams')) {
+            return null;
+        }
+
+        $featured = $this->dams->firstWhere('collection_name', 'featured')
+            ?? $this->dams->first();
+
+        if (! $featured || ! $featured->object_key) {
+            return null;
+        }
+
+        return config('app.cdn_url', 'https://cdn.htashop.com') . '/' . ltrim($featured->object_key, '/');
     }
 }

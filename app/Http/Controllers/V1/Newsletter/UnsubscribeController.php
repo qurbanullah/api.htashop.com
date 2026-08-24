@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\V1\Newsletter;
 
 use App\Http\Controllers\Controller;
-use App\Models\Subscription;
+use App\Models\NewsletterSubscription;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -16,7 +16,7 @@ class UnsubscribeController extends Controller
      */
     public function show(Request $request, string $token): View
     {
-        $subscription = Subscription::where('unsubscribe_token', $token)->first();
+        $subscription = NewsletterSubscription::where('unsubscribe_token', $token)->first();
 
         if (!$subscription) {
             abort(404, 'Invalid unsubscribe link.');
@@ -32,7 +32,7 @@ class UnsubscribeController extends Controller
      */
     public function unsubscribe(Request $request, string $token): RedirectResponse
     {
-        $subscription = Subscription::where('unsubscribe_token', $token)->first();
+        $subscription = NewsletterSubscription::where('unsubscribe_token', $token)->first();
 
         if (!$subscription) {
             return redirect()->route('home')->with('error', 'Invalid unsubscribe link.');
@@ -53,7 +53,7 @@ class UnsubscribeController extends Controller
      */
     public function success(Request $request, string $token): View
     {
-        $subscription = Subscription::where('unsubscribe_token', $token)->first();
+        $subscription = NewsletterSubscription::where('unsubscribe_token', $token)->first();
 
         if (!$subscription) {
             abort(404, 'Invalid unsubscribe link.');
@@ -69,7 +69,7 @@ class UnsubscribeController extends Controller
      */
     public function resubscribe(Request $request, string $token): RedirectResponse
     {
-        $subscription = Subscription::where('unsubscribe_token', $token)->first();
+        $subscription = NewsletterSubscription::where('unsubscribe_token', $token)->first();
 
         if (!$subscription) {
             return redirect()->route('home')->with('error', 'Invalid link.');

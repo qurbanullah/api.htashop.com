@@ -112,7 +112,7 @@ it('can have multiple prices', function () {
         'currency_id' => $currency->id,
         'priceable_type' => App\Models\Product::class,
         'priceable_id' => $product->id,
-        'amount' => '99.99',
+        'base_price' => '99.99',
     ]);
 
     $price2 = $catalog->prices()->create([
@@ -121,7 +121,7 @@ it('can have multiple prices', function () {
         'currency_id' => $currency->id,
         'priceable_type' => App\Models\Product::class,
         'priceable_id' => $product->id,
-        'amount' => '19.99',
+        'base_price' => '19.99',
     ]);
 
     expect($catalog->prices)->toHaveCount(2);

@@ -40,4 +40,8 @@ return [
         'secret_key' => env('TURNSTILE_SECRET_KEY'),
     ],
 
+    'pdf' => [
+        'url' => env('PDF_SERVICE_URL', 'http://pdf:3000'),
+    ],
+
 ];

@@ -23,6 +23,9 @@ class DefinitionResource extends JsonResource
             'unit_id' => $this->unit_id,
             'is_required' => $this->is_required,
             'is_filterable' => $this->is_filterable,
+            'is_searchable' => $this->is_searchable,
+            'is_multi' => $this->is_multi,
+            'is_active' => $this->is_active,
             'options' => $this->whenLoaded('options', fn () => $this->options->map(fn ($o) => [
                 'id' => $o->id,
                 'name' => $o->name,

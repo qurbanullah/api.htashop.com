@@ -2,111 +2,88 @@
 
 namespace App\Models;
 
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class Subscription extends Model
 {
-    use HasFactory;
-
-    /**
-     * Business logic extracted to Actions:
-     *   subscribeUser()   → App\Actions\Subscription\SubscribeUserAction
-     *   unsubscribeUser() → App\Actions\Subscription\UnsubscribeUserAction
-     */
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'subscribeable_id',
-        'subscribeable_type',
-        'type',
-        'is_subscribed',
-        'unsubscribe_token',
-        'subscribed_at',
-        'unsubscribed_at',
+        'uuid',
+        'tenant_id',
+        'subscriber_type',
+        'subscriber_id',
+        'product_id',
+        'variant_id',
+        'quantity',
+        'amount',
+        'currency',
+        'contract_id',
+        'frequency',
+        'interval',
+        'shipping_address',
+        'billing_address',
+        'payment_method',
+        'status',
+        'starts_at',
+        'next_run_at',
+        'ends_at',
+        'metadata',
     ];
 
     protected $casts = [
-        'is_subscribed' => 'boolean',
-        'subscribed_at' => 'datetime',
-        'unsubscribed_at' => 'datetime',
+        'quantity' => 'decimal:3',
+        'amount' => 'decimal:2',
+        'interval' => 'integer',
+        'shipping_address' => 'array',
+        'billing_address' => 'array',
+        'starts_at' => 'datetime',
+        'next_run_at' => 'datetime',
+        'ends_at' => 'datetime',
+        'metadata' => 'array',
     ];
 
-    /**
-     * Get the subscribeable model (polymorphic relation)
-     */
-    public function subscribeable(): MorphTo
+    protected static function booted(): void
+    {
+        static::creating(function (Subscription $subscription): void {
+            if (empty($subscription->uuid)) {
+                $subscription->uuid = (string) Str::uuid();
+            }
+        });
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'uuid';
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    public function subscriber(): MorphTo
     {
         return $this->morphTo();
     }
 
-    /**
-     * Generate a unique unsubscribe token
-     */
-    public static function generateUnsubscribeToken(): string
+    public function product(): BelongsTo
     {
-        do {
-            $token = Str::random(64);
-        } while (static::where('unsubscribe_token', $token)->exists());
-
-        return $token;
+        return $this->belongsTo(Product::class);
     }
 
-    /**
-     * Unsubscribe from this subscription
-     */
-    public function unsubscribe(): void
+    public function variant(): BelongsTo
     {
-        $this->update([
-            'is_subscribed' => false,
-            'unsubscribed_at' => now(),
-        ]);
+        return $this->belongsTo(Variant::class);
     }
 
-    /**
-     * Subscribe to this subscription
-     */
-    public function subscribe(): void
+    public function contract(): BelongsTo
     {
-        $this->update([
-            'is_subscribed' => true,
-            'subscribed_at' => now(),
-            'unsubscribed_at' => null,
-        ]);
-    }
-
-    /**
-     * Check if subscription is active
-     */
-    public function isActive(): bool
-    {
-        return $this->is_subscribed;
-    }
-
-    /**
-     * Scope to get only active subscriptions
-     */
-    public function scopeActive($query)
-    {
-        return $query->where('is_subscribed', true);
-    }
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($subscription) {
-            if (empty($subscription->unsubscribe_token)) {
-                $subscription->unsubscribe_token = static::generateUnsubscribeToken();
-            }
-            if (is_null($subscription->is_subscribed)) {
-                $subscription->is_subscribed = true;
-            }
-            if (is_null($subscription->subscribed_at) && $subscription->is_subscribed) {
-                $subscription->subscribed_at = now();
-            }
-        });
+        return $this->belongsTo(Contract::class);
     }
 }

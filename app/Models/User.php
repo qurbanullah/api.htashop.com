@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Traits\Profile\HasProfile;
+use App\Actions\Subscription\SubscribeUserAction;
 use App\Notifications\ResetPasswordNotification;
 use App\Models\Membership;
 use App\Models\Organization;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -195,6 +197,38 @@ class User extends Authenticatable implements HasMedia
     public function memberships(): HasMany
     {
         return $this->hasMany(Membership::class);
+    }
+
+    public function addresses(): MorphMany
+    {
+        return $this->morphMany(Address::class, 'addressable');
+    }
+
+    /**
+     * Newsletter/announcement subscriptions (legacy newsletter feature).
+     */
+    public function subscriptions(): MorphMany
+    {
+        return $this->morphMany(NewsletterSubscription::class, 'subscribeable');
+    }
+
+    /**
+     * Subscribe this user to a subscription type (e.g. 'newsletter').
+     */
+    public function subscribeTo(string $type): NewsletterSubscription
+    {
+        return app(SubscribeUserAction::class)->handle($this, $type);
+    }
+
+    /**
+     * Check whether this user is actively subscribed to a type.
+     */
+    public function isSubscribedTo(string $type): bool
+    {
+        return $this->subscriptions()
+            ->where('type', $type)
+            ->where('is_subscribed', true)
+            ->exists();
     }
 
     public function organizations(): BelongsToMany

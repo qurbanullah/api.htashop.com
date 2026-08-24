@@ -52,6 +52,8 @@ class DatabaseSeeder extends Seeder
             TicketSeeder::class,
             MeasurementSeeder::class,
             CurrencySeeder::class,
+            CountrySeeder::class,
+            CitySeeder::class,
             DefinitionSeeder::class,
             TenantSeeder::class,
             OrganizationSeeder::class,

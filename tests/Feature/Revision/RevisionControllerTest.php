@@ -65,7 +65,6 @@ test('product revisions can be listed and restored', function () {
 
     $this->putJson('/api/v1/products/' . $product->uuid, [
         'name' => 'Punchout Drill Pro',
-        'status' => 'active',
         'metadata' => ['source' => 'catalog'],
     ])
         ->assertOk()
@@ -76,7 +75,7 @@ test('product revisions can be listed and restored', function () {
                 'uuid' => $product->uuid,
                 'name' => 'Punchout Drill Pro',
                 'slug' => 'punchout-drill-pro',
-                'status' => 'active',
+                'status' => 'draft',
                 'metadata' => ['source' => 'catalog'],
             ],
         ]);

@@ -29,7 +29,7 @@ class PriceStoreRequest extends FormRequest
             'priceable_type' => ['required', 'string', 'in:product,variant'],
             'priceable_uuid' => ['required', 'string', 'max:36'],
             'type' => ['nullable', 'string', 'max:100'],
-            'amount' => ['required', 'numeric', 'min:0'],
+            'base_price' => ['required', 'numeric', 'min:0'],
             'min_quantity' => ['nullable', 'numeric', 'min:0.000001'],
             'max_quantity' => ['nullable', 'numeric', 'min:0.000001'],
             'starts_at' => ['nullable', 'date'],

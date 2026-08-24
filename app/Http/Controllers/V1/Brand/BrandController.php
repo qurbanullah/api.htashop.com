@@ -17,12 +17,17 @@ class BrandController extends Controller
     public function index(Request $request): JsonResponse
     {
         $manufacturerId = $request->integer('manufacturer_id');
+        $user = $request->user();
+        $isAdmin = $user && $user->hasRole(['super-admin', 'admin']);
 
         $brands = Brand::query()
             ->when($manufacturerId, fn ($query) => $query->where('manufacturer_id', $manufacturerId))
+            ->when($isAdmin, fn ($query) => $query->adminView($request->string('approval_status')->toString() ?: null))
+            ->when(! $isAdmin, fn ($query) => $query->vendorVisible($user))
             ->when($request->filled('search'), fn ($query) => $query->where('name', 'like', '%' . $request->string('search') . '%'))
-            ->when(!$request->boolean('include_inactive'), fn ($query) => $query->where('is_active', true))
+            ->when(! $request->boolean('include_inactive'), fn ($query) => $query->where('is_active', true))
             ->with('manufacturer')
+            ->orderByDesc('is_approved')
             ->orderBy('name')
             ->get();
 
@@ -34,9 +39,29 @@ class BrandController extends Controller
         $data = $request->validated();
         $data['slug'] = $this->resolveSlug(data_get($data, 'slug'), $data['name']);
 
+        Brand::applyOrigin($data, $request->user());
+
         $brand = Brand::create($data);
 
         return ApiResponse::success(new BrandResource($brand->load('manufacturer')), 'Brand created successfully', 201);
+    }
+
+    public function approve(Request $request, string $uuid): JsonResponse
+    {
+        $brand = Brand::where('uuid', $uuid)->firstOrFail();
+        $brand->approve();
+
+        return ApiResponse::success(new BrandResource($brand->fresh('manufacturer')), 'Brand approved successfully');
+    }
+
+    public function reject(Request $request, string $uuid): JsonResponse
+    {
+        $data = $request->validate(['reason' => ['required', 'string', 'max:500']]);
+
+        $brand = Brand::where('uuid', $uuid)->firstOrFail();
+        $brand->reject($data['reason']);
+
+        return ApiResponse::success(new BrandResource($brand->fresh('manufacturer')), 'Brand rejected successfully');
     }
 
     public function show(string $uuid): JsonResponse

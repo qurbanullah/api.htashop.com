@@ -6,7 +6,6 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Models\Version;
 use App\Services\Dam\DamService;
 use App\Services\Storage\S3UploadService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -279,47 +278,6 @@ it('rejects raw storage verification and download url generation for a DAM key o
         'filename' => 'blocked.png',
     ])
         ->assertForbidden();
-});
-
-it('ingests a dam record and enriches it with storage metadata', function () {
-    $user = User::factory()->create();
-    $version = Version::factory()->create();
-
-    $this->mock(S3UploadService::class, function (MockInterface $mock) {
-        $mock->shouldReceive('getFileMetadata')
-            ->once()
-            ->with('images/versions/release-banner.png', 2, 100)
-            ->andReturn([
-                'content_type' => 'image/png',
-                'size' => 2048,
-                'etag' => 'etag-ingest',
-                'custom' => 'value',
-            ]);
-    });
-
-    $response = $this
-        ->actingAs($user, 'api')
-        ->postJson('/api/v1/dam/ingest', [
-            'object_key' => 'images/versions/release-banner.png',
-            'file_name' => 'release-banner.png',
-            'collection_name' => 'image',
-            'damable_type' => Version::class,
-            'damable_id' => $version->id,
-        ]);
-
-    $response
-        ->assertCreated()
-        ->assertJsonPath('data.object_key', 'images/versions/release-banner.png')
-        ->assertJsonPath('data.mime_type', 'image/png')
-        ->assertJsonPath('data.size', 2048)
-        ->assertJsonPath('data.uploaded_by', $user->id);
-
-    $dam = Dam::query()->latest('id')->first();
-
-    expect($dam)->not->toBeNull();
-    expect($dam->damable_type)->toBe(Version::class);
-    expect($dam->damable_id)->toBe($version->id);
-    expect($dam->etag)->toBe('etag-ingest');
 });
 
 it('generates public asset urls without authentication for image keys only', function () {

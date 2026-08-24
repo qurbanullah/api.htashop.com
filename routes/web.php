@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\V1\Seo\SitemapController;
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -9,6 +10,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('api-info');
 });
+
+// SEO — robots.txt + XML sitemaps (proxied by the storefront nginx)
+Route::get('/robots.txt', [SitemapController::class, 'robots']);
+Route::get('/sitemap.xml', [SitemapController::class, 'index']);
+Route::get('/sitemap-products.xml', [SitemapController::class, 'products']);
+Route::get('/sitemap-categories.xml', [SitemapController::class, 'categories']);
+Route::get('/sitemap-pages.xml', [SitemapController::class, 'pages']);
 
 // Password reset routes for different frontends
 // Default password reset (for backward compatibility and main frontend)

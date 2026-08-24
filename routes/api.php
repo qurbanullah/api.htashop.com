@@ -48,6 +48,15 @@ use App\Http\Controllers\V1\Cart\CartController;
 use App\Http\Controllers\V1\ProductReview\ProductReviewController;
 use App\Http\Controllers\V1\Highlight\HighlightController;
 use App\Http\Controllers\V1\Highlight\ProductHighlightController;
+use App\Http\Controllers\V1\Address\AddressController;
+use App\Http\Controllers\V1\Account\AccountController;
+use App\Http\Controllers\V1\Country\CountryController;
+use App\Http\Controllers\V1\City\CityController;
+use App\Http\Controllers\V1\Order\OrderController;
+use App\Http\Controllers\V1\OrderDocument\OrderDocumentController;
+use App\Http\Controllers\V1\Manufacturer\ManufacturerController;
+use App\Http\Controllers\V1\Brand\BrandController;
+use App\Http\Controllers\V1\Banner\BannerController;
 use Illuminate\Http\Request;
 use Illuminate\Fasades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -90,6 +99,13 @@ Route::prefix('v1')->group(function () {
     Route::get('/changelogs', [\App\Http\Controllers\V1\Changelog\ChangelogController::class, 'index']);
     Route::get('/changelogs/{id}', [\App\Http\Controllers\V1\Changelog\ChangelogController::class, 'show'])->where('id', '[0-9]+');
 
+    // Public reference data (countries / cities for address forms)
+    Route::get('/countries', [CountryController::class, 'index']);
+    Route::get('/cities', [CityController::class, 'index']);
+
+    // Public banners (placement + context aware)
+    Route::get('/banners', [BannerController::class, 'index']);
+
     // ====================================================================================
     // ADMIN-ONLY ROUTES - Requires super-admin or admin role
     // ====================================================================================
@@ -101,6 +117,19 @@ Route::prefix('v1')->group(function () {
         Route::get('/highlights/{highlight}', [HighlightController::class, 'show']);
         Route::put('/highlights/{highlight}', [HighlightController::class, 'update']);
         Route::delete('/highlights/{highlight}', [HighlightController::class, 'destroy']);
+
+        // Admin approval workflows (manufacturers & brands suggested by vendors)
+        Route::post('/manufacturers/{uuid}/approve', [ManufacturerController::class, 'approve']);
+        Route::post('/manufacturers/{uuid}/reject', [ManufacturerController::class, 'reject']);
+        Route::post('/brands/{uuid}/approve', [BrandController::class, 'approve']);
+        Route::post('/brands/{uuid}/reject', [BrandController::class, 'reject']);
+
+        // Admin Banner CRUD
+        Route::get('/banners', [BannerController::class, 'adminIndex']);
+        Route::post('/banners', [BannerController::class, 'store']);
+        Route::get('/banners/{uuid}', [BannerController::class, 'show']);
+        Route::put('/banners/{uuid}', [BannerController::class, 'update']);
+        Route::delete('/banners/{uuid}', [BannerController::class, 'destroy']);
 
         // Admin Ticket routes
         Route::get('/tickets', [TicketController::class, 'adminIndex']);
@@ -289,6 +318,15 @@ Route::prefix('v1')->group(function () {
     Route::delete('/cart/items/{uuid}', [CartController::class, 'destroy']);
     Route::delete('/cart', [CartController::class, 'clear']);
 
+    // GDPR consent (public — guests identified by pseudonymous consent token)
+    Route::post('/gdpr/consents', [\App\Http\Controllers\V1\Gdpr\GdprConsentController::class, 'store'])->middleware('throttle:60,1');
+    Route::get('/gdpr/consents/latest', [\App\Http\Controllers\V1\Gdpr\GdprConsentController::class, 'latest']);
+    Route::delete('/gdpr/consents', [\App\Http\Controllers\V1\Gdpr\GdprConsentController::class, 'destroy']);
+
+    // Checkout (public — guests can order with inline addresses)
+    Route::post('/checkout', [\App\Http\Controllers\V1\Checkout\CheckoutController::class, 'store']);
+    Route::get('/checkout/orders/{uuid}', [\App\Http\Controllers\V1\Checkout\CheckoutController::class, 'show']);
+
 
     // Profiles - Public routes
     Route::get('/profiles', [ProfileController::class, 'index']);
@@ -310,6 +348,35 @@ Route::prefix('v1')->group(function () {
         Route::put('/products/{uuid}/highlights', [ProductHighlightController::class, 'sync']);
         Route::get('/highlights', [HighlightController::class, 'available']);
         Route::post('/highlights', [HighlightController::class, 'storeForMerchant']);
+
+        // Address book (user / organization)
+        Route::get('/users/me/addresses', [AddressController::class, 'index']);
+        Route::post('/users/me/addresses', [AddressController::class, 'store']);
+        Route::put('/addresses/{uuid}', [AddressController::class, 'update']);
+        Route::delete('/addresses/{uuid}', [AddressController::class, 'destroy']);
+        Route::post('/addresses/{uuid}/primary', [AddressController::class, 'setPrimary']);
+
+        // Buyer account — order history scoped to the authenticated customer
+        Route::get('/account/orders', [OrderController::class, 'myOrders']);
+        Route::get('/account/orders/{uuid}', [OrderController::class, 'myOrder']);
+
+        // Buyer account — profile & security
+        Route::get('/account/profile', [AccountController::class, 'profile']);
+        Route::put('/account/profile', [AccountController::class, 'updateProfile']);
+        Route::post('/account/change-password', [AccountController::class, 'changePassword']);
+        Route::post('/account/deactivate', [AccountController::class, 'deactivateAccount']);
+
+        // GDPR consent history (privacy center)
+        Route::get('/gdpr/consents', [\App\Http\Controllers\V1\Gdpr\GdprConsentController::class, 'index']);
+
+        // Order management (admin + merchant)
+        Route::get('/orders', [OrderController::class, 'index']);
+        Route::get('/orders/{uuid}', [OrderController::class, 'show']);
+        Route::put('/orders/{uuid}/status', [OrderController::class, 'update']);
+
+        // Order documents (invoice / packing slip PDFs)
+        Route::get('/orders/{uuid}/documents', [OrderDocumentController::class, 'index']);
+        Route::post('/orders/{uuid}/documents', [OrderDocumentController::class, 'store']);
 
         // ====================================================================================
         // COMMUNITY FORUM - Authenticated user routes

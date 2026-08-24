@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Actions\Avatar\CreateAvatarsFromUploadAction;
 use App\Actions\Avatar\DeleteAvatarsAction;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * AvatarService

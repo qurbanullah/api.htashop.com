@@ -32,6 +32,12 @@ return [
         'http://127.0.0.1:22050',
         'http://127.0.0.1:23050',
 
+        // Local development — internal Docker service names (used by the
+        // prerender headless browser, which loads pages from inside the network)
+        'http://frontend:23050',
+        'http://manage:22050',
+        'http://admin:21050',
+
         // Production
         'https://htashop.com',
         'https://www.htashop.com',

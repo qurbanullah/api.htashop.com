@@ -30,7 +30,7 @@ class PriceUpdateRequest extends FormRequest
             'priceable_type' => ['sometimes', 'string', 'in:product,variant'],
             'priceable_uuid' => ['sometimes', 'string', 'max:36'],
             'type' => ['sometimes', 'string', 'max:100'],
-            'amount' => ['sometimes', 'numeric', 'min:0'],
+            'base_price' => ['sometimes', 'numeric', 'min:0'],
             'min_quantity' => ['sometimes', 'numeric', 'min:0.000001'],
             'max_quantity' => ['nullable', 'numeric', 'min:0.000001'],
             'starts_at' => ['nullable', 'date'],

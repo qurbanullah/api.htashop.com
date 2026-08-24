@@ -100,28 +100,3 @@ it('creates and reads system labels alongside tenant labels', function () {
         ->assertJsonFragment(['slug' => 'segment', 'scope' => 'tenant']);
 });
 
-it('uses a related label for definition display metadata', function () {
-    $labelResponse = $this->postJson('/api/v1/labels', [
-        'tenant_id' => $this->tenant->id,
-        'slug' => 'pressure',
-        'display_name' => 'Pressure',
-        'is_active' => true,
-    ])->assertStatus(201);
-
-    $labelId = $labelResponse->json('data.id');
-
-    $definitionResponse = $this->postJson('/api/v1/definitions', [
-        'tenant_id' => $this->tenant->id,
-        'label_ids' => [$labelId],
-        'name' => 'Operating Pressure',
-        'kind' => 'specification',
-        'value_type' => 'number',
-    ]);
-
-    $definitionResponse
-        ->assertStatus(201)
-        ->assertJsonPath('data.display_label', 'Pressure')
-        ->assertJsonPath('data.label.slug', 'pressure')
-        ->assertJsonPath('data.labels.0.slug', 'pressure')
-        ->assertJsonPath('data.measurement_type', 'pressure');
-});

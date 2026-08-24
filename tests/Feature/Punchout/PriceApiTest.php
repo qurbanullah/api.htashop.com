@@ -71,7 +71,7 @@ it('creates and shows a price for a product', function () {
         'priceable_type' => 'product',
         'priceable_uuid' => $this->product->uuid,
         'type' => 'fixed',
-        'amount' => 19.99,
+        'base_price' => 19.99,
         'min_quantity' => 1,
         'priority' => 5,
         'is_active' => true,
@@ -87,7 +87,7 @@ it('creates and shows a price for a product', function () {
                 'organization_id' => $this->organization->id,
                 'currency_id' => $this->currency->id,
                 'type' => 'fixed',
-                'amount' => '19.990000',
+                'base_price' => '19.990000',
                 'min_quantity' => '1.000000',
                 'priority' => 5,
                 'is_active' => true,
@@ -113,7 +113,7 @@ it('creates and shows a price for a product', function () {
             'message' => 'Price retrieved successfully',
             'data' => [
                 'id' => $id,
-                'amount' => '19.990000',
+                'base_price' => '19.990000',
             ],
         ]);
 });
@@ -124,7 +124,7 @@ it('lists tenant prices and updates one', function () {
         'organization_id' => $this->organization->id,
         'currency_id' => $this->currency->id,
         'type' => 'fixed',
-        'amount' => 19.99,
+        'base_price' => 19.99,
         'min_quantity' => 1,
         'priority' => 5,
         'is_active' => true,
@@ -135,7 +135,7 @@ it('lists tenant prices and updates one', function () {
         'organization_id' => $this->organization->id,
         'currency_id' => $this->currency->id,
         'type' => 'fixed',
-        'amount' => 29.99,
+        'base_price' => 29.99,
         'min_quantity' => 10,
         'priority' => 1,
         'is_active' => true,
@@ -150,7 +150,7 @@ it('lists tenant prices and updates one', function () {
         ->assertJsonCount(2, 'data');
 
     $this->putJson('/api/v1/prices/' . $price->id, [
-        'amount' => 24.5,
+        'base_price' => 24.5,
         'priority' => 10,
         'is_active' => false,
     ])
@@ -160,7 +160,7 @@ it('lists tenant prices and updates one', function () {
             'message' => 'Price updated successfully',
             'data' => [
                 'id' => $price->id,
-                'amount' => '24.500000',
+                'base_price' => '24.500000',
                 'priority' => 10,
                 'is_active' => false,
             ],
@@ -173,7 +173,7 @@ it('deletes a price', function () {
         'organization_id' => $this->organization->id,
         'currency_id' => $this->currency->id,
         'type' => 'fixed',
-        'amount' => 19.99,
+        'base_price' => 19.99,
         'min_quantity' => 1,
         'priority' => 5,
         'is_active' => true,
@@ -196,7 +196,7 @@ it('scopes price listings to the authenticated membership organization', functio
         'organization_id' => $this->organization->id,
         'currency_id' => $this->currency->id,
         'type' => 'fixed',
-        'amount' => 19.99,
+        'base_price' => 19.99,
         'min_quantity' => 1,
         'priority' => 1,
         'is_active' => true,
@@ -224,7 +224,7 @@ it('scopes price listings to the authenticated membership organization', functio
         'organization_id' => $otherOrganization->id,
         'currency_id' => $this->currency->id,
         'type' => 'fixed',
-        'amount' => 99.99,
+        'base_price' => 99.99,
         'min_quantity' => 1,
         'priority' => 1,
         'is_active' => true,
@@ -235,7 +235,7 @@ it('scopes price listings to the authenticated membership organization', functio
     $response
         ->assertOk()
         ->assertJsonCount(1, 'data')
-        ->assertJsonPath('data.0.amount', '19.990000');
+        ->assertJsonPath('data.0.base_price', '19.990000');
 });
 
 it('rejects a maximum quantity that is lower than the minimum quantity', function () {
@@ -246,7 +246,7 @@ it('rejects a maximum quantity that is lower than the minimum quantity', functio
         'priceable_type' => 'product',
         'priceable_uuid' => $this->product->uuid,
         'type' => 'fixed',
-        'amount' => 19.99,
+        'base_price' => 19.99,
         'min_quantity' => 10,
         'max_quantity' => 5,
     ])
@@ -275,7 +275,7 @@ it('rejects showing a price from another organization membership', function () {
         'organization_id' => $this->organization->id,
         'currency_id' => $this->currency->id,
         'type' => 'fixed',
-        'amount' => 19.99,
+        'base_price' => 19.99,
         'min_quantity' => 1,
         'priority' => 5,
         'is_active' => true,
@@ -317,7 +317,7 @@ it('rejects deleting a price from another organization membership', function () 
         'organization_id' => $this->organization->id,
         'currency_id' => $this->currency->id,
         'type' => 'fixed',
-        'amount' => 19.99,
+        'base_price' => 19.99,
         'min_quantity' => 1,
         'priority' => 5,
         'is_active' => true,
@@ -354,6 +354,6 @@ it('rejects deleting a price from another organization membership', function () 
 
     $this->assertDatabaseHas('prices', [
         'id' => $price->id,
-        'amount' => '19.990000',
+        'base_price' => '19.990000',
     ]);
 });

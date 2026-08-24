@@ -2,11 +2,17 @@
 
 namespace App\Services\Variant;
 
+use App\Actions\Variant\VariantUpdateAction;
 use App\Models\Variant;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class VariantService
 {
+    public function __construct(
+        protected VariantUpdateAction $updateAction,
+    ) {
+    }
+
     public function read(array $filters = []): LengthAwarePaginator
     {
         return Variant::query()
@@ -56,8 +62,7 @@ class VariantService
                 ->update(['is_default' => false]);
         }
 
-        $variant->update($data);
-        return $variant->fresh();
+        return $this->updateAction->handle($variant, $data);
     }
 
     public function delete(Variant $variant): bool
