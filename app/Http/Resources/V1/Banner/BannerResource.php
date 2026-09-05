@@ -31,6 +31,7 @@ class BannerResource extends JsonResource
             'search_keywords' => $this->search_keywords ?? [],
             'sort_order' => $this->sort_order,
             'is_active' => $this->is_active,
+            'deleted_at' => optional($this->deleted_at)?->format('Y-m-d\TH:i'),
             'starts_at' => optional($this->starts_at)?->format('Y-m-d\TH:i'),
             'ends_at' => optional($this->ends_at)?->format('Y-m-d\TH:i'),
         ];

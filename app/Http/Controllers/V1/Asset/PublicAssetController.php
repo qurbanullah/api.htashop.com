@@ -30,8 +30,10 @@ class PublicAssetController extends Controller
      * This includes:
      * - images/softwares/icons/
      * - images/softwares/images/
-     * - images/newsletters/featured/
-     * - images/newsletters/images/
+     * - images/softwares/icons/
+     * - images/softwares/images/
+     * - images/posts/featured/
+     * - images/posts/images/
      * - images/versions/
      * - images/changelogs/
      *

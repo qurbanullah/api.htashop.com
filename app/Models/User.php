@@ -205,17 +205,18 @@ class User extends Authenticatable implements HasMedia
     }
 
     /**
-     * Newsletter/announcement subscriptions (legacy newsletter feature).
+     * All subscriptions owned by this user — product, post,
+     * announcement, etc. (unified Subscribe model).
      */
     public function subscriptions(): MorphMany
     {
-        return $this->morphMany(NewsletterSubscription::class, 'subscribeable');
+        return $this->morphMany(Subscribe::class, 'subscribable');
     }
 
     /**
-     * Subscribe this user to a subscription type (e.g. 'newsletter').
+     * Subscribe this user to a subscription type (e.g. 'post').
      */
-    public function subscribeTo(string $type): NewsletterSubscription
+    public function subscribeTo(string $type): Subscribe
     {
         return app(SubscribeUserAction::class)->handle($this, $type);
     }

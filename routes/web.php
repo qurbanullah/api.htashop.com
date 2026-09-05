@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\V1\Seo\SitemapController;
+use App\Http\Controllers\V1\Post\PostViewController;
+use App\Http\Controllers\V1\Unsubscribe\UnsubscribeController;
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -9,7 +11,18 @@ use App\Http\Controllers\V1\Seo\SitemapController;
 
 Route::get('/', function () {
     return view('api-info');
-});
+})->name('home');
+
+// Post "view online" pages (linked from post emails)
+// NOTE: the token-gated route must be declared before the slug route.
+Route::get('/posts/view/{uuid}/{token}', [PostViewController::class, 'view'])->name('post.view');
+Route::get('/posts/{slug}', [PostViewController::class, 'show'])->name('post.show');
+
+// Unsubscribe / resubscribe flow for post subscriptions
+Route::get('/unsubscribe/{token}', [UnsubscribeController::class, 'show'])->name('unsubscribe.show');
+Route::post('/unsubscribe/{token}', [UnsubscribeController::class, 'unsubscribe'])->name('unsubscribe');
+Route::get('/unsubscribe/{token}/success', [UnsubscribeController::class, 'success'])->name('unsubscribe.success');
+Route::post('/unsubscribe/{token}/resubscribe', [UnsubscribeController::class, 'resubscribe'])->name('unsubscribe.resubscribe');
 
 // SEO — robots.txt + XML sitemaps (proxied by the storefront nginx)
 Route::get('/robots.txt', [SitemapController::class, 'robots']);

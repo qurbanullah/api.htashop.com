@@ -35,6 +35,7 @@ use App\Actions\Users\UserStatusStatsAction;
 use App\Actions\Users\UserRoleStatsAction;
 use App\Actions\Users\UserTotalCountAction;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 /**

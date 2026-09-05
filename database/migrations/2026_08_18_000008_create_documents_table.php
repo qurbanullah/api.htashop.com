@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
             $table->uuid('uuid')->unique();
-            $table->morphs('documentable'); // Order, Subscription...
+            $table->morphs('documentable'); // Order, Subscribe...
             $table->string('type'); // invoice | packing_slip | shipping_label
             $table->string('filename');
             $table->string('object_key');

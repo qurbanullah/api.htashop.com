@@ -20,7 +20,7 @@ class TagController extends Controller
     ) {}
 
     /**
-     * Get all active tags (for newsletter system)
+     * Get all active tags (used by post/blog/news forms).
      */
     public function index(Request $request)
     {

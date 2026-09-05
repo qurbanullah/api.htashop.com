@@ -82,6 +82,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(\App\Services\Punchout\PunchoutProtocolService::class);
         $this->app->singleton(\App\Services\Punchout\PunchoutTransactionService::class);
         $this->app->singleton(\App\Services\Punchout\PunchoutSessionService::class);
+
+        // Search services (Typesense + analytics)
+        $this->app->singleton(\App\Services\Search\ProductSearchService::class);
+        $this->app->singleton(\App\Services\Search\SearchAnalyticsService::class);
     }
 
     /**
@@ -113,5 +117,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ForumPost::class, ForumPostPolicy::class);
         Gate::policy(ForumComment::class, ForumCommentPolicy::class);
 
+        // Keep the Typesense product index in sync with the products table.
+        \App\Models\Product::observe(\App\Observers\ProductSearchObserver::class);
     }
 }

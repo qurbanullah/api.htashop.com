@@ -89,7 +89,7 @@ class Order extends Model
 
     public function subscription(): BelongsTo
     {
-        return $this->belongsTo(Subscription::class);
+        return $this->belongsTo(Subscribe::class, 'subscription_id');
     }
 
     public function items(): HasMany

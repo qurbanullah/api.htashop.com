@@ -45,6 +45,7 @@ use App\Jobs\Tickets\SendTicketLockedEmail;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Services\Assignment\AssignmentService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 

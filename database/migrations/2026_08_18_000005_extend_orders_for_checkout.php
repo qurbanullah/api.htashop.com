@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->after('id')->constrained('users')->nullOnDelete();
             $table->foreignId('organization_id')->nullable()->after('user_id')->constrained('organizations')->nullOnDelete();
             $table->string('source')->default('manual')->after('status'); // manual | subscription
-            $table->foreignId('subscription_id')->nullable()->after('source')->constrained('subscriptions')->nullOnDelete();
+            $table->foreignId('subscription_id')->nullable()->after('source')->constrained('subscribes')->nullOnDelete();
             $table->string('checkout_token')->nullable()->unique()->after('subscription_id');
             $table->string('customer_phone')->nullable()->after('customer_email');
             $table->decimal('subtotal', 15, 2)->default(0)->after('total_amount');

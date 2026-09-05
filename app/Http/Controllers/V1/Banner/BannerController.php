@@ -72,10 +72,25 @@ class BannerController extends Controller
         $banner = Banner::where('uuid', $uuid)->withTrashed()->firstOrFail();
         $data = $request->validate($this->rules());
 
+        // Editing a soft-deleted banner (still listed in the admin UI) means
+        // the operator wants it back live — restore it so the change sticks.
+        if ($banner->trashed()) {
+            $banner->restore();
+        }
+
         $banner->update($data);
         $this->bannerService->flushCache();
 
         return ApiResponse::success(new BannerResource($banner->fresh()), 'Banner updated successfully');
+    }
+
+    public function restore(string $uuid): JsonResponse
+    {
+        $banner = Banner::withTrashed()->where('uuid', $uuid)->firstOrFail();
+        $banner->restore();
+        $this->bannerService->flushCache();
+
+        return ApiResponse::success(new BannerResource($banner->fresh()), 'Banner restored successfully');
     }
 
     public function destroy(string $uuid): JsonResponse

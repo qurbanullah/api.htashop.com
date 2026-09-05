@@ -128,6 +128,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/banners', [BannerController::class, 'adminIndex']);
         Route::post('/banners', [BannerController::class, 'store']);
         Route::get('/banners/{uuid}', [BannerController::class, 'show']);
+        Route::post('/banners/{uuid}/restore', [BannerController::class, 'restore']);
         Route::put('/banners/{uuid}', [BannerController::class, 'update']);
         Route::delete('/banners/{uuid}', [BannerController::class, 'destroy']);
 
@@ -152,21 +153,21 @@ Route::prefix('v1')->group(function () {
         Route::get('/punchout/sessions', [AdminPunchoutSessionController::class, 'index']);
         Route::get('/punchout/sessions/{uuid}', [AdminPunchoutSessionController::class, 'show']);
 
-        // Admin Newsletter Management Routes
-        Route::get('/newsletters', [\App\Http\Controllers\V1\Newsletter\AdminNewsletterController::class, 'index']);
-        Route::get('/newsletters/stats', [\App\Http\Controllers\V1\Newsletter\AdminNewsletterController::class, 'stats']);
-        Route::get('/newsletters/publishing-trends', [\App\Http\Controllers\V1\Newsletter\AdminNewsletterController::class, 'publishingTrends']);
-        Route::get('/newsletters/types', [\App\Http\Controllers\V1\Newsletter\AdminNewsletterController::class, 'types']);
-        Route::get('/newsletters/statuses', [\App\Http\Controllers\V1\Newsletter\AdminNewsletterController::class, 'statuses']);
-        Route::post('/newsletters', [\App\Http\Controllers\V1\Newsletter\AdminNewsletterController::class, 'store']);
-        Route::get('/newsletters/{uuid}', [\App\Http\Controllers\V1\Newsletter\AdminNewsletterController::class, 'show']);
-        Route::put('/newsletters/{uuid}', [\App\Http\Controllers\V1\Newsletter\AdminNewsletterController::class, 'update']);
-        Route::delete('/newsletters/{uuid}', [\App\Http\Controllers\V1\Newsletter\AdminNewsletterController::class, 'destroy']);
+        // Admin Post Management Routes
+        Route::get('/posts', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'index']);
+        Route::get('/posts/stats', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'stats']);
+        Route::get('/posts/publishing-trends', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'publishingTrends']);
+        Route::get('/posts/types', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'types']);
+        Route::get('/posts/statuses', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'statuses']);
+        Route::post('/posts', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'store']);
+        Route::get('/posts/{uuid}', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'show']);
+        Route::put('/posts/{uuid}', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'update']);
+        Route::delete('/posts/{uuid}', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'destroy']);
 
-        // Admin Newsletter Action Routes
-        Route::post('/newsletters/{uuid}/actions/send', [\App\Http\Controllers\V1\Newsletter\AdminNewsletterController::class, 'send']);
-        Route::post('/newsletters/{uuid}/actions/schedule', [\App\Http\Controllers\V1\Newsletter\AdminNewsletterController::class, 'schedule']);
-        Route::post('/newsletters/{uuid}/actions/toggle-blog', [\App\Http\Controllers\V1\Newsletter\AdminNewsletterController::class, 'toggleBlogPublication']);
+        // Admin Post Action Routes
+        Route::post('/posts/{uuid}/actions/send', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'send']);
+        Route::post('/posts/{uuid}/actions/schedule', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'schedule']);
+        Route::post('/posts/{uuid}/actions/toggle-blog', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'toggleBlogPublication']);
 
         // Admin Tutorial Management Routes
         Route::get('/tutorials', [\App\Http\Controllers\V1\Tutorial\AdminTutorialController::class, 'index']);
@@ -232,10 +233,10 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-    // Newsletters API (public) - only GET operations are active for now
-    Route::get('/newsletters', [\App\Http\Controllers\V1\Newsletter\NewsletterApiController::class, 'index']);
-    Route::get('/newsletters/category/{categorySlug}', [\App\Http\Controllers\V1\Newsletter\NewsletterApiController::class, 'byCategory']);
-    Route::get('/newsletters/{id}', [\App\Http\Controllers\V1\Newsletter\NewsletterApiController::class, 'show']);
+    // Posts API (public) - only GET operations are active for now
+    Route::get('/posts', [\App\Http\Controllers\V1\Post\PostApiController::class, 'index']);
+    Route::get('/posts/category/{categorySlug}', [\App\Http\Controllers\V1\Post\PostApiController::class, 'byCategory']);
+    Route::get('/posts/{id}', [\App\Http\Controllers\V1\Post\PostApiController::class, 'show']);
 
     // Tutorials API (public)
     Route::get('/tutorials', [\App\Http\Controllers\V1\Tutorial\PublicTutorialController::class, 'index']);
@@ -265,22 +266,22 @@ Route::prefix('v1')->group(function () {
     Route::post('/tags', [\App\Http\Controllers\V1\Tag\TagController::class, 'store']);
 
     // Category-specific endpoints
-    Route::get('/blogs', [\App\Http\Controllers\V1\Newsletter\NewsletterApiController::class, 'blogs']);
-    Route::get('/events', [\App\Http\Controllers\V1\Newsletter\NewsletterApiController::class, 'events']);
-    Route::get('/news', [\App\Http\Controllers\V1\Newsletter\NewsletterApiController::class, 'news']);
+    Route::get('/blogs', [\App\Http\Controllers\V1\Post\PostApiController::class, 'blogs']);
+    Route::get('/events', [\App\Http\Controllers\V1\Post\PostApiController::class, 'events']);
+    Route::get('/news', [\App\Http\Controllers\V1\Post\PostApiController::class, 'news']);
 
     // Public asset URL generation (no auth required)
     // Use this endpoint for all public images stored in the images/ directory
     Route::post('/assets/generate-url', [\App\Http\Controllers\V1\Asset\PublicAssetController::class, 'generateUrl']);
 
-    // Public newsletter image URL generation (no auth required)
+    // Public post image URL generation (no auth required)
     // @deprecated - Use /assets/generate-url for new implementations
-    Route::post('/newsletters/generate-image-url', [\App\Http\Controllers\V1\Newsletter\NewsletterApiController::class, 'generateImageUrl']);
+    Route::post('/posts/generate-image-url', [\App\Http\Controllers\V1\Post\PostApiController::class, 'generateImageUrl']);
 
     // Placeholder RESTful routes (create/update/delete) kept but return 405 from controller
-    Route::post('/newsletters', [\App\Http\Controllers\V1\Newsletter\NewsletterApiController::class, 'store']);
-    Route::put('/newsletters/{id}', [\App\Http\Controllers\V1\Newsletter\NewsletterApiController::class, 'update']);
-    Route::delete('/newsletters/{id}', [\App\Http\Controllers\V1\Newsletter\NewsletterApiController::class, 'destroy']);
+    Route::post('/posts', [\App\Http\Controllers\V1\Post\PostApiController::class, 'store']);
+    Route::put('/posts/{id}', [\App\Http\Controllers\V1\Post\PostApiController::class, 'update']);
+    Route::delete('/posts/{id}', [\App\Http\Controllers\V1\Post\PostApiController::class, 'destroy']);
 
     // Feedback API routes
     Route::post('/feedback', [FeedbackController::class, 'submitFeedback'])->middleware('throttle:60,1');
@@ -306,6 +307,12 @@ Route::prefix('v1')->group(function () {
     Route::get('/catalog/products/{key}', [CatalogController::class, 'show']);
     Route::get('/catalog/filters', [CatalogController::class, 'filters']);
     Route::get('/catalog/top-nav', [CatalogController::class, 'topNav']);
+
+    // Public search (Typesense-backed with database fallback)
+    Route::get('/search/suggest', [\App\Http\Controllers\V1\Search\SearchController::class, 'suggest'])->middleware('throttle:120,1');
+    Route::get('/search/trending', [\App\Http\Controllers\V1\Search\SearchController::class, 'trending'])->middleware('throttle:120,1');
+    Route::get('/search', [\App\Http\Controllers\V1\Search\SearchController::class, 'index'])->middleware('throttle:120,1');
+    Route::post('/search/click', [\App\Http\Controllers\V1\Search\SearchController::class, 'click'])->middleware('throttle:120,1');
 
     // Public product review routes
     Route::get('/catalog/products/{key}/reviews', [ProductReviewController::class, 'index']);

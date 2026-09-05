@@ -2,16 +2,16 @@
 
 namespace App\Actions\Subscription;
 
-use App\Models\NewsletterSubscription;
+use App\Models\Subscribe;
 use Illuminate\Database\Eloquent\Model;
 
 class SubscribeUserAction
 {
-    public function handle(Model $user, string $type): NewsletterSubscription
+    public function handle(Model $user, string $type): Subscribe
     {
-        $subscription = NewsletterSubscription::firstOrCreate([
-            'subscribeable_id' => $user->getKey(),
-            'subscribeable_type' => get_class($user),
+        $subscription = Subscribe::firstOrCreate([
+            'subscribable_id' => $user->getKey(),
+            'subscribable_type' => get_class($user),
             'type' => $type,
         ], [
             'is_subscribed' => true,
