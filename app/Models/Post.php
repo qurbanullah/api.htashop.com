@@ -63,7 +63,7 @@ class Post extends Model
                 $post->uuid = Str::uuid();
             }
             if (empty($post->type)) {
-                $post->type = PostTypeEnum::POST;
+                $post->type = PostTypeEnum::BLOG;
             }
             if (empty($post->slug)) {
                 $post->slug = Str::slug($post->title);
@@ -189,31 +189,42 @@ class Post extends Model
     }
 
     // Helper Methods
+
+    /**
+     * Raw status value regardless of whether the attribute is cast to enum.
+     */
+    protected function statusValue(): string
+    {
+        return $this->status instanceof PostStatusEnum
+            ? $this->status->value
+            : (string) $this->status;
+    }
+
     public function canBeEdited()
     {
-        return in_array($this->status, ['draft', 'scheduled']);
+        return in_array($this->statusValue(), ['draft', 'scheduled']);
     }
 
     public function canBeSent()
     {
-        return in_array($this->status, ['draft', 'scheduled']) && !empty($this->content);
+        return in_array($this->statusValue(), ['draft', 'scheduled']) && !empty($this->content);
     }
 
     public function canBePublished()
     {
-        return in_array($this->status, ['draft', 'scheduled']);
+        return in_array($this->statusValue(), ['draft', 'scheduled']);
     }
 
     public function isOverdue()
     {
-        return $this->status === 'scheduled' && $this->scheduled_at && $this->scheduled_at->isPast();
+        return $this->statusValue() === 'scheduled' && $this->scheduled_at && $this->scheduled_at->isPast();
     }
 
     public function canBeResent()
     {
-        return ($this->status === 'scheduled' && $this->scheduled_at && $this->scheduled_at->isPast())
-            || ($this->status === 'sending' && $this->updated_at->diffInMinutes(now()) > 60)
-            || ($this->status === 'published' && $this->sent_count === 0);
+        return ($this->statusValue() === 'scheduled' && $this->scheduled_at && $this->scheduled_at->isPast())
+            || ($this->statusValue() === 'sending' && $this->updated_at->diffInMinutes(now()) > 60)
+            || ($this->statusValue() === 'published' && $this->sent_count === 0);
     }
 
     /**

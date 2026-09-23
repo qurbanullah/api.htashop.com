@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
-
+use App\Enums\FeedbackPriorityEnum;
+use App\Enums\FeedbackStatusEnum;
+use App\Enums\FeedbackTypeEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -11,10 +13,12 @@ use Illuminate\Support\Str;
 
 class Feedback extends Model
 {
-        protected $table = 'feedbacks';
+    protected $table = 'feedbacks';
 
     protected $fillable = [
         'uuid',
+        'tenant_id',
+        'user_id',
         'type',
         'name',
         'email',
@@ -22,9 +26,7 @@ class Feedback extends Model
         'message',
         'status',
         'priority',
-        'software_name',
-        'software_version',
-        'operating_system',
+        'page_url',
         'additional_info',
         'source',
         'user_agent',
@@ -57,6 +59,16 @@ class Feedback extends Model
                 $feedback->uuid = Str::uuid();
             }
         });
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     /**
@@ -100,8 +112,7 @@ class Feedback extends Model
             $query->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('subject', 'like', "%{$search}%")
-                  ->orWhere('message', 'like', "%{$search}%")
-                  ->orWhere('software_name', 'like', "%{$search}%");
+                  ->orWhere('message', 'like', "%{$search}%");
         });
     }
 
@@ -110,12 +121,12 @@ class Feedback extends Model
      */
     public function getStatusColorAttribute(): string
     {
-        return match($this->status) {
-            'new' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-            'read' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-            'replied' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-            'closed' => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
-            default => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+        return match ($this->status) {
+            FeedbackStatusEnum::NEW->value => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+            FeedbackStatusEnum::READ->value => 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300',
+            FeedbackStatusEnum::REPLIED->value => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+            FeedbackStatusEnum::CLOSED->value => 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
+            default => 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
         };
     }
 
@@ -124,12 +135,12 @@ class Feedback extends Model
      */
     public function getPriorityColorAttribute(): string
     {
-        return match($this->priority) {
-            'low' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-            'medium' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-            'high' => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
-            'critical' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-            default => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+        return match ($this->priority) {
+            FeedbackPriorityEnum::LOW->value => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+            FeedbackPriorityEnum::MEDIUM->value => 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300',
+            FeedbackPriorityEnum::HIGH->value => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+            FeedbackPriorityEnum::CRITICAL->value => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+            default => 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
         };
     }
 
@@ -138,13 +149,7 @@ class Feedback extends Model
      */
     public function getTypeDisplayAttribute(): string
     {
-        return match($this->type) {
-            'feedback' => 'Feedback',
-            'feature_request' => 'Feature Request',
-            'suggestion' => 'Suggestion',
-            'bug_report' => 'Bug Report',
-            default => ucfirst($this->type),
-        };
+        return FeedbackTypeEnum::tryFrom((string) $this->type)?->label() ?? ucfirst((string) $this->type);
     }
 
     /**
@@ -152,8 +157,8 @@ class Feedback extends Model
      */
     public function markAsRead(): void
     {
-        if ($this->status === 'new') {
-            $this->update(['status' => 'read']);
+        if ($this->status === FeedbackStatusEnum::NEW->value) {
+            $this->update(['status' => FeedbackStatusEnum::READ->value]);
         }
     }
 
@@ -163,7 +168,7 @@ class Feedback extends Model
     public function markAsReplied(string $response, int $repliedBy): void
     {
         $this->update([
-            'status' => 'replied',
+            'status' => FeedbackStatusEnum::REPLIED->value,
             'admin_response' => $response,
             'replied_at' => now(),
             'replied_by' => $repliedBy,

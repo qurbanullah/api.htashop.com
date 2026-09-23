@@ -39,9 +39,31 @@ class SitemapController extends Controller
         return $this->xml($this->sitemapService->categories());
     }
 
+    public function posts(): Response
+    {
+        return $this->xml($this->sitemapService->posts());
+    }
+
     public function pages(): Response
     {
         return $this->xml($this->sitemapService->pages());
+    }
+
+    /**
+     * Serves the IndexNow verification key file at /{key}.txt.
+     * Responds 404 for any other key so unknown crawlers get nothing.
+     */
+    public function indexnowKey(string $indexnowKey): Response
+    {
+        $configuredKey = trim((string) config('indexnow.key'));
+
+        if ($configuredKey === '' || !hash_equals($configuredKey, $indexnowKey)) {
+            abort(404);
+        }
+
+        return response($configuredKey . "\n")
+            ->header('Content-Type', 'text/plain; charset=UTF-8')
+            ->header('Cache-Control', 'public, max-age=86400');
     }
 
     private function xml(string $content): Response

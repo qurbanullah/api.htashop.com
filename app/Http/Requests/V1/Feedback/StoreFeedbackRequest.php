@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\V1\Feedback;
 
+use App\Enums\FeedbackPriorityEnum;
+use App\Enums\FeedbackStatusEnum;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreFeedbackRequest extends FormRequest
@@ -26,9 +28,8 @@ class StoreFeedbackRequest extends FormRequest
             'subject' => 'required|string|max:255',
             'message' => 'required|string|min:10|max:5000',
             'priority' => 'nullable|in:low,medium,high,critical',
-            'software_name' => 'nullable|string|max:255',
-            'software_version' => 'nullable|string|max:100',
-            'operating_system' => 'nullable|string|max:255',
+            'page_url' => 'nullable|string|max:2048',
+            'additional_info' => 'nullable|array',
         ];
     }
 
@@ -58,11 +59,13 @@ class StoreFeedbackRequest extends FormRequest
         $validated = $this->validated();
 
         return array_merge($validated, [
-            'status' => 'new',
-            'priority' => $validated['priority'] ?? 'medium',
+            'status' => FeedbackStatusEnum::NEW->value,
+            'priority' => $validated['priority'] ?? FeedbackPriorityEnum::MEDIUM->value,
             'source' => 'api',
             'ip_address' => $this->ip(),
             'user_agent' => $this->header('User-Agent'),
+            'page_url' => $validated['page_url'] ?? null,
+            'additional_info' => $validated['additional_info'] ?? [],
         ]);
     }
 }

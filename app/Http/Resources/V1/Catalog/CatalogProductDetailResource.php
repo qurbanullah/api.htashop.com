@@ -26,8 +26,10 @@ class CatalogProductDetailResource extends JsonResource
             'specs' => data_get($this->metadata, 'specs', []),
             'image_url' => $this->resolveImageUrl(),
             'image_original_url' => $this->resolveOriginalImageUrl(),
+            'image_urls' => $this->resolveFeaturedUrls(),
             'gallery' => $this->resolveGallery(),
             'gallery_original' => $this->resolveOriginalGallery(),
+            'gallery_sizes' => $this->resolveGallerySizes(),
             'categories' => $this->whenLoaded('categories'),
             'brands' => $this->whenLoaded('brands'),
             'features' => $this->whenLoaded('features'),
@@ -98,6 +100,56 @@ class CatalogProductDetailResource extends JsonResource
             ->filter()
             ->values()
             ->all();
+    }
+
+    private function resolveFeaturedUrls(): array
+    {
+        if (! $this->relationLoaded('dams')) {
+            return [];
+        }
+
+        $featured = $this->dams->firstWhere('collection_name', 'featured')
+            ?? $this->dams->first();
+
+        return $featured ? $this->damLadder($featured) : [];
+    }
+
+    /**
+     * Per-image URL ladders aligned with `gallery` (index-for-index).
+     *
+     * @return array<int, array<string, string|null>>
+     */
+    private function resolveGallerySizes(): array
+    {
+        if (! $this->relationLoaded('dams')) {
+            return [];
+        }
+
+        return $this->dams
+            ->map(fn (Dam $dam) => $this->damLadder($dam))
+            ->filter(fn (array $ladder) => ! empty($ladder['medium']))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<string, string|null>
+     */
+    private function damLadder(Dam $dam): array
+    {
+        $variants = data_get($dam->metadata, 'variants', []);
+        $variants = is_array($variants) ? $variants : [];
+
+        $urlFor = fn (string $key): string => 'https://cdn.htashop.com/' . ltrim($key, '/');
+        $originalKey = (string) data_get($variants, 'original', $dam->object_key ?? '');
+
+        $ladder = ['original' => $originalKey !== '' ? $urlFor($originalKey) : null];
+        foreach (['thumb', 'small', 'medium', 'large'] as $size) {
+            $key = data_get($variants, $size);
+            $ladder[$size] = is_string($key) && $key !== '' ? $urlFor($key) : null;
+        }
+
+        return $ladder;
     }
 
     private function resolveVariants(): array

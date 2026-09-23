@@ -28,8 +28,24 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
+        <!-- External services stay off in tests so the suite is deterministic. -->
+        <env name="TYPESENSE_ENABLED" value="false"/>
+        <env name="EMBEDDINGS_ENABLED" value="false"/>
+        <env name="CHAT_ENABLED" value="true"/>
+        <env name="CHAT_PREVIEW" value="false"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+
+        <!--
+            The api container exports these as *real* environment variables
+            (see docker-compose.yml), and Laravel's Env repository reads $_SERVER
+            before $_ENV/getenv — so the <env> entries above do not win. <server>
+            always sets $_SERVER, which is what actually makes the test
+            environment deterministic (otherwise the suite silently queries the
+            live Typesense index).
+        -->
+        <server name="TYPESENSE_ENABLED" value="false"/>
+        <server name="EMBEDDINGS_ENABLED" value="false"/>
     </php>
 </phpunit>

@@ -112,7 +112,7 @@ class AuthController extends Controller
         $tokenResult = $this->getOAuthToken($request->email, $request->password);
 
         if ($tokenResult['success']) {
-            return ApiResponse::success([
+            $payload = [
                 'user' => [
                     'id' => $user->id,
                     'uuid' => $user->uuid,
@@ -138,7 +138,17 @@ class AuthController extends Controller
                 'expires_in' => $tokenResult['expires_in'],
                 'token_type' => 'Bearer',
                 'requires_onboarding' => !$user->isOnboardingComplete(),
-            ], 'Login successful');
+            ];
+
+            // The storefront authenticates with the httpOnly cookie set below, so it
+            // must not also receive a JS-readable copy of the bearer token. Other
+            // clients (admin/manage/native) still read it from the body as before.
+            if ($this->clientIsStorefront($request)) {
+                unset($payload['access_token'], $payload['refresh_token']);
+            }
+
+            return ApiResponse::success($payload, 'Login successful')
+                ->withCookie($this->accessTokenCookie($tokenResult['access_token']));
         }
 
         Log::error('OAuth token generation failed', [
@@ -163,7 +173,7 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Successfully logged out',
-        ]);
+        ])->withCookie($this->forgetAccessTokenCookie());
     }
 
     /**
@@ -189,6 +199,15 @@ class AuthController extends Controller
             'success' => false,
             'message' => 'Unable to refresh token',
         ], 401);
+    }
+
+    /**
+     * Whether the caller is the storefront SPA (which holds its session in an
+     * httpOnly cookie) rather than the admin/manage/native clients.
+     */
+    private function clientIsStorefront(Request $request): bool
+    {
+        return strtolower((string) $request->header('X-Client', '')) === 'storefront';
     }
 
     /**
@@ -763,6 +782,41 @@ class AuthController extends Controller
     /**
      * Validate Turnstile token (skip in local environment)
      */
+    /**
+     * Build the httpOnly access-token cookie used by the storefront so the
+     * Bearer token never lives in localStorage (and can't be read by injected
+     * scripts). Admin/manage continue to read the token from the JSON body.
+     */
+    private function accessTokenCookie(string $token): \Symfony\Component\HttpFoundation\Cookie
+    {
+        return cookie(
+            'hta_access_token',
+            $token,
+            21600, // 15 days (matches the personal-access-token expiry)
+            '/',
+            null, // host-only (api.htashop.com)
+            !app()->environment('local', 'testing'), // Secure in production
+            true, // httpOnly
+            false, // raw
+            'lax' // htashop.com <-> api.htashop.com are same-site
+        );
+    }
+
+    private function forgetAccessTokenCookie(): \Symfony\Component\HttpFoundation\Cookie
+    {
+        return cookie(
+            'hta_access_token',
+            '',
+            -2628000, // expired — instructs the browser to delete it
+            '/',
+            null,
+            !app()->environment('local', 'testing'),
+            true,
+            false,
+            'lax'
+        );
+    }
+
     private function validateTurnstile(?string $token): bool
     {
         // Skip validation in local environment

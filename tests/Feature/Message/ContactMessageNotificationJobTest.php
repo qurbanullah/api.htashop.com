@@ -1,6 +1,6 @@
 <?php
 
-use App\Jobs\User\SendContactMessageNotificationJob;
+use App\Jobs\Contacts\SendContactMessageNotificationJob;
 use App\Mail\Messages\ContactMessageNotificationMail;
 use App\Models\ContactMessage;
 use App\Models\User;

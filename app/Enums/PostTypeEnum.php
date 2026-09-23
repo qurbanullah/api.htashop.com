@@ -4,14 +4,14 @@ namespace App\Enums;
 
 enum PostTypeEnum: string
 {
-    case POST = 'post';
     case BLOG = 'blog';
     case NEWS = 'news';
     case EVENT = 'event';
-    case SHOWCASE = 'showcase';
     case ANNOUNCEMENT = 'announcement';
+    case NEWSLETTER = 'newsletter';
     case PROMOTION = 'promotion';
     case UPDATE = 'update';
+    case SHOWCASE = 'showcase';
     case TUTORIAL = 'tutorial';
     case PRESS_RELEASE = 'press_release';
 
@@ -21,14 +21,14 @@ enum PostTypeEnum: string
     public function label(): string
     {
         return match ($this) {
-            self::POST => 'Post',
             self::BLOG => 'Blog Post',
             self::NEWS => 'News Article',
             self::EVENT => 'Event',
-            self::SHOWCASE => 'Showcase',
             self::ANNOUNCEMENT => 'Announcement',
+            self::NEWSLETTER => 'Newsletter',
             self::PROMOTION => 'Promotion',
             self::UPDATE => 'Product Update',
+            self::SHOWCASE => 'Showcase',
             self::TUTORIAL => 'Tutorial',
             self::PRESS_RELEASE => 'Press Release',
         };
@@ -40,14 +40,14 @@ enum PostTypeEnum: string
     public function description(): string
     {
         return match ($this) {
-            self::POST => 'Email post sent to subscribers',
             self::BLOG => 'Blog post published on the website',
             self::NEWS => 'News article or press release',
             self::EVENT => 'Event announcement or details',
-            self::SHOWCASE => 'Product showcase or spotlight',
             self::ANNOUNCEMENT => 'General announcement or update',
+            self::NEWSLETTER => 'Email post sent to subscribers',
             self::PROMOTION => 'Special offer, discount, or campaign',
             self::UPDATE => 'Product or platform update',
+            self::SHOWCASE => 'Product showcase or spotlight',
             self::TUTORIAL => 'How-to guide or tutorial',
             self::PRESS_RELEASE => 'Official press release',
         };
@@ -59,16 +59,43 @@ enum PostTypeEnum: string
     public function icon(): string
     {
         return match ($this) {
-            self::POST => 'mail',
             self::BLOG => 'file-text',
             self::NEWS => 'newspaper',
             self::EVENT => 'calendar',
-            self::SHOWCASE => 'sparkles',
             self::ANNOUNCEMENT => 'megaphone',
+            self::NEWSLETTER => 'mail',
             self::PROMOTION => 'badge-percent',
             self::UPDATE => 'refresh-cw',
+            self::SHOWCASE => 'sparkles',
             self::TUTORIAL => 'book-open',
             self::PRESS_RELEASE => 'mic',
+        };
+    }
+
+    /**
+     * Public storefront path segment for this post type.
+     *
+     * Every type has its own dedicated section, so each is separately
+     * indexable and can grow its own landing page. The match is exhaustive on
+     * purpose — adding a new case without deciding its public section fails
+     * loudly (UnhandledMatchError) rather than silently losing a page.
+     *
+     * Tutorial posts are served under /guides because /tutorials already
+     * belongs to the standalone Tutorial system (PublicTutorialController).
+     */
+    public function webSection(): string
+    {
+        return match ($this) {
+            self::BLOG => '/blogs',
+            self::NEWS => '/news',
+            self::EVENT => '/events',
+            self::ANNOUNCEMENT => '/announcements',
+            self::PRESS_RELEASE => '/press-releases',
+            self::PROMOTION => '/promotions',
+            self::UPDATE => '/updates',
+            self::SHOWCASE => '/showcases',
+            self::TUTORIAL => '/guides',
+            self::NEWSLETTER => '/newsletters',
         };
     }
 

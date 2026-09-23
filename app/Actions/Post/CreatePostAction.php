@@ -26,6 +26,7 @@ use App\Models\Post;
 use App\Models\Tag;
 use App\Models\Category;
 use App\Traits\Post\GeneratesUniqueSlug;
+use App\Enums\PostTypeEnum;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -60,7 +61,7 @@ class CreatePostAction
                             'title' => data_get($data, 'title'),
                             // Always auto-generate slug from title for consistency
                             'slug' => $this->generateUniqueSlug(data_get($data, 'title')),
-                            'type' => data_get($data, 'type', 'post'),
+                            'type' => data_get($data, 'type', PostTypeEnum::BLOG->value),
                             'excerpt' => data_get($data, 'excerpt'),
                             'content' => data_get($data, 'content'),
                             'featured_image' => data_get($data, 'featured_image'),

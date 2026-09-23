@@ -2,9 +2,11 @@
 
 namespace App\Actions\Post;
 
+use App\Enums\PostTypeEnum;
 use App\Models\Post;
+use App\Models\Subscribe;
 use App\Models\User;
-use App\Mail\PostMail;
+use App\Mail\Post\PostMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -21,7 +23,7 @@ class SendPostAction
         }
 
         // Get recipients based on criteria
-        $recipients = $this->getRecipients($post->recipients ?? []);
+        $recipients = $this->getRecipients($post, $post->recipients ?? []);
 
         if ($recipients->isEmpty()) {
             throw new \Exception('No subscribers found to send post to.');
@@ -74,8 +76,22 @@ class SendPostAction
         ];
     }
 
-    private function getRecipients(array $criteria): \Illuminate\Database\Eloquent\Collection
+    private function getRecipients(Post $post, array $criteria): \Illuminate\Support\Collection
     {
+        $type = $post->type instanceof PostTypeEnum
+            ? $post->type->value
+            : (string) $post->type;
+
+        // Newsletter posts go to the guest + account newsletter list
+        // (Subscribe rows with type = newsletter).
+        if ($type === PostTypeEnum::NEWSLETTER->value) {
+            return Subscribe::query()
+                ->where('type', 'newsletter')
+                ->where('is_subscribed', true)
+                ->whereNotNull('email')
+                ->get();
+        }
+
         $query = User::query();
 
         // Default to subscribed users if no criteria specified
@@ -134,10 +150,13 @@ class SendPostAction
     private function throwDetailedValidationError(Post $post): void
     {
         $errors = [];
+        $statusLabel = $post->status instanceof \App\Enums\PostStatusEnum
+            ? $post->status->value
+            : (string) $post->status;
 
         // Check status
-        if (!in_array($post->status, ['draft', 'scheduled'])) {
-            $errors[] = "Status is '{$post->status}' (must be 'draft' or 'scheduled')";
+        if (!in_array($statusLabel, ['draft', 'scheduled'])) {
+            $errors[] = "Status is '{$statusLabel}' (must be 'draft' or 'scheduled')";
         }
 
         // Check content
@@ -154,7 +173,7 @@ class SendPostAction
         $additionalInfo = [
             "Post ID: {$post->id}",
             "Post UUID: {$post->uuid}",
-            "Current Status: {$post->status}",
+            "Current Status: {$statusLabel}",
             "Created: {$post->created_at->format('Y-m-d H:i:s')}",
             "Updated: {$post->updated_at->format('Y-m-d H:i:s')}"
         ];

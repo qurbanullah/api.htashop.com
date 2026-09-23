@@ -27,10 +27,9 @@ class SendContactReplyEmail implements ShouldQueue
         public string $replySubject,
         public string $senderName,
         public string $senderEmail,
+        public ?int $repliedById = null,
         public bool $markAsReplied = true
     ) {
-        // Set queue connection and queue name
-        // $this->onQueue('emails');
         $this->onQueue('default');
     }
 
@@ -53,14 +52,18 @@ class SendContactReplyEmail implements ShouldQueue
                 'senderName' => $this->senderName,
             ], function ($mail) {
                 $mail->to($this->message->email, $this->message->name)
-                     ->from(config('mail.from.address', 'contact@real3dtech.com'))
+                     ->from(config('mail.from.address'), config('mail.from.name'))
                      ->subject($this->replySubject);
             });
 
             // Mark as replied if requested
             if ($this->markAsReplied) {
                 $contactMessageService = new ContactMessageService();
-                $contactMessageService->markAsReplied($this->message->id);
+                $contactMessageService->markAsReplied(
+                    $this->message->id,
+                    $this->replyMessage,
+                    $this->repliedById ?? 0
+                );
             }
 
             Log::info('Contact reply email sent successfully', [

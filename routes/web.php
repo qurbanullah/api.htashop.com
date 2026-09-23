@@ -28,8 +28,13 @@ Route::post('/unsubscribe/{token}/resubscribe', [UnsubscribeController::class, '
 Route::get('/robots.txt', [SitemapController::class, 'robots']);
 Route::get('/sitemap.xml', [SitemapController::class, 'index']);
 Route::get('/sitemap-products.xml', [SitemapController::class, 'products']);
+Route::get('/sitemap-posts.xml', [SitemapController::class, 'posts']);
 Route::get('/sitemap-categories.xml', [SitemapController::class, 'categories']);
 Route::get('/sitemap-pages.xml', [SitemapController::class, 'pages']);
+
+// IndexNow key file — served at the site root so search engines can verify it.
+Route::get('/{indexnowKey}.txt', [SitemapController::class, 'indexnowKey'])
+    ->where('indexnowKey', '[A-Za-z0-9]{8,64}');
 
 // Password reset routes for different frontends
 // Default password reset (for backward compatibility and main frontend)

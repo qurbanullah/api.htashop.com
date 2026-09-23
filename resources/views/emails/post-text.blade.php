@@ -1,7 +1,7 @@
 {{ $post->title }}
 {{ str_repeat('=', mb_strlen($post->title)) }}
 
-Hello {{ $user?->name ?? 'there' }},
+Hello {{ $recipientName ?? $user?->name ?? 'there' }},
 
 {{ strip_tags($post->content) }}
 

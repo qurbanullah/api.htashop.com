@@ -26,6 +26,14 @@ use App\Http\Controllers\V1\Audit\AuditController;
 use App\Http\Controllers\V1\Dam\DamCollectionController;
 use App\Http\Controllers\V1\Dam\DamController;
 use App\Http\Controllers\V1\Support\PublicSupportTicketController;
+use App\Http\Controllers\V1\Chat\ChatController;
+use App\Http\Controllers\V1\Chat\ChatStreamController;
+use App\Http\Controllers\V1\Chat\ChatFeedbackController;
+use App\Http\Controllers\V1\Chat\ChatAdminController;
+use App\Http\Controllers\V1\Knowledge\KnowledgeEntryAdminController;
+use App\Http\Middleware\EnsureChatEnabled;
+use App\Http\Middleware\EnsureChatTokenBudget;
+use App\Http\Middleware\EnsureChatVisitor;
 use App\Http\Controllers\V1\Forum\PublicForumController;
 use App\Http\Controllers\V1\Forum\PublicForumCommentController;
 use App\Http\Controllers\V1\Forum\ForumPostController;
@@ -141,7 +149,27 @@ Route::prefix('v1')->group(function () {
         Route::get('/contact-messages/statistics', [ContactMessageAdminController::class, 'statistics']);
         Route::get('/contact-messages/{id}', [ContactMessageAdminController::class, 'show'])->whereNumber('id');
         Route::patch('/contact-messages/{id}/mark-read', [ContactMessageAdminController::class, 'markAsRead'])->whereNumber('id');
+        Route::patch('/contact-messages/{id}/reply', [ContactMessageAdminController::class, 'reply'])->whereNumber('id');
         Route::delete('/contact-messages/{id}', [ContactMessageAdminController::class, 'destroy'])->whereNumber('id');
+
+        // Admin - AI support assistant: knowledge base
+        // `statistics` must be registered before `{uuid}` so it is not captured.
+        Route::get('/knowledge-entries', [KnowledgeEntryAdminController::class, 'index']);
+        Route::get('/knowledge-entries/statistics', [KnowledgeEntryAdminController::class, 'statistics']);
+        Route::post('/knowledge-entries', [KnowledgeEntryAdminController::class, 'store']);
+        Route::get('/knowledge-entries/{uuid}', [KnowledgeEntryAdminController::class, 'show']);
+        Route::patch('/knowledge-entries/{uuid}', [KnowledgeEntryAdminController::class, 'update']);
+        Route::delete('/knowledge-entries/{uuid}', [KnowledgeEntryAdminController::class, 'destroy']);
+        Route::post('/knowledge-entries/{uuid}/actions/publish', [KnowledgeEntryAdminController::class, 'publish']);
+        Route::post('/knowledge-entries/{uuid}/actions/unpublish', [KnowledgeEntryAdminController::class, 'unpublish']);
+
+        // Admin - AI support assistant: conversations
+        Route::get('/chats', [ChatAdminController::class, 'index']);
+        Route::get('/chats/statistics', [ChatAdminController::class, 'statistics']);
+        Route::get('/chats/{uuid}', [ChatAdminController::class, 'show']);
+
+        // Admin newsletter audience stats
+        Route::get('/newsletter/subscribers', [\App\Http\Controllers\V1\Newsletter\NewsletterAdminController::class, 'subscribers']);
 
         // Admin Audit routes
         Route::get('/audits', [AuditController::class, 'adminIndex']);
@@ -285,12 +313,43 @@ Route::prefix('v1')->group(function () {
 
     // Feedback API routes
     Route::post('/feedback', [FeedbackController::class, 'submitFeedback'])->middleware('throttle:60,1');
-    Route::get('/feedback/{id}', [FeedbackController::class, 'getFeedback'])->middleware('throttle:120,1');
+    Route::get('/feedback/{reference}', [FeedbackController::class, 'getFeedback'])->middleware('throttle:120,1');
     Route::get('/feedback/options', [FeedbackController::class, 'getOptions']);
 
     // Public contact and support intake routes
     Route::post('/contact', [ContactMessageController::class, 'store'])->middleware('throttle:20,1');
     Route::post('/support/tickets', [PublicSupportTicketController::class, 'store'])->middleware('throttle:20,1');
+
+    // AI support assistant — guest-first. A dedicated httpOnly visitor cookie
+    // (see EnsureChatVisitor) replaces the session, so chat never touches the
+    // database-backed session store.
+    Route::prefix('chat')
+        ->middleware(EnsureChatVisitor::class)
+        ->group(function () {
+            // Always available: the widget calls this to learn whether chat is on.
+            Route::get('/config', [ChatController::class, 'config']);
+            Route::get('/conversation', [ChatController::class, 'show']);
+            Route::post('/conversation/actions/reset', [ChatController::class, 'reset']);
+
+            Route::middleware(EnsureChatEnabled::class)->group(function () {
+                Route::post('/stream', [ChatStreamController::class, 'store'])
+                    ->middleware(['throttle:chat', EnsureChatTokenBudget::class]);
+
+                Route::post('/messages/{message:uuid}/actions/feedback', [ChatFeedbackController::class, 'store'])
+                    ->middleware('throttle:chat');
+            });
+        });
+
+    // Public newsletter subscription
+    Route::post('/newsletter/subscribe', [\App\Http\Controllers\V1\Newsletter\NewsletterController::class, 'subscribe'])
+        ->middleware('throttle:10,1');
+
+    // Public unsubscribe API (storefront SPA at /unsubscribe/{token})
+    Route::get('/unsubscribe/{token}', [\App\Http\Controllers\V1\Unsubscribe\ApiUnsubscribeController::class, 'show']);
+    Route::post('/unsubscribe/{token}/unsubscribe', [\App\Http\Controllers\V1\Unsubscribe\ApiUnsubscribeController::class, 'unsubscribe'])
+        ->middleware('throttle:10,1');
+    Route::post('/unsubscribe/{token}/resubscribe', [\App\Http\Controllers\V1\Unsubscribe\ApiUnsubscribeController::class, 'resubscribe'])
+        ->middleware('throttle:10,1');
 
     // Quote API routes
     Route::post('/quotes', [QuoteController::class, 'submitQuoteRequest'])->middleware('throttle:10,1');

@@ -94,7 +94,7 @@ return [
     |
     */
 
-    'storefront_url' => env('STOREFRONT_URL', 'https://www.htashop.com'),
+    'storefront_url' => env('STOREFRONT_URL', 'https://htashop.com'),
 
     /*
     |--------------------------------------------------------------------------

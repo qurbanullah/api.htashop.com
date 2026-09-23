@@ -34,6 +34,14 @@ class ApiAuthenticate extends Authenticate
                 $guards = ['api'];
             }
 
+        // Support httpOnly-cookie auth (storefront) in addition to Bearer tokens
+        // (admin/manage). If the access-token cookie is present and no
+        // Authorization header was sent, promote the cookie to a Bearer header
+        // so Passport validates it.
+        if (!$request->hasHeader('Authorization') && $request->hasCookie('hta_access_token')) {
+            $request->headers->set('Authorization', 'Bearer ' . $request->cookie('hta_access_token'));
+        }
+
         try {
             return parent::handle($request, $next, ...$guards);
         } catch (AuthenticationException $e) {

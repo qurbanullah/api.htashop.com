@@ -204,7 +204,7 @@
 
         <!-- Content -->
         <div class="content">
-            <p class="greeting">Hello {{ $user?->name ?? 'there' }},</p>
+            <p class="greeting">Hello {{ $recipientName ?? $user?->name ?? 'there' }},</p>
 
             @if ($post->featured_image_url)
                 <img src="{{ $post->featured_image_url }}" alt="{{ $post->title }}" class="featured-image">

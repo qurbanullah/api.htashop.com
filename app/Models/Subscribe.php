@@ -16,6 +16,8 @@ class Subscribe extends Model
     protected $fillable = [
         'uuid',
         'tenant_id',
+        'type',
+        'email',
         'subscribable_type',
         'subscribable_id',
         'product_id',

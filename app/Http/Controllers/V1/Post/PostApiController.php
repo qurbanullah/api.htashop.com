@@ -12,6 +12,7 @@ use App\Http\Requests\V1\Post\PostUpdateRequest;
 use App\Http\Resources\V1\Post\PostResource;
 use App\Services\Post\PostService;
 use App\Services\Storage\S3UploadService;
+use App\Http\Responses\V1\ApiResponse;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -76,6 +77,7 @@ class PostApiController extends Controller
 
         $filters = [
             'search' => $request->input('search'),
+            'type' => $request->input('type'),
             'start_date' => $request->input('start_date'),
             'end_date' => $request->input('end_date'),
             'tags' => $request->input('tags'),
@@ -91,18 +93,18 @@ class PostApiController extends Controller
         if ($limit !== null) {
             $data = $result->map(fn ($item) => $this->transform($item));
 
-            return response()->json(['data' => $data]);
+            return ApiResponse::success(['data' => $data->values()], 'Posts retrieved successfully');
         }
 
-        return response()->json([
-            'data' => $result->getCollection()->map(fn ($item) => $this->transform($item)),
+        return ApiResponse::success([
+            'data' => $result->getCollection()->map(fn ($item) => $this->transform($item))->values(),
             'meta' => [
                 'current_page' => $result->currentPage(),
                 'per_page' => $result->perPage(),
                 'total' => $result->total(),
                 'last_page' => $result->lastPage(),
             ],
-        ]);
+        ], 'Posts retrieved successfully');
     }
 
     /**
@@ -116,7 +118,7 @@ class PostApiController extends Controller
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        return response()->json(['data' => $this->transformDetail($post)]);
+        return ApiResponse::success($this->transformDetail($post), 'Post retrieved successfully');
     }
 
     /**
@@ -205,18 +207,18 @@ class PostApiController extends Controller
         if ($limit !== null) {
             $data = $result->map(fn ($item) => $this->transform($item));
 
-            return response()->json(['data' => $data]);
+            return ApiResponse::success(['data' => $data->values()], 'Content retrieved successfully');
         }
 
-        return response()->json([
-            'data' => $result->getCollection()->map(fn ($item) => $this->transform($item)),
+        return ApiResponse::success([
+            'data' => $result->getCollection()->map(fn ($item) => $this->transform($item))->values(),
             'meta' => [
                 'current_page' => $result->currentPage(),
                 'per_page' => $result->perPage(),
                 'total' => $result->total(),
                 'last_page' => $result->lastPage(),
             ],
-        ]);
+        ], 'Content retrieved successfully');
     }
 
     /**
@@ -298,13 +300,13 @@ class PostApiController extends Controller
     {
         $base = config('app.url') ?: url('/');
 
-        // Featured image: stored keys resolve through the public CDN; full URLs pass through.
-        $featuredImageUrl = null;
-        if ($n->featured_image && !str_starts_with($n->featured_image, 'http')) {
-            $featuredImageUrl = config('app.cdn_url', 'https://cdn.htashop.com') . '/' . ltrim($n->featured_image, '/');
-        } elseif ($n->featured_image && str_starts_with($n->featured_image, 'http')) {
-            $featuredImageUrl = $n->featured_image;
-        }
+        $featuredImages = $this->featuredImageUrls($n);
+        // Summary consumers (cards) should never pull the master file — prefer
+        // the largest rendered size below the original.
+        $featuredImageUrl = $featuredImages['medium']
+            ?? $featuredImages['small']
+            ?? $featuredImages['large']
+            ?? $featuredImages['original'];
 
         // Generate frontend URL based on type
         $frontendBase = config('app.frontend_url', 'https://htashop.com');
@@ -331,6 +333,7 @@ class PostApiController extends Controller
             'excerpt' => $n->excerpt,
             'featured_image' => $n->featured_image,
             'featured_image_url' => $featuredImageUrl,
+            'featured_image_urls' => $featuredImages,
             'published_at' => $n->sent_at ? $n->sent_at->toIso8601String() : ($n->created_at ? $n->created_at->toIso8601String() : null),
             'url' => $frontendUrl,
             'frontend_url' => $frontendUrl,
@@ -358,13 +361,12 @@ class PostApiController extends Controller
     {
         $base = config('app.url') ?: url('/');
 
-        // Featured image: stored keys resolve through the public CDN; full URLs pass through.
-        $featuredImageUrl = null;
-        if ($n->featured_image && !str_starts_with($n->featured_image, 'http')) {
-            $featuredImageUrl = config('app.cdn_url', 'https://cdn.htashop.com') . '/' . ltrim($n->featured_image, '/');
-        } elseif ($n->featured_image && str_starts_with($n->featured_image, 'http')) {
-            $featuredImageUrl = $n->featured_image;
-        }
+        $featuredImages = $this->featuredImageUrls($n);
+        // Detail header renders up to ~736px — serve the large (or original)
+        // rendering rather than always pulling the master on small sizes.
+        $featuredImageUrl = $featuredImages['large']
+            ?? $featuredImages['medium']
+            ?? $featuredImages['original'];
 
         // Generate frontend URL based on type
         $frontendBase = config('app.frontend_url', 'https://htashop.com');
@@ -391,6 +393,7 @@ class PostApiController extends Controller
             'content' => $n->content,
             'featured_image' => $n->featured_image,
             'featured_image_url' => $featuredImageUrl,
+            'featured_image_urls' => $featuredImages,
             'published_at' => $n->sent_at ? $n->sent_at->toIso8601String() : ($n->created_at ? $n->created_at->toIso8601String() : null),
             'url' => $frontendUrl,
             'frontend_url' => $frontendUrl,
@@ -409,5 +412,44 @@ class PostApiController extends Controller
             'date' => $n->created_at ? $n->created_at->toIso8601String() : null,
             'category' => $n->categories?->first()?->name,
         ];
+    }
+
+    /**
+     * Resolve the responsive featured-image URL ladder for a post.
+     * Keys: thumb / small / medium / large / original. Variants recorded in
+     * metadata.featured_variants (generated at upload time) are preferred;
+     * missing sizes fall back to null so clients only advertise real files.
+     *
+     * @return array<string, string|null>
+     */
+    protected function featuredImageUrls(Post $n): array
+    {
+        $cdn = config('app.cdn_url', 'https://cdn.htashop.com');
+        $original = $n->featured_image;
+
+        if (empty($original)) {
+            return [];
+        }
+
+        $originalUrl = str_starts_with($original, 'http')
+            ? $original
+            : $cdn . '/' . ltrim($original, '/');
+
+        $variants = data_get($n->metadata, 'featured_variants', []);
+        $variants = is_array($variants) ? $variants : [];
+
+        $urlFor = function (string $key): ?string {
+            $cdn = config('app.cdn_url', 'https://cdn.htashop.com');
+
+            return str_starts_with($key, 'http') ? $key : $cdn . '/' . ltrim($key, '/');
+        };
+
+        $map = ['original' => $originalUrl];
+        foreach (['thumb', 'small', 'medium', 'large'] as $size) {
+            $key = $variants[$size] ?? null;
+            $map[$size] = is_string($key) && $key !== '' ? $urlFor($key) : null;
+        }
+
+        return $map;
     }
 }

@@ -31,7 +31,7 @@ class FeedbackCommentMail extends Mailable
      */
     public function envelope(): Envelope
     {
-        $commenterName = $this->comment->user->name ?? 'Volvicon Support';
+        $commenterName = $this->comment->user->name ?? 'HTAShop Support';
         $commenterEmail = $this->comment->user->email ?? config('mail.from.address');
 
         return new Envelope(
@@ -52,7 +52,7 @@ class FeedbackCommentMail extends Mailable
             with: [
                 'feedback' => $this->feedback,
                 'comment' => $this->comment,
-                'commenterName' => $this->comment->user->name ?? 'Volvicon Support',
+                'commenterName' => $this->comment->user->name ?? 'HTAShop Support',
             ]
         );
     }

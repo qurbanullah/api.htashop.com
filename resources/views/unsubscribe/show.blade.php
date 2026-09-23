@@ -148,7 +148,7 @@
 
             <p class="message">
                 You are currently subscribed to <strong>{{ $subscription->type }}</strong> notifications
-                for <span class="email">{{ $user?->email ?? 'your account' }}</span>.
+                for <span class="email">{{ $subscription->email ?? $user?->email ?? 'your account' }}</span>.
             </p>
 
             <p class="message" style="margin-bottom: 28px;">

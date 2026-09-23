@@ -141,7 +141,7 @@
             </p>
 
             <p class="message">
-                Email: <span style="font-weight:600;color:#0f172a;">{{ $user?->email ?? '—' }}</span>
+                Email: <span style="font-weight:600;color:#0f172a;">{{ $subscription->email ?? $user?->email ?? '—' }}</span>
             </p>
 
             <div class="actions">

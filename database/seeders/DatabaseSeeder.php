@@ -62,6 +62,7 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,
             VariantSeeder::class,
             OrderSeeder::class,
+            KnowledgeEntrySeeder::class,
         ]);
 
         $this->command->info('✅ Database seeding completed successfully!');

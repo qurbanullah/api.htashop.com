@@ -1,6 +1,6 @@
 <?php
 
-use App\Jobs\User\SendContactMessageNotificationJob;
+use App\Jobs\Contacts\SendContactMessageNotificationJob;
 use App\Jobs\Tickets\SendTicketCreatedEmail;
 use App\Models\ContactMessage;
 use App\Models\Ticket;
