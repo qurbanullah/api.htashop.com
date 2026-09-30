@@ -1,131 +1,238 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# Build the API image and roll the Swarm service onto it.
+#
+# This runs ON THE SWARM MANAGER, normally arriving over stdin from
+# .github/workflows/deploy.yml:
+#
+#   ssh "$USER@$HOST" "cd '$APP_DIR' && bash -s" < deploy.sh
+#
+# The manager keeps the checkout this builds from; the script updates it first, so
+# what is built is what was pushed. The stack itself (networks, secrets, db, redis,
+# typesense, haproxy) is deployed separately — see deploy/ — and this only moves one
+# service.
+#
+# Migrations are NOT run here. The image's entrypoint runs them on boot, which
+# means each replica does it once at startup; see DEPLOYMENT.md for what that
+# implies during a rollout.
+#
+#   ./deploy.sh --no-build      roll the existing image (already built)
+#   ./deploy.sh --no-smoke      skip the post-rollout check
+#   ./deploy.sh --help
+#
+# Environment:
+#
+#   APP_DIR              checkout to build from (defaults to this script's directory)
+#   BRANCH               branch to deploy (default: main)
+#   STACK_NAME           (default: htashop)
+#   SERVICE_NAME         (default: api)
+#   SMOKE_URL            e.g. https://api.htashop.com/up
+#
+set -euo pipefail
 
-# Service-specific Docker Swarm Deployment Script
-# This script updates a single service in the Docker Swarm cluster.
+BRANCH="${BRANCH:-main}"
+STACK_NAME="${STACK_NAME:-htashop}"
+SERVICE_NAME="${SERVICE_NAME:-api}"
 
-set -e  # Exit on any error
-
-# Color definitions
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-PURPLE='\033[0;35m'
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
-
-# Configuration variables (adjust per service)
-STACK_NAME="volvicon"
-SERVICE_NAME="api"  # Change this for each service: api, frontend, manage, admin, help
-NODE_USER="volvicon"
-MANAGER_HOST="87.106.56.165"  # The swarm manager hostname
-NODE_HOST="${MANAGER_HOST}"  # Load image on the manager node
-IMAGES_DIR="../deploy/images"
-IMAGE_NAME="${STACK_NAME}-${SERVICE_NAME}:latest"
-TAR_FILE="${IMAGES_DIR}/${STACK_NAME}-${SERVICE_NAME}_latest.tar"
 SWARM_SERVICE_NAME="${STACK_NAME}_${SERVICE_NAME}"
+IMAGE_NAME="${STACK_NAME}-${SERVICE_NAME}:latest"
 
-# Ensure that the local git repository is up to date
-update_src() {
-    git pull origin main
+DO_BUILD=1
+DO_SMOKE=1
+
+step()  { printf '\n\033[1;34m==>\033[0m \033[1m%s\033[0m\n' "$1"; }
+info()  { printf '    %s\n' "$1"; }
+warn()  { printf '\033[1;33mwarning:\033[0m %s\n' "$1" >&2; }
+die()   { printf '\033[1;31merror:\033[0m %s\n' "$1" >&2; exit 1; }
+
+usage() {
+    cat <<'USAGE'
+Build the API image and roll the Swarm service onto it.
+
+  --no-build   skip the build and roll the existing image
+  --no-smoke   skip the post-rollout smoke test
+  -h, --help   show this message
+
+With no options this updates the checkout, builds, rolls the service and checks it.
+See DEPLOYMENT.md.
+USAGE
+    exit 0
 }
 
-# Function to print colored output
-print_status() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
+for argument in "$@"; do
+    case "$argument" in
+        --no-build) DO_BUILD=0 ;;
+        --no-smoke) DO_SMOKE=0 ;;
+        -h|--help)  usage ;;
+        *)          die "unknown option: $argument (try --help)" ;;
+    esac
+done
 
-print_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
+# Where this script lives. It normally arrives over stdin, in which case there is no
+# path to derive and the caller is expected to have changed into the checkout.
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
+    SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+else
+    SCRIPT_DIR="$PWD"
+fi
 
-print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
+APP_DIR="${APP_DIR:-$SCRIPT_DIR}"
 
-print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
+# ---------------------------------------------------------------------------
+# Preflight
+#
+# Everything checkable is checked before the service is touched: a failed rollout
+# costs a rollback and a window of reduced capacity.
+# ---------------------------------------------------------------------------
 
-# Function to build Docker image
-build_image() {
-    print_status "Building Docker image ${IMAGE_NAME}..."
+step "Checking the environment"
 
-    docker build -t ${IMAGE_NAME} .
-    print_success "Built ${IMAGE_NAME}"
-}
+cd "$APP_DIR" || die "cannot enter $APP_DIR"
+[ -f Dockerfile ] || die "$APP_DIR has no Dockerfile, so it is not the build context"
+[ -f artisan ]    || die "$APP_DIR does not look like the application (no artisan)"
 
-# Function to save image to tar file
-save_image() {
-    print_status "Saving image to tar file..."
+command -v git >/dev/null 2>&1 || die "git not found"
+command -v docker >/dev/null 2>&1 || die "docker not found"
 
-    mkdir -p ${IMAGES_DIR}
-    docker save ${IMAGE_NAME} -o ${TAR_FILE}
-    print_success "Saved ${IMAGE_NAME} to ${TAR_FILE}"
-}
+docker info >/dev/null 2>&1 || die "cannot talk to the Docker daemon"
 
-# Function to copy image to node
-copy_to_node() {
-    print_status "Copying image to ${NODE_HOST}..."
+SWARM_STATE="$(docker info --format '{{.Swarm.LocalNodeState}}' 2>/dev/null || echo unknown)"
+[ "$SWARM_STATE" = "active" ] \
+    || die "this node is not part of a Swarm ($SWARM_STATE), so there is no service to roll"
 
-    scp ${TAR_FILE} ${NODE_USER}@${NODE_HOST}:/tmp/
-    print_success "Copied image to ${NODE_HOST}"
-}
+# Checked before building: a missing service or a bad NAME would otherwise be
+# discovered after several minutes of building.
+docker service inspect "$SWARM_SERVICE_NAME" >/dev/null 2>&1 \
+    || die "no service named '$SWARM_SERVICE_NAME'.
+  The stack must be deployed first (see deploy/), or STACK_NAME/SERVICE_NAME are wrong."
 
-# Function to load image on node
-load_on_node() {
-    print_status "Loading image on ${NODE_HOST}..."
+EXPECTED_REPLICAS="$(docker service inspect "$SWARM_SERVICE_NAME" \
+    --format '{{.Spec.Mode.Replicated.Replicas}}' 2>/dev/null || echo '?')"
 
-    ssh ${NODE_USER}@${NODE_HOST} "
-        set -e
-        echo 'Loading ${IMAGE_NAME}...'
-        docker load -i /tmp/${STACK_NAME}-${SERVICE_NAME}_latest.tar
-        echo 'Verifying image...'
-        docker images | grep '${STACK_NAME}-${SERVICE_NAME}'
-        echo 'Image loaded successfully'
-    "
+git remote get-url origin >/dev/null 2>&1 \
+    || die "$APP_DIR has no 'origin' remote, so it is not the application's checkout"
 
-    if [ $? -eq 0 ]; then
-        print_success "Image loaded on ${NODE_HOST}"
+info "app:     $APP_DIR"
+info "service: $SWARM_SERVICE_NAME ($EXPECTED_REPLICAS replicas)"
+info "image:   $IMAGE_NAME"
+info "branch:  $BRANCH"
+
+# ---------------------------------------------------------------------------
+# Code
+#
+# Fast-forward only. The manager is a build host, not a place to keep local work;
+# if it somehow has commits, stop rather than discard something that exists nowhere
+# else.
+# ---------------------------------------------------------------------------
+
+step "Updating the checkout"
+
+git fetch --prune origin "$BRANCH"
+
+if [ "$(git rev-parse HEAD)" = "$(git rev-parse "origin/$BRANCH")" ]; then
+    info "already at $(git rev-parse --short HEAD)"
+else
+    git merge --ff-only "origin/$BRANCH" \
+        || die "origin/$BRANCH cannot be fast-forwarded. The checkout has commits that are not on the remote; reconcile them before deploying."
+    info "now at $(git log -1 --format='%h %s')"
+fi
+
+if [ -n "$(git status --porcelain)" ]; then
+    warn "the checkout has uncommitted changes; the image will not match what was pushed"
+fi
+
+# ---------------------------------------------------------------------------
+# Build
+#
+# Tagged with the commit as well as 'latest' so a rollback is a one-liner:
+#   docker service update --force --image $IMAGE_NAME:<sha> $SWARM_SERVICE_NAME
+# ---------------------------------------------------------------------------
+
+SHORT_SHA="$(git rev-parse --short HEAD)"
+BUILD_TAG="${STACK_NAME}-${SERVICE_NAME}:${SHORT_SHA}"
+
+if [ "$DO_BUILD" -eq 1 ]; then
+    step "Building $BUILD_TAG"
+
+    # No --memory cap: BuildKit ignores it, and on a shared host a fixed 8g ceiling
+    # hurts more than it protects.
+    docker build -t "$IMAGE_NAME" -t "$BUILD_TAG" .
+
+    info "built $BUILD_TAG"
+else
+    step "Skipping the build"
+    info "rolling $IMAGE_NAME, whatever it currently points at"
+fi
+
+# ---------------------------------------------------------------------------
+# Roll out
+#
+# `docker service update` blocks until the rollout converges, and the service's own
+# update_config (parallelism 1, delay 30s, monitor 60s, failure_action rollback)
+# governs how. A non-zero exit here means Swarm gave up and rolled back.
+# ---------------------------------------------------------------------------
+
+step "Rolling $SWARM_SERVICE_NAME"
+
+docker service update --force --image "$IMAGE_NAME" "$SWARM_SERVICE_NAME"
+
+docker service ps "$SWARM_SERVICE_NAME" \
+    --filter desired-state=running \
+    --format 'table {{.Name}}\t{{.Node}}\t{{.CurrentState}}' \
+    || warn "could not read the service's tasks"
+
+RUNNING="$(docker service ps "$SWARM_SERVICE_NAME" \
+    --filter desired-state=running --format '{{.CurrentState}}' 2>/dev/null \
+    | grep -c '^Running' || true)"
+
+info "$RUNNING of ${EXPECTED_REPLICAS} replicas running"
+
+if [ "$EXPECTED_REPLICAS" != "?" ] && [ "$RUNNING" -lt "$EXPECTED_REPLICAS" ]; then
+    die "only $RUNNING of $EXPECTED_REPLICAS replicas are running.
+  The rollout reported success but the service is short — check:
+    docker service ps $SWARM_SERVICE_NAME
+    docker service logs $SWARM_SERVICE_NAME --tail 100"
+fi
+
+# ---------------------------------------------------------------------------
+# Verify
+# ---------------------------------------------------------------------------
+
+if [ "$DO_SMOKE" -eq 1 ] && [ -n "${SMOKE_URL:-}" ]; then
+    step "Smoke testing $SMOKE_URL"
+
+    # Retried: the routing mesh and the load balancer in front of it take a moment
+    # to notice new tasks, and a single fast failure would be a false alarm.
+    SMOKE_OK=0
+    for attempt in 1 2 3 4 5; do
+        if curl -fsS --max-time 10 -o /dev/null "$SMOKE_URL"; then
+            SMOKE_OK=1
+            break
+        fi
+
+        info "attempt $attempt did not answer; retrying in 5s"
+        sleep 5
+    done
+
+    if [ "$SMOKE_OK" -eq 1 ]; then
+        info "answered"
     else
-        print_error "Failed to load image on ${NODE_HOST}"
-        exit 1
+        warn "$SMOKE_URL did not answer cleanly after 5 attempts"
+        warn "the service is running, so this is more likely the proxy than the API:"
+        warn "  docker service logs ${STACK_NAME}_haproxy --tail 50"
     fi
-}
+elif [ "$DO_SMOKE" -eq 1 ]; then
+    info "no SMOKE_URL set, so nothing was checked from outside"
+fi
 
-# Function to update service
-update_service() {
-    print_status "Updating service ${SWARM_SERVICE_NAME}..."
+# ---------------------------------------------------------------------------
+# Housekeeping
+#
+# Dangling images only (the previous build), which is what fills a disk on a host
+# rebuilt this often. In-use images are never touched, so a rollback target stays.
+# ---------------------------------------------------------------------------
 
-    ssh ${NODE_USER}@${MANAGER_HOST} "docker service update --force --image ${IMAGE_NAME} ${SWARM_SERVICE_NAME}"
+step "Pruning dangling images"
+docker image prune -f || warn "could not prune images"
 
-    if [ $? -eq 0 ]; then
-        print_success "Service ${SWARM_SERVICE_NAME} updated successfully"
-    else
-        print_error "Failed to update service ${SWARM_SERVICE_NAME}"
-        exit 1
-    fi
-}
-
-# Main execution
-main() {
-    echo -e "${CYAN}========================================${NC}"
-    echo -e "${CYAN}  Service Deployment Script${NC}"
-    echo -e "${CYAN}  Service: ${SERVICE_NAME}${NC}"
-    echo -e "${CYAN}  Image: ${IMAGE_NAME}${NC}"
-    echo -e "${CYAN}========================================${NC}"
-
-    update_src
-    build_image
-    save_image
-    copy_to_node
-    load_on_node
-    update_service
-
-    echo -e "${GREEN}========================================${NC}"
-    echo -e "${GREEN}  Service ${SERVICE_NAME} updated successfully!${NC}"
-    echo -e "${GREEN}========================================${NC}"
-}
-
-# Run main function
-main "$@"
+step "Deployed ${SWARM_SERVICE_NAME} at ${SHORT_SHA}"

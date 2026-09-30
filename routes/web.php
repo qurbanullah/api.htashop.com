@@ -1,9 +1,10 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\V1\Seo\SitemapController;
 use App\Http\Controllers\V1\Post\PostViewController;
+use App\Http\Controllers\V1\Seo\SitemapController;
 use App\Http\Controllers\V1\Unsubscribe\UnsubscribeController;
+use App\Http\Controllers\V1\WellKnown\WellKnownController;
+use Illuminate\Support\Facades\Route;
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -36,26 +37,34 @@ Route::get('/sitemap-pages.xml', [SitemapController::class, 'pages']);
 Route::get('/{indexnowKey}.txt', [SitemapController::class, 'indexnowKey'])
     ->where('indexnowKey', '[A-Za-z0-9]{8,64}');
 
+// App Links (Android) / Universal Links (iOS) association files. Proxied by the
+// storefront nginx from the site root; see config/mobile_links.php.
+Route::get('/.well-known/assetlinks.json', [WellKnownController::class, 'assetLinks']);
+Route::get('/.well-known/apple-app-site-association', [WellKnownController::class, 'appleAppSiteAssociation']);
+
 // Password reset routes for different frontends
 // Default password reset (for backward compatibility and main frontend)
 Route::get('/password/reset/{token}', function ($token) {
     $email = request('email');
     $frontendUrl = env('FRONTEND_URL', 'https://volvicon.com');
-    return redirect($frontendUrl . '/reset-password?token=' . $token . '&email=' . urlencode($email));
+
+    return redirect($frontendUrl.'/reset-password?token='.$token.'&email='.urlencode($email));
 })->name('password.reset');
 
 // Manage submission system password reset
 Route::get('/manage/password/reset/{token}', function ($token) {
     $email = request('email');
     $frontendUrl = env('MANAGE_FRONTEND_URL', 'https://manage.volvicon.com');
-    return redirect($frontendUrl . '/reset-password?token=' . $token . '&email=' . urlencode($email));
+
+    return redirect($frontendUrl.'/reset-password?token='.$token.'&email='.urlencode($email));
 })->name('password.reset.manage');
 
 // Admin panel password reset
 Route::get('/admin/password/reset/{token}', function ($token) {
     $email = request('email');
     $frontendUrl = env('ADMIN_FRONTEND_URL', 'https://admin.volvicon.com');
-    return redirect($frontendUrl . '/reset-password?token=' . $token . '&email=' . urlencode($email));
+
+    return redirect($frontendUrl.'/reset-password?token='.$token.'&email='.urlencode($email));
 })->name('password.reset.admin');
 
 // Fallback health endpoint (guaranteed)

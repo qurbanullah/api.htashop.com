@@ -14,6 +14,9 @@ use App\Actions\Users\CreateUserAction;
 use App\Actions\Users\DeleteUserAction;
 use App\Actions\Users\RestoreUserAction;
 use App\Actions\Users\UpdateUserAction;
+use App\Gateways\PaymentGatewayManager;
+use App\Gateways\Safepay\SafepayClient;
+use App\Gateways\SafepayGateway;
 use App\Interfaces\Ai\ChatProviderInterface;
 use App\Interfaces\Ai\EmbeddingProviderInterface;
 use App\Interfaces\Ai\KnowledgeRetrieverInterface;
@@ -61,19 +64,27 @@ use App\Services\Ai\Tools\SearchProductsTool;
 use App\Services\Assignment\AssignmentService;
 use App\Services\Chat\ChatService;
 use App\Services\Chat\ConversationService;
+use App\Services\Checkout\CartPricing;
+use App\Services\Checkout\CheckoutPricing;
 use App\Services\Code\CodeService;
+use App\Services\Coupon\CouponAdminService;
+use App\Services\Coupon\CouponService;
 use App\Services\Definition\DefinitionService;
 use App\Services\Knowledge\KnowledgeChunker;
 use App\Services\Knowledge\KnowledgeEntryService;
 use App\Services\Knowledge\KnowledgeSearchService;
 use App\Services\Label\LabelService;
 use App\Services\Measurement\MeasurementService;
+use App\Services\Payment\PaymentReconciler;
+use App\Services\Payment\PaymentService;
 use App\Services\Price\PriceService;
 use App\Services\Product\ProductService;
 use App\Services\Profile\ProfileService;
 use App\Services\Punchout\PunchoutProtocolService;
 use App\Services\Punchout\PunchoutSessionService;
 use App\Services\Punchout\PunchoutTransactionService;
+use App\Services\Push\Providers\FcmProvider;
+use App\Services\Push\PushService;
 use App\Services\Revision\RevisionService;
 use App\Services\Search\ProductSearchService;
 use App\Services\Search\SearchAnalyticsService;
@@ -144,6 +155,67 @@ class AppServiceProvider extends ServiceProvider
 
         // AI support assistant
         $this->registerSupportAssistant();
+        $this->registerPush();
+        $this->registerPayments();
+        $this->registerCheckout();
+    }
+
+    /**
+     * Register the pricing rules that decide what a basket costs.
+     *
+     * These are stateless, so a singleton is enough; they are named here rather
+     * than left to autowiring so the checkout money path is easy to find.
+     */
+    protected function registerCheckout(): void
+    {
+        $this->app->singleton(CouponService::class);
+        $this->app->singleton(CouponAdminService::class);
+        $this->app->singleton(CartPricing::class);
+        $this->app->singleton(CheckoutPricing::class);
+    }
+
+    /**
+     * Register the payment gateways.
+     *
+     * Each driver is bound with its own config slice, because a gateway's
+     * credentials cannot be autowired. Adding a provider means adding a class,
+     * an entry in config/payment.php, and a binding here.
+     */
+    protected function registerPayments(): void
+    {
+        $this->app->singleton(PaymentReconciler::class);
+        $this->app->singleton(PaymentService::class);
+        $this->app->singleton(PaymentGatewayManager::class);
+
+        $this->app->singleton(
+            SafepayClient::class,
+            fn () => new SafepayClient((array) config('payment.gateways.safepay', []))
+        );
+
+        $this->app->singleton(
+            SafepayGateway::class,
+            fn ($app) => new SafepayGateway(
+                $app->make(SafepayClient::class),
+                $app->make(PaymentReconciler::class),
+                (array) config('payment.gateways.safepay', []),
+            )
+        );
+    }
+
+    /**
+     * Register the push-notification services.
+     *
+     * The transport holds its own credentials (a service-account file for FCM, an
+     * APNs key later), so it is built from config here rather than autowired.
+     */
+    protected function registerPush(): void
+    {
+        $this->app->singleton(
+            FcmProvider::class,
+            fn () => new FcmProvider((array) config('push.fcm'))
+        );
+
+        $this->app->singleton(PushService::class);
     }
 
     /**
@@ -234,6 +306,13 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perMinute(max(1, (int) config('ai.limits.per_minute', 10)))->by($key.':minute'),
                 Limit::perDay(max(1, (int) config('ai.limits.per_day', 100)))->by($key.':day'),
             ];
+        });
+
+        // Gateway callbacks are unauthenticated, so bound them per IP. A
+        // retrying gateway is expected; a flood is not.
+        RateLimiter::for('payment-webhook', function (Request $request) {
+            return Limit::perMinute(max(1, (int) config('payment.webhooks.per_minute', 120)))
+                ->by($request->ip());
         });
     }
 }

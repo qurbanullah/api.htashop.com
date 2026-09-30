@@ -24,3 +24,10 @@ Schedule::command('sitemap:generate')
 Schedule::command('knowledge:ingest')
     ->dailyAt('03:15')
     ->withoutOverlapping();
+
+// Drop refresh tokens that expired past their retention window. Rows past their
+// absolute expiry can no longer be exchanged, and pruning keeps the table (and
+// the reuse-detection lookups) small.
+Schedule::command('auth:prune-refresh-tokens')
+    ->dailyAt('03:45')
+    ->withoutOverlapping();

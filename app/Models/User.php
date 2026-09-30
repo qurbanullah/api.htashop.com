@@ -3,37 +3,37 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Traits\Profile\HasProfile;
 use App\Actions\Subscription\SubscribeUserAction;
 use App\Notifications\ResetPasswordNotification;
-use App\Models\Membership;
-use App\Models\Organization;
+use App\Traits\Profile\HasProfile;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Laravel\Passport\HasApiTokens;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\DB;
-use Spatie\Permission\Traits\HasRoles;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements HasMedia
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, HasRoles, HasProfile, InteractsWithMedia;
+    /** @use HasFactory<UserFactory> */
+    use HasApiTokens, HasFactory, HasProfile, HasRoles, InteractsWithMedia, Notifiable, SoftDeletes;
 
     /** Account status constants */
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_SUSPENDED = 'suspended';
+
     public const STATUS_BANNED = 'banned';
+
     public const STATUS_PENDING = 'pending';
 
     protected $guard_name = 'api';
@@ -42,7 +42,7 @@ class User extends Authenticatable implements HasMedia
     {
         static::creating(function (User $user) {
             if (empty($user->uuid)) {
-                $user->uuid = (string) \Illuminate\Support\Str::uuid();
+                $user->uuid = (string) Str::uuid();
             }
         });
     }
@@ -100,14 +100,40 @@ class User extends Authenticatable implements HasMedia
 
     // ── Status helpers ──
 
-    public function isActive(): bool { return $this->status === self::STATUS_ACTIVE; }
-    public function isSuspended(): bool { return $this->status === self::STATUS_SUSPENDED; }
-    public function isBanned(): bool { return $this->status === self::STATUS_BANNED; }
-    public function isPending(): bool { return $this->status === self::STATUS_PENDING; }
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE;
+    }
 
-    public function scopeActive($query) { return $query->where('status', self::STATUS_ACTIVE); }
-    public function scopeSuspended($query) { return $query->where('status', self::STATUS_SUSPENDED); }
-    public function scopeBanned($query) { return $query->where('status', self::STATUS_BANNED); }
+    public function isSuspended(): bool
+    {
+        return $this->status === self::STATUS_SUSPENDED;
+    }
+
+    public function isBanned(): bool
+    {
+        return $this->status === self::STATUS_BANNED;
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === self::STATUS_PENDING;
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', self::STATUS_ACTIVE);
+    }
+
+    public function scopeSuspended($query)
+    {
+        return $query->where('status', self::STATUS_SUSPENDED);
+    }
+
+    public function scopeBanned($query)
+    {
+        return $query->where('status', self::STATUS_BANNED);
+    }
 
     /**
      * Register media conversions for avatar images
@@ -145,17 +171,18 @@ class User extends Authenticatable implements HasMedia
     /**
      * Get avatar URL for specified type
      *
-     * @param string $type Avatar type: 'original', 'thumb', 'small', 'medium', 'large'
+     * @param  string  $type  Avatar type: 'original', 'thumb', 'small', 'medium', 'large'
      * @return string|null S3 path or null if not available
      */
     public function getAvatarUrl(string $type = 'medium'): ?string
     {
         // Ensure avatars are loaded
-        if (!$this->relationLoaded('avatars')) {
+        if (! $this->relationLoaded('avatars')) {
             $this->load('avatars');
         }
 
         $avatar = $this->avatars->where('type', $type)->first();
+
         return $avatar?->path;
     }
 
@@ -168,7 +195,7 @@ class User extends Authenticatable implements HasMedia
     public function getAvatarUrls(): array
     {
         // Ensure avatars are loaded
-        if (!$this->relationLoaded('avatars')) {
+        if (! $this->relationLoaded('avatars')) {
             $this->load('avatars');
         }
 
@@ -186,6 +213,7 @@ class User extends Authenticatable implements HasMedia
 
         return $urls;
     }
+
     /**
      * Get manuscripts where user is the submitting author
      */
@@ -197,6 +225,14 @@ class User extends Authenticatable implements HasMedia
     public function memberships(): HasMany
     {
         return $this->hasMany(Membership::class);
+    }
+
+    /**
+     * The push destinations this user's devices registered.
+     */
+    public function deviceTokens(): HasMany
+    {
+        return $this->hasMany(DeviceToken::class);
     }
 
     public function addresses(): MorphMany
@@ -300,7 +336,7 @@ class User extends Authenticatable implements HasMedia
             'managing-editor',
             'guest-editor',
             'reviewer',
-            'author'
+            'author',
         ];
 
         foreach ($academicRoleOrder as $role) {
@@ -368,10 +404,10 @@ class User extends Authenticatable implements HasMedia
      */
     public function sendPasswordResetNotification($token)
     {
-        \Illuminate\Support\Facades\Log::info('Custom password reset notification triggered', [
+        Log::info('Custom password reset notification triggered', [
             'user_id' => $this->id,
             'email' => $this->email,
-            'token' => substr($token, 0, 10) . '...',
+            'token' => substr($token, 0, 10).'...',
             'token_length' => strlen($token),
             'token_starts_with_hash' => str_starts_with($token, '$2y$'),
             'full_token' => $token, // Log full token temporarily for debugging
@@ -379,7 +415,7 @@ class User extends Authenticatable implements HasMedia
 
         $this->notify(new ResetPasswordNotification($token));
 
-        \Illuminate\Support\Facades\Log::info('Notification queued', [
+        Log::info('Notification queued', [
             'user_id' => $this->id,
             'email' => $this->email,
         ]);
@@ -390,11 +426,12 @@ class User extends Authenticatable implements HasMedia
      */
     public function generateEmailVerificationToken(): string
     {
-        $token = \Illuminate\Support\Str::random(64);
+        $token = Str::random(64);
         $this->update([
             'email_verification_token' => $token,
             'email_verification_sent_at' => now(),
         ]);
+
         return $token;
     }
 
@@ -403,11 +440,11 @@ class User extends Authenticatable implements HasMedia
      */
     public function verifyEmailWithToken(string $token): bool
     {
-        \Illuminate\Support\Facades\Log::info('Attempting email verification', [
+        Log::info('Attempting email verification', [
             'user_id' => $this->id,
             'email' => $this->email,
-            'token_provided' => substr($token, 0, 20) . '...',
-            'token_stored' => $this->email_verification_token ? substr($this->email_verification_token, 0, 20) . '...' : 'NULL',
+            'token_provided' => substr($token, 0, 20).'...',
+            'token_stored' => $this->email_verification_token ? substr($this->email_verification_token, 0, 20).'...' : 'NULL',
             'tokens_match' => $this->email_verification_token === $token,
         ]);
 
@@ -423,7 +460,7 @@ class User extends Authenticatable implements HasMedia
                 // Refresh to verify the update
                 $this->refresh();
 
-                \Illuminate\Support\Facades\Log::info('Email verification database update', [
+                Log::info('Email verification database update', [
                     'user_id' => $this->id,
                     'email_verified_at' => $this->email_verified_at,
                     'token_cleared' => $this->email_verification_token === null,
@@ -431,15 +468,16 @@ class User extends Authenticatable implements HasMedia
 
                 return true;
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Email verification update failed', [
+                Log::error('Email verification update failed', [
                     'user_id' => $this->id,
                     'error' => $e->getMessage(),
                 ]);
+
                 return false;
             }
         }
 
-        \Illuminate\Support\Facades\Log::warning('Email verification token mismatch', [
+        Log::warning('Email verification token mismatch', [
             'user_id' => $this->id,
             'email' => $this->email,
         ]);

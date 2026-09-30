@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\V1\Account;
 
+use App\Enums\RefreshTokenRevokedReasonEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\V1\ApiResponse;
+use App\Models\User;
+use App\Services\Auth\RefreshTokenService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -16,7 +19,7 @@ class AccountController extends Controller
 {
     public function profile(Request $request): JsonResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
         $user->loadMissing('avatars');
 
@@ -45,7 +48,7 @@ class AccountController extends Controller
             'last_name' => ['nullable', 'string', 'max:255'],
         ]);
 
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         $user->update([
@@ -64,14 +67,14 @@ class AccountController extends Controller
         ], 'Profile updated successfully');
     }
 
-    public function changePassword(Request $request): JsonResponse
+    public function changePassword(Request $request, RefreshTokenService $refreshTokenService): JsonResponse
     {
         $data = $request->validate([
             'current_password' => ['required', 'string'],
             'new_password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         if (! Hash::check($data['current_password'], $user->password)) {
@@ -82,6 +85,16 @@ class AccountController extends Controller
 
         $user->update(['password' => Hash::make($data['new_password'])]);
 
+        // Changing a password is often a reaction to suspecting someone else has
+        // it, so every *other* session is cut off. This device keeps its session:
+        // the user just proved the old password on it.
+        $token = $user->token();
+        $refreshTokenService->revokeOtherSessionsForUser(
+            $user,
+            isset($token->id) ? (string) $token->id : null,
+            RefreshTokenRevokedReasonEnum::PASSWORD_CHANGED
+        );
+
         return ApiResponse::success(null, 'Password changed successfully');
     }
 
@@ -89,13 +102,13 @@ class AccountController extends Controller
      * Soft-delete the authenticated account after confirming the password.
      * All active tokens are revoked so the user is signed out everywhere.
      */
-    public function deactivateAccount(Request $request): JsonResponse
+    public function deactivateAccount(Request $request, RefreshTokenService $refreshTokenService): JsonResponse
     {
         $data = $request->validate([
             'password' => ['required', 'string'],
         ]);
 
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         if (! Hash::check($data['password'], $user->password)) {
@@ -104,6 +117,9 @@ class AccountController extends Controller
             ]);
         }
 
+        // The row is soft-deleted, so nothing cascades: both the Passport tokens
+        // and the refresh tokens have to be retired explicitly.
+        $refreshTokenService->revokeAllForUser($user, RefreshTokenRevokedReasonEnum::ACCOUNT_DEACTIVATED);
         $user->tokens()->delete();
         $user->delete();
 

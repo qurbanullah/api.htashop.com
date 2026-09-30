@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Gateways\CodGateway;
 use App\Models\Order;
+use App\Services\Coupon\CouponService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\ValidationException;
 
@@ -13,8 +14,8 @@ class OrderService
 {
     public function __construct(
         protected CodGateway $codGateway,
-    ) {
-    }
+        protected CouponService $coupons,
+    ) {}
 
     public function read(array $filters = []): LengthAwarePaginator
     {
@@ -108,6 +109,13 @@ class OrderService
             if ($payment && $payment->status !== PaymentStatus::PAID) {
                 $this->codGateway->capture($payment);
             }
+        }
+
+        // A cancelled or refunded order never consumed the coupon, so hand the
+        // use back. Without this a limited code would leak a use per
+        // cancellation and could silently sell out.
+        if (in_array($status, [OrderStatus::CANCELLED, OrderStatus::REFUNDED], true)) {
+            $this->coupons->releaseFor($order);
         }
 
         return $order->fresh(['items', 'payments.transactions']);

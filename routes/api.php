@@ -1,97 +1,126 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\V1\Account\AccountController;
+use App\Http\Controllers\V1\Address\AddressController;
+use App\Http\Controllers\V1\Asset\PublicAssetController;
 use App\Http\Controllers\V1\Assignment\AssignmentController;
-use App\Http\Controllers\V1\Category\CategoryController;
-use App\Http\Controllers\V1\User\UserController;
-use App\Http\Controllers\V1\Comment\CommentController;
-use App\Http\Controllers\V1\Profile\ProfileController;
-use App\Http\Controllers\V1\Price\PriceController;
-use App\Http\Controllers\V1\Quote\QuoteController;
-use App\Http\Controllers\V1\Code\CodeController;
-use App\Http\Controllers\V1\Definition\DefinitionController;
-use App\Http\Controllers\V1\Label\LabelController;
-use App\Http\Controllers\V1\Measurement\MeasurementController;
-use App\Http\Controllers\V1\Unit\UnitController;
-use App\Http\Controllers\V1\Ticket\TicketController;
-use App\Http\Controllers\V1\Package\PackageController;
-use App\Http\Controllers\V1\Product\ProductController;
-use App\Http\Controllers\V1\Product\ProductRevisionController;
-use App\Http\Controllers\V1\Feedback\FeedbackController;
-use App\Http\Controllers\V1\Feedback\FeedbackAdminController;
-use App\Http\Controllers\V1\Contact\ContactMessageController;
-use App\Http\Controllers\V1\Contact\ContactMessageAdminController;
-use App\Http\Controllers\V1\CrashReport\CrashReportController;
 use App\Http\Controllers\V1\Audit\AuditController;
+use App\Http\Controllers\V1\Auth\AuthController;
+use App\Http\Controllers\V1\AvailabilityController;
+use App\Http\Controllers\V1\Banner\BannerController;
+use App\Http\Controllers\V1\Brand\BrandController;
+use App\Http\Controllers\V1\Cart\CartController;
+use App\Http\Controllers\V1\Catalog\CatalogController;
+use App\Http\Controllers\V1\Category\CategoryController;
+use App\Http\Controllers\V1\Changelog\ChangelogController;
+use App\Http\Controllers\V1\Chat\ChatAdminController;
+use App\Http\Controllers\V1\Chat\ChatController;
+use App\Http\Controllers\V1\Chat\ChatFeedbackController;
+use App\Http\Controllers\V1\Chat\ChatStreamController;
+use App\Http\Controllers\V1\Checkout\CheckoutController;
+use App\Http\Controllers\V1\City\CityController;
+use App\Http\Controllers\V1\Code\CodeController;
+use App\Http\Controllers\V1\Comment\CommentController;
+use App\Http\Controllers\V1\Contact\ContactMessageAdminController;
+use App\Http\Controllers\V1\Contact\ContactMessageController;
+use App\Http\Controllers\V1\Country\CountryController;
+use App\Http\Controllers\V1\Coupon\CouponAdminController;
+use App\Http\Controllers\V1\Coupon\CouponMerchantController;
+use App\Http\Controllers\V1\Currency\CurrencyController;
 use App\Http\Controllers\V1\Dam\DamCollectionController;
 use App\Http\Controllers\V1\Dam\DamController;
-use App\Http\Controllers\V1\Support\PublicSupportTicketController;
-use App\Http\Controllers\V1\Chat\ChatController;
-use App\Http\Controllers\V1\Chat\ChatStreamController;
-use App\Http\Controllers\V1\Chat\ChatFeedbackController;
-use App\Http\Controllers\V1\Chat\ChatAdminController;
-use App\Http\Controllers\V1\Knowledge\KnowledgeEntryAdminController;
-use App\Http\Middleware\EnsureChatEnabled;
-use App\Http\Middleware\EnsureChatTokenBudget;
-use App\Http\Middleware\EnsureChatVisitor;
-use App\Http\Controllers\V1\Forum\PublicForumController;
-use App\Http\Controllers\V1\Forum\PublicForumCommentController;
-use App\Http\Controllers\V1\Forum\ForumPostController;
+use App\Http\Controllers\V1\Definition\DefinitionController;
+use App\Http\Controllers\V1\Device\DeviceTokenController;
+use App\Http\Controllers\V1\Email\EmailLogController;
+use App\Http\Controllers\V1\Eula\ConsentController;
+use App\Http\Controllers\V1\Eula\EulaActionController;
+use App\Http\Controllers\V1\Eula\EulaController;
+use App\Http\Controllers\V1\Feature\FeatureController;
+use App\Http\Controllers\V1\Feedback\FeedbackAdminController;
+use App\Http\Controllers\V1\Feedback\FeedbackController;
 use App\Http\Controllers\V1\Forum\AdminForumController;
+use App\Http\Controllers\V1\Forum\ForumPostController;
+use App\Http\Controllers\V1\Forum\PublicForumCommentController;
+use App\Http\Controllers\V1\Forum\PublicForumController;
+use App\Http\Controllers\V1\Gdpr\GdprConsentController;
+use App\Http\Controllers\V1\Highlight\HighlightController;
+use App\Http\Controllers\V1\Highlight\ProductHighlightController;
+use App\Http\Controllers\V1\Inventory\InventoryController;
+use App\Http\Controllers\V1\Knowledge\KnowledgeEntryAdminController;
+use App\Http\Controllers\V1\Label\LabelController;
+use App\Http\Controllers\V1\Manufacturer\ManufacturerController;
+use App\Http\Controllers\V1\Measurement\MeasurementController;
+use App\Http\Controllers\V1\Message\MessageController;
+use App\Http\Controllers\V1\Newsletter\NewsletterAdminController;
+use App\Http\Controllers\V1\Newsletter\NewsletterController;
+use App\Http\Controllers\V1\Order\OrderController;
+use App\Http\Controllers\V1\OrderDocument\OrderDocumentController;
+use App\Http\Controllers\V1\Package\PackageController;
+use App\Http\Controllers\V1\Payment\PaymentController;
+use App\Http\Controllers\V1\Post\AdminPostController;
+use App\Http\Controllers\V1\Post\PostApiController;
+use App\Http\Controllers\V1\Price\PriceController;
+use App\Http\Controllers\V1\Product\ProductController;
+use App\Http\Controllers\V1\Product\ProductRevisionController;
+use App\Http\Controllers\V1\ProductReview\ProductReviewController;
+use App\Http\Controllers\V1\Profile\ProfileController;
 use App\Http\Controllers\V1\Punchout\AdminPunchoutSessionController;
 use App\Http\Controllers\V1\Punchout\PunchoutController;
+use App\Http\Controllers\V1\Quote\QuoteController;
+use App\Http\Controllers\V1\Search\SearchController;
+use App\Http\Controllers\V1\SellerDashboard\SellerDashboardController;
+use App\Http\Controllers\V1\Support\PublicSupportTicketController;
+use App\Http\Controllers\V1\Tag\TagController;
+use App\Http\Controllers\V1\Ticket\TicketController;
+use App\Http\Controllers\V1\Tutorial\AdminTutorialController;
+use App\Http\Controllers\V1\Tutorial\PublicTutorialController;
+use App\Http\Controllers\V1\Unit\UnitController;
+use App\Http\Controllers\V1\Unsubscribe\ApiUnsubscribeController;
+use App\Http\Controllers\V1\User\UserController;
 use App\Http\Controllers\V1\Value\ValueController;
 use App\Http\Controllers\V1\Variant\VariantController;
 use App\Http\Controllers\V1\Variant\VariantRevisionController;
-use App\Http\Controllers\V1\Eula\EulaController;
-use App\Http\Controllers\V1\Eula\EulaActionController;
-use App\Http\Controllers\V1\Eula\ConsentController;
-use App\Http\Controllers\V1\AvailabilityController;
-use App\Http\Controllers\V1\Currency\CurrencyController;
 use App\Http\Controllers\V1\Warehouse\WarehouseController;
-use App\Http\Controllers\V1\Inventory\InventoryController;
-use App\Http\Controllers\V1\SellerDashboard\SellerDashboardController;
-use App\Http\Controllers\V1\Catalog\CatalogController;
-use App\Http\Controllers\V1\Cart\CartController;
-use App\Http\Controllers\V1\ProductReview\ProductReviewController;
-use App\Http\Controllers\V1\Highlight\HighlightController;
-use App\Http\Controllers\V1\Highlight\ProductHighlightController;
-use App\Http\Controllers\V1\Address\AddressController;
-use App\Http\Controllers\V1\Account\AccountController;
-use App\Http\Controllers\V1\Country\CountryController;
-use App\Http\Controllers\V1\City\CityController;
-use App\Http\Controllers\V1\Order\OrderController;
-use App\Http\Controllers\V1\OrderDocument\OrderDocumentController;
-use App\Http\Controllers\V1\Manufacturer\ManufacturerController;
-use App\Http\Controllers\V1\Brand\BrandController;
-use App\Http\Controllers\V1\Banner\BannerController;
-use Illuminate\Http\Request;
+use App\Http\Middleware\EnsureChatEnabled;
+use App\Http\Middleware\EnsureChatTokenBudget;
+use App\Http\Middleware\EnsureChatVisitor;
 use Illuminate\Fasades\DB;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 // API Version 1 Routes
 Route::prefix('v1')->group(function () {
 
     // Public authentication routes
-    Route::post('/register', [\App\Http\Controllers\V1\Auth\AuthController::class, 'register']);
-    Route::post('/login', [\App\Http\Controllers\V1\Auth\AuthController::class, 'login']);
-    Route::post('/refresh', [\App\Http\Controllers\V1\Auth\AuthController::class, 'refresh']);
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/refresh', [AuthController::class, 'refresh'])
+        // Unauthenticated by necessity (the refresh token is the credential), so
+        // bound it per IP. The limit is generous: a shared NAT is one IP, and a
+        // client refreshes roughly hourly.
+        ->middleware('throttle:60,1');
 
     // Protected: Get authenticated user
-    Route::middleware('auth.api')->get('/user', [\App\Http\Controllers\V1\Auth\AuthController::class, 'user']);
+    Route::middleware('auth.api')->get('/user', [AuthController::class, 'user']);
+
+    // Protected: revoke the caller's tokens and clear the storefront's
+    // httpOnly access-token cookie. Without this a "signed out" browser kept a
+    // live session for the token's remaining lifetime.
+    Route::middleware('auth.api')->post('/logout', [AuthController::class, 'logout']);
 
     // User avatar routes (protected)
-    Route::middleware('auth.api')->post('/user/avatar', [\App\Http\Controllers\V1\User\UserController::class, 'uploadAvatar']);
-    Route::middleware('auth.api')->delete('/user/avatar', [\App\Http\Controllers\V1\User\UserController::class, 'deleteAvatar']);
+    Route::middleware('auth.api')->post('/user/avatar', [UserController::class, 'uploadAvatar']);
+    Route::middleware('auth.api')->delete('/user/avatar', [UserController::class, 'deleteAvatar']);
 
     // Email verification routes
-    Route::post('/verify-email', [\App\Http\Controllers\V1\Auth\AuthController::class, 'verifyEmail']);
-    Route::post('/resend-verification-email', [\App\Http\Controllers\V1\Auth\AuthController::class, 'resendVerificationEmail']);
+    Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
+    Route::post('/resend-verification-email', [AuthController::class, 'resendVerificationEmail']);
 
     // Password reset routes
-    Route::post('/check-account', [\App\Http\Controllers\V1\Auth\AuthController::class, 'checkAccount']);
-    Route::post('/forgot-password', [\App\Http\Controllers\V1\Auth\AuthController::class, 'sendResetLink']);
-    Route::post('/reset-password', [\App\Http\Controllers\V1\Auth\AuthController::class, 'resetPassword']);
+    Route::post('/check-account', [AuthController::class, 'checkAccount']);
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLink']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
     // Public punchout entry points
     Route::post('/punchout/{tenantIdentifier}/setup', [PunchoutController::class, 'setup'])->middleware('throttle:10,1');
@@ -104,8 +133,8 @@ Route::prefix('v1')->group(function () {
     // Software Update Checker (Public endpoint for desktop app)
 
     // Public changelog endpoints (for frontend changelog pages)
-    Route::get('/changelogs', [\App\Http\Controllers\V1\Changelog\ChangelogController::class, 'index']);
-    Route::get('/changelogs/{id}', [\App\Http\Controllers\V1\Changelog\ChangelogController::class, 'show'])->where('id', '[0-9]+');
+    Route::get('/changelogs', [ChangelogController::class, 'index']);
+    Route::get('/changelogs/{id}', [ChangelogController::class, 'show'])->where('id', '[0-9]+');
 
     // Public reference data (countries / cities for address forms)
     Route::get('/countries', [CountryController::class, 'index']);
@@ -152,6 +181,17 @@ Route::prefix('v1')->group(function () {
         Route::patch('/contact-messages/{id}/reply', [ContactMessageAdminController::class, 'reply'])->whereNumber('id');
         Route::delete('/contact-messages/{id}', [ContactMessageAdminController::class, 'destroy'])->whereNumber('id');
 
+        // Admin - discount codes. `statistics` must be registered before
+        // `{coupon}` so it is not captured by the wildcard.
+        Route::get('/coupons', [CouponAdminController::class, 'index']);
+        Route::get('/coupons/statistics', [CouponAdminController::class, 'statistics']);
+        Route::get('/coupons/scopes', [CouponAdminController::class, 'scopes']);
+        Route::post('/coupons', [CouponAdminController::class, 'store']);
+        Route::get('/coupons/{coupon}', [CouponAdminController::class, 'show']);
+        Route::patch('/coupons/{coupon}', [CouponAdminController::class, 'update']);
+        Route::delete('/coupons/{coupon}', [CouponAdminController::class, 'destroy']);
+        Route::get('/coupons/{coupon}/redemptions', [CouponAdminController::class, 'redemptions']);
+
         // Admin - AI support assistant: knowledge base
         // `statistics` must be registered before `{uuid}` so it is not captured.
         Route::get('/knowledge-entries', [KnowledgeEntryAdminController::class, 'index']);
@@ -169,51 +209,51 @@ Route::prefix('v1')->group(function () {
         Route::get('/chats/{uuid}', [ChatAdminController::class, 'show']);
 
         // Admin newsletter audience stats
-        Route::get('/newsletter/subscribers', [\App\Http\Controllers\V1\Newsletter\NewsletterAdminController::class, 'subscribers']);
+        Route::get('/newsletter/subscribers', [NewsletterAdminController::class, 'subscribers']);
 
         // Admin Audit routes
         Route::get('/audits', [AuditController::class, 'adminIndex']);
         Route::get('/audits/stats', [AuditController::class, 'adminStats']);
         Route::get('/audits/export', [AuditController::class, 'exportCsv']);
-        Route::get('/audits/{id}', [\App\Http\Controllers\V1\Audit\AuditController::class, 'show']);
+        Route::get('/audits/{id}', [AuditController::class, 'show']);
 
         // Admin Punchout session audit routes
         Route::get('/punchout/sessions', [AdminPunchoutSessionController::class, 'index']);
         Route::get('/punchout/sessions/{uuid}', [AdminPunchoutSessionController::class, 'show']);
 
         // Admin Post Management Routes
-        Route::get('/posts', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'index']);
-        Route::get('/posts/stats', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'stats']);
-        Route::get('/posts/publishing-trends', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'publishingTrends']);
-        Route::get('/posts/types', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'types']);
-        Route::get('/posts/statuses', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'statuses']);
-        Route::post('/posts', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'store']);
-        Route::get('/posts/{uuid}', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'show']);
-        Route::put('/posts/{uuid}', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'update']);
-        Route::delete('/posts/{uuid}', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'destroy']);
+        Route::get('/posts', [AdminPostController::class, 'index']);
+        Route::get('/posts/stats', [AdminPostController::class, 'stats']);
+        Route::get('/posts/publishing-trends', [AdminPostController::class, 'publishingTrends']);
+        Route::get('/posts/types', [AdminPostController::class, 'types']);
+        Route::get('/posts/statuses', [AdminPostController::class, 'statuses']);
+        Route::post('/posts', [AdminPostController::class, 'store']);
+        Route::get('/posts/{uuid}', [AdminPostController::class, 'show']);
+        Route::put('/posts/{uuid}', [AdminPostController::class, 'update']);
+        Route::delete('/posts/{uuid}', [AdminPostController::class, 'destroy']);
 
         // Admin Post Action Routes
-        Route::post('/posts/{uuid}/actions/send', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'send']);
-        Route::post('/posts/{uuid}/actions/schedule', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'schedule']);
-        Route::post('/posts/{uuid}/actions/toggle-blog', [\App\Http\Controllers\V1\Post\AdminPostController::class, 'toggleBlogPublication']);
+        Route::post('/posts/{uuid}/actions/send', [AdminPostController::class, 'send']);
+        Route::post('/posts/{uuid}/actions/schedule', [AdminPostController::class, 'schedule']);
+        Route::post('/posts/{uuid}/actions/toggle-blog', [AdminPostController::class, 'toggleBlogPublication']);
 
         // Admin Tutorial Management Routes
-        Route::get('/tutorials', [\App\Http\Controllers\V1\Tutorial\AdminTutorialController::class, 'index']);
-        Route::get('/tutorials/stats', [\App\Http\Controllers\V1\Tutorial\AdminTutorialController::class, 'stats']);
-        Route::get('/tutorials/popular', [\App\Http\Controllers\V1\Tutorial\AdminTutorialController::class, 'popular']);
-        Route::get('/tutorials/types', [\App\Http\Controllers\V1\Tutorial\AdminTutorialController::class, 'types']);
-        Route::get('/tutorials/statuses', [\App\Http\Controllers\V1\Tutorial\AdminTutorialController::class, 'statuses']);
-        Route::post('/tutorials', [\App\Http\Controllers\V1\Tutorial\AdminTutorialController::class, 'store']);
-        Route::get('/tutorials/{uuid}', [\App\Http\Controllers\V1\Tutorial\AdminTutorialController::class, 'show']);
-        Route::put('/tutorials/{uuid}', [\App\Http\Controllers\V1\Tutorial\AdminTutorialController::class, 'update']);
-        Route::delete('/tutorials/{uuid}', [\App\Http\Controllers\V1\Tutorial\AdminTutorialController::class, 'destroy']);
+        Route::get('/tutorials', [AdminTutorialController::class, 'index']);
+        Route::get('/tutorials/stats', [AdminTutorialController::class, 'stats']);
+        Route::get('/tutorials/popular', [AdminTutorialController::class, 'popular']);
+        Route::get('/tutorials/types', [AdminTutorialController::class, 'types']);
+        Route::get('/tutorials/statuses', [AdminTutorialController::class, 'statuses']);
+        Route::post('/tutorials', [AdminTutorialController::class, 'store']);
+        Route::get('/tutorials/{uuid}', [AdminTutorialController::class, 'show']);
+        Route::put('/tutorials/{uuid}', [AdminTutorialController::class, 'update']);
+        Route::delete('/tutorials/{uuid}', [AdminTutorialController::class, 'destroy']);
 
         // Email logs (admin only)
-        Route::get('/email-logs', [\App\Http\Controllers\V1\Email\EmailLogController::class, 'index']);
-        Route::get('/email-logs/statistics', [\App\Http\Controllers\V1\Email\EmailLogController::class, 'statistics']);
-        Route::get('/email-logs/{uuid}', [\App\Http\Controllers\V1\Email\EmailLogController::class, 'show']);
-        Route::get('/email-logs/context/{contextType}/{contextId}', [\App\Http\Controllers\V1\Email\EmailLogController::class, 'byContext']);
-        Route::post('/email-logs/{uuid}/retry', [\App\Http\Controllers\V1\Email\EmailLogController::class, 'retry']);
+        Route::get('/email-logs', [EmailLogController::class, 'index']);
+        Route::get('/email-logs/statistics', [EmailLogController::class, 'statistics']);
+        Route::get('/email-logs/{uuid}', [EmailLogController::class, 'show']);
+        Route::get('/email-logs/context/{contextType}/{contextId}', [EmailLogController::class, 'byContext']);
+        Route::post('/email-logs/{uuid}/retry', [EmailLogController::class, 'retry']);
 
         // Feedback Management (Admin)
         Route::get('/feedbacks', [FeedbackAdminController::class, 'index']);
@@ -262,19 +302,19 @@ Route::prefix('v1')->group(function () {
     });
 
     // Posts API (public) - only GET operations are active for now
-    Route::get('/posts', [\App\Http\Controllers\V1\Post\PostApiController::class, 'index']);
-    Route::get('/posts/category/{categorySlug}', [\App\Http\Controllers\V1\Post\PostApiController::class, 'byCategory']);
-    Route::get('/posts/{id}', [\App\Http\Controllers\V1\Post\PostApiController::class, 'show']);
+    Route::get('/posts', [PostApiController::class, 'index']);
+    Route::get('/posts/category/{categorySlug}', [PostApiController::class, 'byCategory']);
+    Route::get('/posts/{id}', [PostApiController::class, 'show']);
 
     // Tutorials API (public)
-    Route::get('/tutorials', [\App\Http\Controllers\V1\Tutorial\PublicTutorialController::class, 'index']);
-    Route::get('/tutorials/popular', [\App\Http\Controllers\V1\Tutorial\PublicTutorialController::class, 'popular']);
-    Route::get('/tutorials/category/{categorySlug}', [\App\Http\Controllers\V1\Tutorial\PublicTutorialController::class, 'byCategory']);
-    Route::get('/tutorials/{slug}', [\App\Http\Controllers\V1\Tutorial\PublicTutorialController::class, 'show']);
+    Route::get('/tutorials', [PublicTutorialController::class, 'index']);
+    Route::get('/tutorials/popular', [PublicTutorialController::class, 'popular']);
+    Route::get('/tutorials/category/{categorySlug}', [PublicTutorialController::class, 'byCategory']);
+    Route::get('/tutorials/{slug}', [PublicTutorialController::class, 'show']);
 
     // Tutorials API (public) for Software
-    Route::get('/learning-center', [\App\Http\Controllers\V1\Tutorial\PublicTutorialController::class, 'index']);
-    Route::get('/learning-center/category/{categorySlug}', [\App\Http\Controllers\V1\Tutorial\PublicTutorialController::class, 'byCategory']);
+    Route::get('/learning-center', [PublicTutorialController::class, 'index']);
+    Route::get('/learning-center/category/{categorySlug}', [PublicTutorialController::class, 'byCategory']);
 
     // ====================================================================================
     // COMMUNITY FORUM - Public routes
@@ -288,28 +328,28 @@ Route::prefix('v1')->group(function () {
     });
 
     // Category and Tag API routes (public)
-    Route::get('/categories', [\App\Http\Controllers\V1\Category\CategoryController::class, 'index']);
-    Route::get('/categories/tree', [\App\Http\Controllers\V1\Category\CategoryController::class, 'tree']);
+    Route::get('/categories', [CategoryController::class, 'index']);
+    Route::get('/categories/tree', [CategoryController::class, 'tree']);
     Route::get('/currencies', [CurrencyController::class, 'index']);
-    Route::post('/tags', [\App\Http\Controllers\V1\Tag\TagController::class, 'store']);
+    Route::post('/tags', [TagController::class, 'store']);
 
     // Category-specific endpoints
-    Route::get('/blogs', [\App\Http\Controllers\V1\Post\PostApiController::class, 'blogs']);
-    Route::get('/events', [\App\Http\Controllers\V1\Post\PostApiController::class, 'events']);
-    Route::get('/news', [\App\Http\Controllers\V1\Post\PostApiController::class, 'news']);
+    Route::get('/blogs', [PostApiController::class, 'blogs']);
+    Route::get('/events', [PostApiController::class, 'events']);
+    Route::get('/news', [PostApiController::class, 'news']);
 
     // Public asset URL generation (no auth required)
     // Use this endpoint for all public images stored in the images/ directory
-    Route::post('/assets/generate-url', [\App\Http\Controllers\V1\Asset\PublicAssetController::class, 'generateUrl']);
+    Route::post('/assets/generate-url', [PublicAssetController::class, 'generateUrl']);
 
     // Public post image URL generation (no auth required)
     // @deprecated - Use /assets/generate-url for new implementations
-    Route::post('/posts/generate-image-url', [\App\Http\Controllers\V1\Post\PostApiController::class, 'generateImageUrl']);
+    Route::post('/posts/generate-image-url', [PostApiController::class, 'generateImageUrl']);
 
     // Placeholder RESTful routes (create/update/delete) kept but return 405 from controller
-    Route::post('/posts', [\App\Http\Controllers\V1\Post\PostApiController::class, 'store']);
-    Route::put('/posts/{id}', [\App\Http\Controllers\V1\Post\PostApiController::class, 'update']);
-    Route::delete('/posts/{id}', [\App\Http\Controllers\V1\Post\PostApiController::class, 'destroy']);
+    Route::post('/posts', [PostApiController::class, 'store']);
+    Route::put('/posts/{id}', [PostApiController::class, 'update']);
+    Route::delete('/posts/{id}', [PostApiController::class, 'destroy']);
 
     // Feedback API routes
     Route::post('/feedback', [FeedbackController::class, 'submitFeedback'])->middleware('throttle:60,1');
@@ -341,14 +381,14 @@ Route::prefix('v1')->group(function () {
         });
 
     // Public newsletter subscription
-    Route::post('/newsletter/subscribe', [\App\Http\Controllers\V1\Newsletter\NewsletterController::class, 'subscribe'])
+    Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])
         ->middleware('throttle:10,1');
 
     // Public unsubscribe API (storefront SPA at /unsubscribe/{token})
-    Route::get('/unsubscribe/{token}', [\App\Http\Controllers\V1\Unsubscribe\ApiUnsubscribeController::class, 'show']);
-    Route::post('/unsubscribe/{token}/unsubscribe', [\App\Http\Controllers\V1\Unsubscribe\ApiUnsubscribeController::class, 'unsubscribe'])
+    Route::get('/unsubscribe/{token}', [ApiUnsubscribeController::class, 'show']);
+    Route::post('/unsubscribe/{token}/unsubscribe', [ApiUnsubscribeController::class, 'unsubscribe'])
         ->middleware('throttle:10,1');
-    Route::post('/unsubscribe/{token}/resubscribe', [\App\Http\Controllers\V1\Unsubscribe\ApiUnsubscribeController::class, 'resubscribe'])
+    Route::post('/unsubscribe/{token}/resubscribe', [ApiUnsubscribeController::class, 'resubscribe'])
         ->middleware('throttle:10,1');
 
     // Quote API routes
@@ -368,10 +408,10 @@ Route::prefix('v1')->group(function () {
     Route::get('/catalog/top-nav', [CatalogController::class, 'topNav']);
 
     // Public search (Typesense-backed with database fallback)
-    Route::get('/search/suggest', [\App\Http\Controllers\V1\Search\SearchController::class, 'suggest'])->middleware('throttle:120,1');
-    Route::get('/search/trending', [\App\Http\Controllers\V1\Search\SearchController::class, 'trending'])->middleware('throttle:120,1');
-    Route::get('/search', [\App\Http\Controllers\V1\Search\SearchController::class, 'index'])->middleware('throttle:120,1');
-    Route::post('/search/click', [\App\Http\Controllers\V1\Search\SearchController::class, 'click'])->middleware('throttle:120,1');
+    Route::get('/search/suggest', [SearchController::class, 'suggest'])->middleware('throttle:120,1');
+    Route::get('/search/trending', [SearchController::class, 'trending'])->middleware('throttle:120,1');
+    Route::get('/search', [SearchController::class, 'index'])->middleware('throttle:120,1');
+    Route::post('/search/click', [SearchController::class, 'click'])->middleware('throttle:120,1');
 
     // Public product review routes
     Route::get('/catalog/products/{key}/reviews', [ProductReviewController::class, 'index']);
@@ -385,14 +425,26 @@ Route::prefix('v1')->group(function () {
     Route::delete('/cart', [CartController::class, 'clear']);
 
     // GDPR consent (public — guests identified by pseudonymous consent token)
-    Route::post('/gdpr/consents', [\App\Http\Controllers\V1\Gdpr\GdprConsentController::class, 'store'])->middleware('throttle:60,1');
-    Route::get('/gdpr/consents/latest', [\App\Http\Controllers\V1\Gdpr\GdprConsentController::class, 'latest']);
-    Route::delete('/gdpr/consents', [\App\Http\Controllers\V1\Gdpr\GdprConsentController::class, 'destroy']);
+    Route::post('/gdpr/consents', [GdprConsentController::class, 'store'])->middleware('throttle:60,1');
+    Route::get('/gdpr/consents/latest', [GdprConsentController::class, 'latest']);
+    Route::delete('/gdpr/consents', [GdprConsentController::class, 'destroy']);
 
     // Checkout (public — guests can order with inline addresses)
-    Route::post('/checkout', [\App\Http\Controllers\V1\Checkout\CheckoutController::class, 'store']);
-    Route::get('/checkout/orders/{uuid}', [\App\Http\Controllers\V1\Checkout\CheckoutController::class, 'show']);
+    // The quote is called as the basket and coupon change, so it is bounded per
+    // IP; it resolves a coupon code and must not become a brute-force oracle.
+    Route::post('/checkout/quote', [CheckoutController::class, 'quote'])->middleware('throttle:60,1');
+    Route::post('/checkout', [CheckoutController::class, 'store']);
+    Route::get('/checkout/orders/{uuid}', [CheckoutController::class, 'show']);
 
+    // Payments. `methods` is declared before `{uuid}` so the literal path is
+    // not swallowed by the wildcard.
+    Route::get('/payments/methods', [PaymentController::class, 'methods']);
+    Route::get('/payments/{uuid}', [PaymentController::class, 'show']);
+
+    // Gateway callbacks. Unauthenticated by necessity — trust comes from the
+    // signature — so they are bounded per IP.
+    Route::post('/payments/webhooks/{method}', [PaymentController::class, 'webhook'])
+        ->middleware('throttle:payment-webhook');
 
     // Profiles - Public routes
     Route::get('/profiles', [ProfileController::class, 'index']);
@@ -400,7 +452,6 @@ Route::prefix('v1')->group(function () {
 
     // Public profile view by ID - Must be after /profiles/me
     Route::get('/profiles/{id}', [ProfileController::class, 'show']);
-
 
     // Management - Protected routes
     Route::middleware('auth.api')->group(function () {
@@ -414,6 +465,18 @@ Route::prefix('v1')->group(function () {
         Route::put('/products/{uuid}/highlights', [ProductHighlightController::class, 'sync']);
         Route::get('/highlights', [HighlightController::class, 'available']);
         Route::post('/highlights', [HighlightController::class, 'storeForMerchant']);
+
+        // Discount codes (merchant): scoped to the caller's tenant or
+        // organization, resolved from their membership — never from the
+        // request. `statistics` is registered before `{coupon}` so it is not
+        // captured by the wildcard.
+        Route::get('/coupons', [CouponMerchantController::class, 'index']);
+        Route::get('/coupons/statistics', [CouponMerchantController::class, 'statistics']);
+        Route::post('/coupons', [CouponMerchantController::class, 'store']);
+        Route::get('/coupons/{coupon}', [CouponMerchantController::class, 'show']);
+        Route::patch('/coupons/{coupon}', [CouponMerchantController::class, 'update']);
+        Route::delete('/coupons/{coupon}', [CouponMerchantController::class, 'destroy']);
+        Route::get('/coupons/{coupon}/redemptions', [CouponMerchantController::class, 'redemptions']);
 
         // Address book (user / organization)
         Route::get('/users/me/addresses', [AddressController::class, 'index']);
@@ -433,12 +496,22 @@ Route::prefix('v1')->group(function () {
         Route::post('/account/deactivate', [AccountController::class, 'deactivateAccount']);
 
         // GDPR consent history (privacy center)
-        Route::get('/gdpr/consents', [\App\Http\Controllers\V1\Gdpr\GdprConsentController::class, 'index']);
+        Route::get('/gdpr/consents', [GdprConsentController::class, 'index']);
+
+        // Native push destinations — register on sign-in, detach on sign-out
+        Route::post('/devices', [DeviceTokenController::class, 'store']);
+        Route::delete('/devices', [DeviceTokenController::class, 'destroy']);
 
         // Order management (admin + merchant)
         Route::get('/orders', [OrderController::class, 'index']);
         Route::get('/orders/{uuid}', [OrderController::class, 'show']);
         Route::put('/orders/{uuid}/status', [OrderController::class, 'update']);
+
+        // Refunds move money back out of the account, so they are admin-only
+        // even though the order routes around them are open to merchants.
+        Route::middleware('admin')->group(function () {
+            Route::post('/payments/{uuid}/refund', [PaymentController::class, 'refund']);
+        });
 
         // Order documents (invoice / packing slip PDFs)
         Route::get('/orders/{uuid}/documents', [OrderDocumentController::class, 'index']);
@@ -460,7 +533,6 @@ Route::prefix('v1')->group(function () {
             Route::post('/comments/{commentId}/like', [ForumPostController::class, 'toggleCommentLike'])->middleware('throttle:120,1');
             Route::post('/report', [ForumPostController::class, 'report'])->middleware('throttle:20,1');
         });
-
 
         // Seller dashboard (protected)
         Route::get('/dashboard', [SellerDashboardController::class, 'index']);
@@ -484,8 +556,8 @@ Route::prefix('v1')->group(function () {
         Route::post('/tickets/{uuid}/unassign', [TicketController::class, 'unassign']);
 
         // Ticket messages
-        Route::post('/tickets/{uuid}/messages', [\App\Http\Controllers\V1\Message\MessageController::class, 'store']);
-        Route::post('/tickets/{uuid}/messages/upload', [\App\Http\Controllers\V1\Message\MessageController::class, 'upload']);
+        Route::post('/tickets/{uuid}/messages', [MessageController::class, 'store']);
+        Route::post('/tickets/{uuid}/messages/upload', [MessageController::class, 'upload']);
         // Ticket description uploads (for create/edit flows)
         Route::post('/tickets/{uuid}/upload', [TicketController::class, 'upload']);
 
@@ -497,19 +569,19 @@ Route::prefix('v1')->group(function () {
         Route::put('/products/{uuid}', [ProductController::class, 'update']);
         Route::delete('/products/{uuid}', [ProductController::class, 'destroy']);
 
-        Route::get('/features', [\App\Http\Controllers\V1\Feature\FeatureController::class, 'index']);
+        Route::get('/features', [FeatureController::class, 'index']);
 
-        Route::get('/manufacturers', [\App\Http\Controllers\V1\Manufacturer\ManufacturerController::class, 'index']);
-        Route::post('/manufacturers', [\App\Http\Controllers\V1\Manufacturer\ManufacturerController::class, 'store']);
-        Route::get('/manufacturers/{uuid}', [\App\Http\Controllers\V1\Manufacturer\ManufacturerController::class, 'show']);
-        Route::put('/manufacturers/{uuid}', [\App\Http\Controllers\V1\Manufacturer\ManufacturerController::class, 'update']);
-        Route::delete('/manufacturers/{uuid}', [\App\Http\Controllers\V1\Manufacturer\ManufacturerController::class, 'destroy']);
+        Route::get('/manufacturers', [ManufacturerController::class, 'index']);
+        Route::post('/manufacturers', [ManufacturerController::class, 'store']);
+        Route::get('/manufacturers/{uuid}', [ManufacturerController::class, 'show']);
+        Route::put('/manufacturers/{uuid}', [ManufacturerController::class, 'update']);
+        Route::delete('/manufacturers/{uuid}', [ManufacturerController::class, 'destroy']);
 
-        Route::get('/brands', [\App\Http\Controllers\V1\Brand\BrandController::class, 'index']);
-        Route::post('/brands', [\App\Http\Controllers\V1\Brand\BrandController::class, 'store']);
-        Route::get('/brands/{uuid}', [\App\Http\Controllers\V1\Brand\BrandController::class, 'show']);
-        Route::put('/brands/{uuid}', [\App\Http\Controllers\V1\Brand\BrandController::class, 'update']);
-        Route::delete('/brands/{uuid}', [\App\Http\Controllers\V1\Brand\BrandController::class, 'destroy']);
+        Route::get('/brands', [BrandController::class, 'index']);
+        Route::post('/brands', [BrandController::class, 'store']);
+        Route::get('/brands/{uuid}', [BrandController::class, 'show']);
+        Route::put('/brands/{uuid}', [BrandController::class, 'update']);
+        Route::delete('/brands/{uuid}', [BrandController::class, 'destroy']);
 
         Route::get('/products/{uuid}/revisions', [ProductRevisionController::class, 'index']);
         Route::get('/products/{uuid}/revisions/{revision_uuid}', [ProductRevisionController::class, 'show']);
@@ -669,8 +741,7 @@ Route::prefix('v1')->group(function () {
 
     });
 
-
-        // New role-based authentication routes
+    // New role-based authentication routes
     // Route::prefix('auth')->group(function () {
     //     Route::post('/login-with-roles', [RoleAuthController::class, 'login']);
     //     Route::post('/register-with-roles', [RoleAuthController::class, 'register']);
@@ -684,12 +755,12 @@ Route::prefix('v1')->group(function () {
     // });
 
     // Test route for debugging
-    Route::post('/test-auth', function(Request $request) {
+    Route::post('/test-auth', function (Request $request) {
         try {
             $email = $request->email;
             $password = $request->password;
 
-            if (!Auth::attempt(['email' => $email, 'password' => $password])) {
+            if (! Auth::attempt(['email' => $email, 'password' => $password])) {
                 return response()->json(['error' => 'Auth failed']);
             }
 
@@ -699,13 +770,12 @@ Route::prefix('v1')->group(function () {
             return response()->json([
                 'success' => true,
                 'user' => $user->name,
-                'token' => substr($token, 0, 20) . '...'
+                'token' => substr($token, 0, 20).'...',
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()]);
         }
     });
-
 
 });
 
@@ -719,8 +789,8 @@ Route::get('/health', function () {
             if (DB::connection()->getDatabaseName()) {
                 $dbStatus = 'Connected';
             }
-        } catch (\Exception $e) {
-            $dbStatus = 'Failed: ' . $e->getMessage();
+        } catch (Exception $e) {
+            $dbStatus = 'Failed: '.$e->getMessage();
         }
 
         // Check disk space
@@ -745,15 +815,15 @@ Route::get('/health', function () {
             'disk_free_percent' => round($diskSpace, 2),
             'memory_usage_mb' => round($memoryUsage, 2),
             'container' => $containerInfo,
-            'load_balancer' => 'haproxy'
+            'load_balancer' => 'haproxy',
         ], 200);
 
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         return response()->json([
             'status' => 'unhealthy',
             'timestamp' => now()->toISOString(),
             'error' => $e->getMessage(),
-            'container_id' => gethostname()
+            'container_id' => gethostname(),
         ], 503);
     }
 });

@@ -13,8 +13,9 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Issues and resolves the visitor's chat token.
  *
- * A random opaque token is stored in an httpOnly cookie on first contact; the
- * application only ever persists a hash of it. Without this, an anonymous
+ * A random opaque token identifies the visitor: browsers get it in an httpOnly
+ * cookie on first contact, native shells send it in the X-Chat-Token header.
+ * The application only ever persists a hash of it. Without this, an anonymous
  * visitor could not resume a thread, and the session store (the database here)
  * would take a write on every message.
  */
@@ -22,19 +23,25 @@ class EnsureChatVisitor
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $existing = (string) $request->cookie(ChatIdentity::COOKIE, '');
-        $token = trim($existing);
+        // Native clients keep their own copy and never receive a cookie; the
+        // browser path below is left exactly as it was.
+        $headerToken = ChatIdentity::headerToken($request);
 
-        if (! preg_match('/^[a-f0-9]{64}$/', $token)) {
-            $token = bin2hex(random_bytes(32));
+        if ($headerToken !== null) {
+            $request->attributes->set(ChatIdentity::ATTRIBUTE, $headerToken);
+
+            return $next($request);
         }
+
+        $cookieToken = ChatIdentity::cookieToken($request);
+        $token = $cookieToken ?? bin2hex(random_bytes(32));
 
         // Make the resolved token available to the rest of the request.
         $request->attributes->set(ChatIdentity::ATTRIBUTE, $token);
 
         $response = $next($request);
 
-        if ($existing !== $token) {
+        if ($cookieToken === null) {
             $response->headers->setCookie(new Cookie(
                 name: ChatIdentity::COOKIE,
                 value: $token,

@@ -2,18 +2,22 @@
 
 namespace App\Services\Checkout;
 
-use App\Enums\PaymentMethod;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
+use App\Enums\PaymentStatus;
 use App\Gateways\PaymentGatewayManager;
 use App\Models\Address;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\Product;
+use App\Models\Organization;
+use App\Models\Payment;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Models\Variant;
+use App\Services\Coupon\CouponException;
+use App\Services\Coupon\CouponService;
 use App\Services\Order\OrderNumberService;
+use App\Support\Checkout\CheckoutTotals;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -23,14 +27,26 @@ class CheckoutService
     public function __construct(
         protected PaymentGatewayManager $gatewayManager,
         protected OrderNumberService $orderNumberService,
-    ) {
-    }
+        protected CartPricing $cartPricing,
+        protected CheckoutPricing $checkoutPricing,
+        protected CouponService $coupons,
+    ) {}
 
     /**
      * Create an order from the current cart. Idempotent per checkout_token.
      */
     public function checkout(Request $request, array $data): array
     {
+        // Reject an unavailable gateway before we create anything, so a
+        // disabled method cannot leave a half-finished order behind.
+        $paymentMethod = (string) data_get($data, 'payment_method', PaymentMethod::COD);
+
+        if (! $this->gatewayManager->isAvailable($paymentMethod)) {
+            throw ValidationException::withMessages([
+                'payment_method' => 'The selected payment method is not available.',
+            ]);
+        }
+
         // Idempotency: the same checkout_token always returns the same order,
         // even if the cart was already consumed by a previous attempt.
         $token = data_get($data, 'checkout_token');
@@ -41,7 +57,22 @@ class CheckoutService
                 ->first();
 
             if ($existing) {
-                return $this->result($existing);
+                // A retry after the gateway call failed still gets a usable
+                // session: without this the customer would be stranded with a
+                // saved order and no way to pay for it.
+                $redirectUrl = $this->pendingCheckoutUrl($existing);
+
+                if ($redirectUrl === null && $this->awaitsHostedPayment($existing)) {
+                    [$redirectUrl, $paymentError] = $this->initializePayment($existing, $paymentMethod);
+
+                    return $this->result(
+                        $existing->fresh(['items', 'payments']),
+                        $redirectUrl,
+                        $paymentError,
+                    );
+                }
+
+                return $this->result($existing, $redirectUrl);
             }
         }
 
@@ -52,11 +83,29 @@ class CheckoutService
         }
 
         $user = $request->user('api');
+
+        // Scope is resolved before pricing: a coupon belongs to an organization,
+        // a tenant or the platform, and the same code can exist in every scope.
         $tenantId = $this->resolveTenantId($cart, $user);
         $tenant = Tenant::query()->find($tenantId);
         $organization = $user?->memberships()->where('is_active', true)->first()?->organization;
 
-        return DB::transaction(function () use ($cart, $user, $tenantId, $tenant, $organization, $data, $token) {
+        // Money is decided here, never by the request: delivery, tax and any
+        // coupon come from `config/shipping.php` and the coupon table. A
+        // `shipping_fee` or `discount` in the payload is ignored.
+        $totals = $this->checkoutPricing->forCart(
+            $cart,
+            data_get($data, 'coupon_code'),
+            $user,
+            $tenantId,
+            $organization?->id,
+        );
+
+        $order = DB::transaction(function () use ($cart, $user, $tenantId, $tenant, $organization, $data, $token, $totals) {
+            // Re-checked inside the transaction: stock can move between the quote
+            // and the commit.
+            $this->cartPricing->assertPurchasable($cart);
+
             /** @var Order $order */
             $order = Order::create([
                 'tenant_id' => $tenantId,
@@ -74,20 +123,24 @@ class CheckoutService
                     ?? $this->resolveAddress($data, 'shipping_address', 'shipping', $user),
                 'notes' => data_get($data, 'notes'),
                 'placed_at' => now(),
-                'currency' => $cart->currency,
-                'metadata' => [
+                'currency' => $totals->currency,
+                'subtotal' => $totals->subtotal,
+                'shipping_fee' => $totals->shippingFee,
+                'tax' => $totals->tax,
+                'discount' => $totals->discount,
+                'total_amount' => $totals->total,
+                'metadata' => array_filter([
                     'payment_method' => data_get($data, 'payment_method', PaymentMethod::COD),
-                ],
+                    'coupon' => $totals->couponCode ? [
+                        'code' => $totals->couponCode,
+                        'label' => $totals->couponLabel,
+                        'discount' => $totals->discount,
+                    ] : null,
+                ]),
             ]);
 
-            $subtotal = 0.0;
-
             foreach ($cart->items()->with(['product', 'variant'])->get() as $item) {
-                $this->validateItemStock($item->product, $item->variant, (int) $item->quantity);
-
-                $pricing = $this->resolvePricing($item->product, $item->variant);
-                $lineTotal = round($pricing['unit_price'] * (float) $item->quantity, 2);
-                $subtotal += $lineTotal;
+                $pricing = $this->cartPricing->linePrice($item->product, $item->variant);
 
                 OrderItem::create([
                     'order_id' => $order->id,
@@ -98,33 +151,76 @@ class CheckoutService
                     'quantity' => $item->quantity,
                     'unit_price' => $pricing['unit_price'],
                     'base_price' => $pricing['base_price'],
-                    'total' => $lineTotal,
+                    'total' => round($pricing['unit_price'] * (float) $item->quantity, 2),
                     'currency' => $pricing['currency'],
                     'metadata' => $item->metadata,
                 ]);
             }
 
-            $shippingFee = (float) data_get($data, 'shipping_fee', 0);
-            $tax = (float) data_get($data, 'tax', 0);
-            $discount = (float) data_get($data, 'discount', 0);
-
-            $order->update([
-                'subtotal' => $subtotal,
-                'shipping_fee' => $shippingFee,
-                'tax' => $tax,
-                'discount' => $discount,
-                'total_amount' => round($subtotal + $shippingFee + $tax - $discount, 2),
-            ]);
-
-            // Payment record + gateway initialization (COD: no redirect).
-            $gateway = $this->gatewayManager->gateway(data_get($data, 'payment_method', PaymentMethod::COD));
-            $initResult = $gateway->initialize($order->fresh());
+            // Recorded inside the transaction so the use and the order commit
+            // together — a redeemed coupon with no order would burn a use.
+            if ($totals->couponCode) {
+                $coupon = $this->coupons->resolve(
+                    $totals->couponCode,
+                    $totals->subtotal,
+                    $user,
+                    $cart->session_id,
+                    $tenantId,
+                    $organization?->id,
+                );
+                $this->coupons->redeem($coupon, $order, $totals->discount, $user, $cart->session_id);
+            }
 
             // Cart is consumed by the order.
             $cart->items()->delete();
 
-            return $this->result($order->fresh(['items', 'payments']), $initResult->redirectUrl);
+            return $order->fresh(['items', 'payments']);
         });
+
+        // Gateway initialization runs *after* the commit. A hosted gateway is an
+        // outbound HTTP call, and holding a write transaction open across it
+        // would pin row locks for as long as the provider takes to answer —
+        // with several API replicas that is a self-inflicted outage.
+        [$redirectUrl, $paymentError] = $this->initializePayment($order, $paymentMethod);
+
+        return $this->result($order->fresh(['items', 'payments']), $redirectUrl, $paymentError);
+    }
+
+    /**
+     * Open the gateway's payment session for an order.
+     *
+     * A provider outage must not turn a placed order into a 500 — the order is
+     * valid and the customer can retry against it — so the failure is reported
+     * back to the caller instead of thrown.
+     *
+     * @return array{0: ?string, 1: ?string} [redirectUrl, paymentError]
+     */
+    private function initializePayment(Order $order, string $paymentMethod): array
+    {
+        try {
+            $redirectUrl = $this->gatewayManager
+                ->gateway($paymentMethod)
+                ->initialize($order)
+                ->redirectUrl;
+
+            return [$redirectUrl, null];
+        } catch (\Throwable $e) {
+            report($e);
+
+            return [null, 'We could not start the payment. Please try again.'];
+        }
+    }
+
+    /**
+     * Whether the order still needs a session with a hosted gateway, i.e. it has
+     * a pending payment for a method that redirects the customer away.
+     */
+    private function awaitsHostedPayment(Order $order): bool
+    {
+        return $order->payments->contains(
+            fn (Payment $payment) => $payment->status === PaymentStatus::PENDING
+                && $payment->payment_method !== PaymentMethod::COD
+        );
     }
 
     public function read(string $uuid): Order
@@ -135,14 +231,54 @@ class CheckoutService
             ->firstOrFail();
     }
 
-    private function result(Order $order, ?string $redirectUrl = null): array
+    /**
+     * Price the current cart without creating anything.
+     *
+     * Shares `CheckoutPricing` with `checkout()`, so the quote the customer is
+     * shown is the arithmetic the order is placed with. A bad coupon throws
+     * `CouponException`; the controller turns that into a 422.
+     */
+    public function quote(Request $request, ?string $couponCode): CheckoutTotals
+    {
+        $cart = $this->resolveCart($request);
+
+        if ($cart->items()->count() === 0) {
+            throw ValidationException::withMessages(['cart' => 'Your cart is empty.']);
+        }
+
+        $user = $request->user('api');
+
+        // The quote must price the coupon in the same scope the order will, or
+        // the customer would see one discount and be charged another.
+        $tenantId = $this->resolveTenantId($cart, $user);
+        $organization = $user?->memberships()->where('is_active', true)->first()?->organization;
+
+        return $this->checkoutPricing->forCart($cart, $couponCode, $user, $tenantId, $organization?->id);
+    }
+
+    private function result(Order $order, ?string $redirectUrl = null, ?string $paymentError = null): array
     {
         return [
             'order' => $order,
             'payment' => $order->payments->first(),
             'requires_redirect' => $redirectUrl !== null,
             'redirect_url' => $redirectUrl,
+            'payment_error' => $paymentError,
         ];
+    }
+
+    /**
+     * The hosted checkout URL of an order's still-pending payment, if we
+     * already opened one. A repeated checkout with the same token reuses it.
+     */
+    private function pendingCheckoutUrl(Order $order): ?string
+    {
+        $payment = $order->payments
+            ->firstWhere('status', PaymentStatus::PENDING);
+
+        $url = data_get($payment?->gateway_payload, 'checkout_url');
+
+        return is_string($url) && $url !== '' ? $url : null;
     }
 
     private function resolveCart(Request $request): Cart
@@ -183,11 +319,6 @@ class CheckoutService
 
         return Tenant::query()->value('id')
             ?? throw ValidationException::withMessages(['cart' => 'No tenant configured.']);
-    }
-
-    private function resolveOrganizationId(?User $user): ?int
-    {
-        return $user?->memberships()->where('is_active', true)->first()?->organization_id;
     }
 
     /**
@@ -237,7 +368,7 @@ class CheckoutService
             return $owner->is($user);
         }
 
-        if ($owner instanceof \App\Models\Organization) {
+        if ($owner instanceof Organization) {
             return $user->memberships()
                 ->where('is_active', true)
                 ->where('organization_id', $owner->id)
@@ -263,46 +394,6 @@ class CheckoutService
             'postal_code' => data_get($data, 'postal_code'),
             'country_id' => data_get($data, 'country_id'),
             'country' => data_get($data, 'country') ?? data_get($data, 'country.name'),
-        ];
-    }
-
-    private function validateItemStock(?Product $product, ?Variant $variant, int $quantity): void
-    {
-        if (! $product || ! $product->is_active || $product->status !== 'active') {
-            $name = $product?->name ?? 'Product';
-            throw ValidationException::withMessages(['cart' => "The product \"{$name}\" is not available."]);
-        }
-
-        $stockable = $variant ?? $product;
-        $inventories = $stockable->inventories()->where('track_inventory', true)->get();
-
-        if ($inventories->isEmpty()) {
-            return;
-        }
-
-        $available = $inventories->sum(fn ($inventory) => max(0, (float) $inventory->available));
-
-        if ($available < $quantity) {
-            throw ValidationException::withMessages([
-                'cart' => 'Insufficient stock for "' . ($variant?->name ?? $product->name) . '".',
-            ]);
-        }
-    }
-
-    private function resolvePricing(?Product $product, ?Variant $variant): array
-    {
-        $metadata = $variant?->metadata ?? $product?->metadata ?? [];
-
-        $base = (float) data_get($metadata, 'price', 0);
-        $sale = (float) data_get($metadata, 'sale_price', 0);
-        $currency = data_get($metadata, 'currency', 'USD') ?: 'USD';
-
-        $effective = ($sale > 0 && $sale < $base) ? $sale : $base;
-
-        return [
-            'unit_price' => $effective,
-            'base_price' => $base > 0 ? $base : null,
-            'currency' => $currency,
         ];
     }
 }

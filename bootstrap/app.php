@@ -1,8 +1,21 @@
 <?php
 
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\ApiAuthenticate;
+use App\Http\Middleware\ForceHttps;
+use App\Http\Middleware\ForceJsonResponse;
+use App\Http\Middleware\LoadUserRoles;
+use App\Http\Middleware\PermissionMiddleware;
+use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\TrustProxies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Middleware\HandleCors;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -14,37 +27,48 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Trust proxies must be set before any other middleware
         $middleware->use([
-            \App\Http\Middleware\TrustProxies::class,
-            \Illuminate\Http\Middleware\HandleCors::class,
+            TrustProxies::class,
+            HandleCors::class,
         ]);
 
         // Add API-specific middleware after CORS
         $middleware->api(prepend: [
-            \App\Http\Middleware\ForceHttps::class,
-            \App\Http\Middleware\ForceJsonResponse::class,
+            ForceHttps::class,
+            ForceJsonResponse::class,
         ]);
 
         // Add middleware to load user roles after authentication
         $middleware->api(append: [
-            \App\Http\Middleware\LoadUserRoles::class,
+            LoadUserRoles::class,
         ]);
 
         // Add locale detection middleware to all routes
-        $middleware->append(\App\Http\Middleware\SetLocale::class);
+        $middleware->append(SetLocale::class);
 
         // Register role and permission middleware
         $middleware->alias([
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
-            'permission' => \App\Http\Middleware\PermissionMiddleware::class,
-            'auth.api' => \App\Http\Middleware\ApiAuthenticate::class,
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'role' => RoleMiddleware::class,
+            'permission' => PermissionMiddleware::class,
+            'auth.api' => ApiAuthenticate::class,
+            'admin' => AdminMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Force JSON response for API routes, even for 404/405 errors
-        $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response, \Throwable $exception, \Illuminate\Http\Request $request) {
+        $exceptions->respond(function (Response $response, Throwable $exception, Request $request) {
             if ($request->is('api/*')) {
                 $statusCode = $response->getStatusCode();
+
+                // Carry over only the client-facing extras — chiefly the
+                // per-field `errors` map of a validation failure, which every
+                // form renders next to the offending input. Everything else the
+                // framework rendered is deliberately dropped, so debug payloads
+                // (`exception`, `file`, `trace`) never reach a client.
+                $rendered = $response instanceof JsonResponse
+                    ? $response->getData(true)
+                    : null;
+                $errors = is_array($rendered) ? ($rendered['errors'] ?? null) : null;
+
                 $message = $exception->getMessage();
 
                 // Default messages for common HTTP status codes
@@ -61,11 +85,22 @@ return Application::configure(basePath: dirname(__DIR__))
                     $message = $defaultMessages[$statusCode];
                 }
 
-                return response()->json([
+                $payload = [
                     'success' => false,
                     'message' => $message,
                     'status_code' => $statusCode,
-                ], $statusCode);
+                ];
+
+                if (is_array($errors) && $errors !== []) {
+                    $payload['errors'] = $errors;
+                }
+
+                $json = response()->json($payload, $statusCode);
+
+                // Keep transport-level headers (Retry-After on a throttle, …).
+                $json->headers->add($response->headers->all());
+
+                return $json;
             }
 
             return $response;

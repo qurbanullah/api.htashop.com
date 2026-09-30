@@ -2,11 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Symfony\Component\HttpFoundation\Response;
-use Illuminate\Auth\AuthenticationException;
 
 class ApiAuthenticate extends Authenticate
 {
@@ -27,19 +26,21 @@ class ApiAuthenticate extends Authenticate
 
         // If no guards were provided, assume the API guard so tokens are checked
         // with the Passport driver instead of falling back to the default 'web' guard.
-            // If no guards were passed, default to the API guard (Passport) so Bearer tokens
-            // are validated correctly. Previously an empty guards array meant the framework
-            // did not check the api guard and valid tokens were rejected.
-            if (empty($guards)) {
-                $guards = ['api'];
-            }
+        // If no guards were passed, default to the API guard (Passport) so Bearer tokens
+        // are validated correctly. Previously an empty guards array meant the framework
+        // did not check the api guard and valid tokens were rejected.
+        if (empty($guards)) {
+            $guards = ['api'];
+        }
 
         // Support httpOnly-cookie auth (storefront) in addition to Bearer tokens
-        // (admin/manage). If the access-token cookie is present and no
+        // (admin/manage/native). If the access-token cookie is present and no
         // Authorization header was sent, promote the cookie to a Bearer header
         // so Passport validates it.
-        if (!$request->hasHeader('Authorization') && $request->hasCookie('hta_access_token')) {
-            $request->headers->set('Authorization', 'Bearer ' . $request->cookie('hta_access_token'));
+        $accessCookie = (string) config('auth_tokens.cookie.access');
+
+        if (! $request->hasHeader('Authorization') && $request->hasCookie($accessCookie)) {
+            $request->headers->set('Authorization', 'Bearer '.$request->cookie($accessCookie));
         }
 
         try {
@@ -47,13 +48,17 @@ class ApiAuthenticate extends Authenticate
         } catch (AuthenticationException $e) {
             if ($request->is('api/*')) {
                 Log::info('ApiAuthenticate returning JSON 401 for API route', [
-                    'path' => $request->path()
+                    'path' => $request->path(),
                 ]);
 
                 return response()->json([
                     'success' => false,
                     'message' => 'Unauthenticated.',
-                    'error' => 'Authentication required'
+                    'error' => 'Authentication required',
+                    // Machine-readable (RFC 6750 wording): the client uses this to
+                    // decide whether attempting a token refresh is worthwhile,
+                    // instead of matching on the message text.
+                    'code' => $request->hasHeader('Authorization') ? 'invalid_token' : 'unauthenticated',
                 ], 401);
             }
 
