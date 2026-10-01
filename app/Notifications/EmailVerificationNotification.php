@@ -36,7 +36,7 @@ class EmailVerificationNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $verificationUrl = $this->getVerificationUrl();
-        $appName = config('app.name', 'Volvicon');
+        $appName = config('app.name', 'HTAShop');
 
         return (new MailMessage)
             ->subject('Verify Your Email Address - ' . $appName)
@@ -68,7 +68,7 @@ class EmailVerificationNotification extends Notification implements ShouldQueue
      */
     private function getVerificationUrl(): string
     {
-        $frontendUrl = config('app.manage_frontend_url', 'https://manage.volvicon.com');
+        $frontendUrl = config('app.manage_frontend_url', 'https://manage.htashop.com');
         $token = urlencode($this->verificationToken);
         return "{$frontendUrl}/verify-email?token={$token}&email=" . urlencode($this->user->email);
     }

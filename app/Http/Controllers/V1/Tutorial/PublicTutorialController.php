@@ -14,7 +14,7 @@ use App\Models\Tutorial;
 use Illuminate\Support\Facades\Validator;
 
 /**
- * PublicTutorialController - Handles public access to tutorials for Volvicon 3D Software
+ * PublicTutorialController - Handles public access to tutorials for HTAShop
  *
  * This controller follows SOLID principles:
  * - Single Responsibility: Only handles HTTP layer for public tutorial access
@@ -224,7 +224,7 @@ class PublicTutorialController extends Controller
         }
 
         // Generate frontend URL with category
-        $frontendBase = config('app.frontend_url', 'https://volvicon.com');
+        $frontendBase = config('app.frontend_url', 'https://htashop.com');
         $slug = $t->slug ?? $t->uuid;
         $categorySlug = $t->primaryCategory ? $t->primaryCategory->slug : 'general';
         $frontendUrl = rtrim($frontendBase, '/') . '/learning-center/' . $categorySlug . '/' . $slug;
@@ -317,7 +317,7 @@ class PublicTutorialController extends Controller
         }
 
         // Generate frontend URL with category
-        $frontendBase = config('app.frontend_url', 'https://volvicon.com');
+        $frontendBase = config('app.frontend_url', 'https://htashop.com');
         $slug = $t->slug ?? $t->uuid;
         $categorySlug = $t->primaryCategory ? $t->primaryCategory->slug : 'general';
         $frontendUrl = rtrim($frontendBase, '/') . '/learning-center/' . $categorySlug . '/' . $slug;

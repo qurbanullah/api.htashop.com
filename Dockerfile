@@ -38,6 +38,13 @@ RUN sed -i "s|^listen = .*|listen = /run/php/php8.4-fpm.sock|" /etc/php/8.4/fpm/
     # can create the socket with the right owner/group; chown in image build
     mkdir -p /run/php && chown -R www-data:www-data /run/php || true
 
+# Pool sizing. The distro default is `pm.max_children = 5`, which silently caps
+# PHP concurrency far below Apache's MaxRequestWorkers (a healthcheck can pass
+# while the site queues behind 5 workers). Appended to the same file so these
+# values win, and sized to fit the api container's memory limit together with
+# memory_limit in php.ini.
+RUN printf '\n; HTAShop pool tuning\npm = dynamic\npm.max_children = 6\npm.start_servers = 3\npm.min_spare_servers = 2\npm.max_spare_servers = 4\npm.max_requests = 500\n; FPM clears the environment by default, which would hide every env var the\n; stack sets (DB_HOST=db, REDIS_HOST=redis, APP_KEY, TYPESENSE_API_KEY, ...)\n; from PHP - the app would silently fall back to the values baked into .env.\nclear_env = no\n' >> /etc/php/8.4/fpm/pool.d/www.conf
+
 # Copy application and install dependencies
 # Set working directory
 WORKDIR /var/www/html
@@ -88,8 +95,14 @@ RUN getent group www-data >/dev/null 2>&1 || groupadd -r www-data && \
     usermod -a -G www-data ubuntu >/dev/null 2>&1 || true && \
     mkdir -p /var/run/apache2 /var/lock/apache2 /tmp && \
     chown -R ubuntu:www-data /var/run/apache2 /var/lock/apache2 /var/www/html /tmp && \
-    # Allow ubuntu to elevate via sudo without password for controlled root actions
-    echo 'ubuntu ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ubuntu && \
+    # Allow ubuntu to elevate via sudo without password for controlled root actions.
+    # `!env_reset` is ESSENTIAL, not cosmetic: sudo's default env_reset wipes the
+    # environment, so every env var the Swarm stack sets (DB_HOST=db, APP_KEY,
+    # the *_FILE secret paths) would be lost before supervisord starts - and
+    # php-fpm would then see none of them and the app would silently fall back
+    # to the values baked into .env. (Verified: `sudo printenv FOO` returns
+    # nothing with env_reset, and the value with !env_reset.)
+    printf 'Defaults:ubuntu !env_reset\nubuntu ALL=(ALL) NOPASSWD:ALL\n' > /etc/sudoers.d/ubuntu && \
     chmod 0440 /etc/sudoers.d/ubuntu
 
 EXPOSE 20050

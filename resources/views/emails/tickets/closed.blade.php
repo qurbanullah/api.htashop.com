@@ -423,7 +423,7 @@
         <!-- Footer -->
         <div class="footer">
             <p><strong>{{ config('app.name') }} Team</strong><br>
-            <a href="https://www.volvicon.com">www.volvicon.com</a></p>
+            <a href="https://www.htashop.com">www.htashop.com</a></p>
             <p style="margin-top: 20px; font-size: 12px; opacity: 0.8;">
                 This email was sent because a ticket status was updated.<br>
                 If you need further assistance, please contact our support team.

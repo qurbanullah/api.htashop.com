@@ -120,10 +120,10 @@ class SendLicenseRequestCreatedEmailJob implements ShouldQueue
                 }
             }
 
-            // Mail::to('qurbanullah@volvicon.com')
+            // Mail::to('qurbanullah@htashop.com')
             //     ->send(new LicenseRequestCreatedMail($this->license, 'admin'));
 
-            // Mail::to('furqan@volvicon.com')
+            // Mail::to('furqan@htashop.com')
             //     ->send(new LicenseRequestCreatedMail($this->license, 'admin'));
 
             Log::info('License request notification emails sent to admins', [

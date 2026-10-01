@@ -22,6 +22,33 @@ MIGRATE_LOCK_TIMEOUT=${MIGRATE_LOCK_TIMEOUT:-90}
 
 echo "[entrypoint] waiting for database at ${DB_HOST}:${DB_PORT}..."
 
+# ---------------------------------------------------------------------------
+# Docker-secret convention: any <VAR>_FILE pointing at a readable file is
+# exported as <VAR> containing that file's contents. This is how the stack
+# supplies APP_KEY, DB_PASSWORD, REDIS_PASSWORD and the third-party API keys
+# without any of them being baked into the image or written in plain sight in
+# the stack file.
+#
+# This only reaches PHP because the image preserves the environment across
+# `sudo` (Defaults:ubuntu !env_reset in the Dockerfile) and the FPM pool sets
+# `clear_env = no`.
+# ---------------------------------------------------------------------------
+export_secret_files() {
+    local entry name file value
+    # `env`/`sed` matching nothing is not an error; the loop simply does not run.
+    while IFS= read -r entry; do
+        name="${entry%_FILE}"
+        file="${!entry}"
+        [[ -n "${file}" && -r "${file}" ]] || continue
+        value="$(cat "${file}")"
+        # Docker secrets frequently end with a newline; strip exactly one.
+        value="${value%$'\n'}"
+        export "${name}=${value}"
+        echo "[entrypoint] loaded ${name} from ${file}"
+    done < <(env | sed -n 's/^\([A-Z0-9_]*_FILE\)=.*/\1/p')
+}
+export_secret_files
+
 # Fast-path for one-off debug commands: if SKIP_STARTUP is set, exec the
 # provided command immediately instead of performing DB waits/migrations.
 # Useful for `docker run --rm -e SKIP_STARTUP=1 ... punchout-api sh -c 'cat /var/www/html/.env'`
@@ -92,6 +119,16 @@ wait_for_port() {
                 return 0
             fi
         fi
+
+        # Without this the loop spins forever (and burns CPU): the timeout was
+        # computed but never checked, so a down database hung the container
+        # instead of failing fast.
+        now=$(date +%s)
+        if [ $((now - start)) -ge "$timeout" ]; then
+            echo "[entrypoint] TCP port ${host}:${port} did not open within ${timeout}s" >&2
+            return 1
+        fi
+        sleep 2
     done
 }
 
@@ -221,19 +258,30 @@ run_migrations_with_lock() {
 if [ "${SKIP_MIGRATIONS:-}" != "" ]; then
   echo "[entrypoint] SKIP_MIGRATIONS is set, skipping migration execution"
 elif [ -x /usr/bin/php ] || [ -x /usr/local/bin/php ]; then
-  if ! run_migrations_with_lock; then
-    # If the lock timeout occurred (return code 2), assume another node completed migrations.
-    # For other failures, fail the container start so the operator can inspect logs.
-    rc=$?
-    if [ "$rc" -eq 2 ]; then
-      echo "[entrypoint] continuing without running migrations (another node likely ran them)"
-    else
-      echo "[entrypoint] migrations failed (rc=${rc})" >&2
-      exit 1
-    fi
+  # `set -e` would abort on the non-zero statuses we deliberately handle below,
+  # so capture the exit code with -e temporarily disabled. (`$?` inside the
+  # else-branch of `if ! cmd` is NOT the command's status - that bug meant the
+  # "another node already migrated" path never ran.)
+  set +e
+  run_migrations_with_lock
+  rc=$?
+  set -e
+  if [ "$rc" -eq 2 ]; then
+    echo "[entrypoint] continuing without running migrations (another node likely ran them)"
+  elif [ "$rc" -ne 0 ]; then
+    echo "[entrypoint] migrations failed (rc=${rc})" >&2
+    exit 1
   fi
 else
   echo "[entrypoint] PHP CLI not found; cannot run migrations" >&2
+fi
+
+# Optional production caching. Off by default: `config:cache`/`route:cache`
+# break on apps that call env() outside config files or use closure routes, so
+# enable it deliberately once you have confirmed the app supports it.
+if [ "${RUN_OPTIMIZE:-}" = "1" ]; then
+  echo "[entrypoint] caching config/routes/views (RUN_OPTIMIZE=1)..."
+  php artisan optimize || echo "[entrypoint] artisan optimize failed (non-fatal)" >&2
 fi
 
 echo "[entrypoint] migrations completed, execing CMD..."

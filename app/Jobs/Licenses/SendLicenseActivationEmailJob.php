@@ -252,10 +252,10 @@ class SendLicenseActivationEmailJob implements ShouldQueue
                 }
             }
 
-            // Mail::to('qurbanullah@volvicon.com')
+            // Mail::to('qurbanullah@htashop.com')
             //     ->send(new LicenseActivatedMail($this->license, $this->isActivated));
 
-            // Mail::to('furqan@volvicon.com')
+            // Mail::to('furqan@htashop.com')
             //     ->send(new LicenseActivatedMail($this->license, $this->isActivated));
 
             Log::info('License request notification emails sent to admins', [

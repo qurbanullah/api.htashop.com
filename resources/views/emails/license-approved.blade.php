@@ -437,19 +437,19 @@
                     <strong>1. Download the license file:</strong> Download the attached license file (.lic) or download it from your portal account by clicking the "View License Detail" link.
                 </div>
                 <div class="instruction-step">
-                    <strong>2. Launch Volvicon:</strong> Start Volvicon again. The License Manager dialog should appear automatically.
+                    <strong>2. Launch HTAShop:</strong> Start HTAShop again. The License Manager dialog should appear automatically.
                 </div>
                 <div class="instruction-step">
                     <strong>3. Import your license file:</strong> Select <strong>Existing license</strong>, click <strong>Browse</strong>, and choose the <code>.lic</code> file. Verify that the displayed license information is correct.
                 </div>
                 <div class="instruction-step">
-                    <strong>4. Complete activation:</strong> Click <strong>Go Back</strong>, close the dialog, and start using Volvicon.
+                    <strong>4. Complete activation:</strong> Click <strong>Go Back</strong>, close the dialog, and start using HTAShop.
                 </div>
                 <div class="instruction-step" style="margin-top: 18px; padding-top: 18px; border-top: 1px solid #dbeafe;">
-                    <strong>Written guide:</strong> <a href="https://help.volvicon.com/docs/getting-started/license-guide">Volvicon License Registration Guide</a>
+                    <strong>Written guide:</strong> <a href="https://help.htashop.com/docs/getting-started/license-guide">HTAShop License Registration Guide</a>
                 </div>
                 <div class="instruction-step">
-                    <strong>Video guide:</strong> <a href="https://volvicon.com/learning-center/volvicon-licensing-and-installation-complete-stepbystep-guide">Volvicon Licensing and Installation: Complete Step‑by‑Step Guide</a>
+                    <strong>Video guide:</strong> <a href="https://htashop.com/learning-center/htashop-licensing-and-installation-complete-stepbystep-guide">HTAShop Licensing and Installation: Complete Step‑by‑Step Guide</a>
                 </div>
             </div>
 
@@ -474,9 +474,9 @@
 
         <!-- Footer -->
         <div class="footer">
-            <p><strong>Volvicon Team</strong></p>
-            <p><a href="mailto:support@volvicon.com">support@volvicon.com</a></p>
-            <p><a href="https://volvicon.com">www.volvicon.com</a></p>
+            <p><strong>HTAShop Team</strong></p>
+            <p><a href="mailto:support@htashop.com">support@htashop.com</a></p>
+            <p><a href="https://htashop.com">www.htashop.com</a></p>
             <p style="margin-top: 20px; font-size: 12px; opacity: 0.8;">
                 This email was sent because your license status was updated.<br>
                 If you have any questions, please contact our support team.

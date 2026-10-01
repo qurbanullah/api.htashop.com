@@ -111,9 +111,11 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => env('MAIL_FROM_ADDRESS', 'no-reply@htashop.com'),
+        'name' => env('MAIL_FROM_NAME', 'HTAShop'),
     ],
+
+    'admin_email' => env('MAIL_ADMIN_EMAIL', 'support@htashop.com'),
 
     'contact_recipient_email' => env('MAIL_CONTACT_RECIPIENT_EMAIL', env('MAIL_ADMIN_EMAIL')),
 

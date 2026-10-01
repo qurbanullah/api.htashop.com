@@ -64,8 +64,8 @@ Please take appropriate action on this license request to ensure timely customer
 @endif
 
 ---
-Volvicon Team
-Email: support@volvicon.com
-Website: https://volvicon.com
+HTAShop Team
+Email: support@htashop.com
+Website: https://htashop.com
 
 This email was sent because a new license request was submitted. If you have any questions, please contact our support team.

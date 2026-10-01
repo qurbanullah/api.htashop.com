@@ -41,8 +41,8 @@ Contact Support: {{ $supportUrl }}
 
 ---
 
-Volvicon
-{{ config('mail.from.address', 'team@volvicon.com') }}
+HTAShop
+{{ config('mail.from.address', 'team@htashop.com') }}
 
 Website: {{ config('app.url') }}
 Support: {{ $supportUrl }}

@@ -249,7 +249,7 @@ class SendLicenseApprovalEmailJob implements ShouldQueue
             }
 
             // Also send to configured admin emails if not already included
-            $configuredAdminEmail = config('mail.admin_email', 'qurbanullah@volvicon.com');
+            $configuredAdminEmail = config('mail.admin_email', 'support@htashop.com');
             // $fallbackAdminEmail = 'furqan797@gmail.com'; // Removed - no longer sending to fallback email
 
             if ($configuredAdminEmail && !$admins->pluck('email')->contains($configuredAdminEmail) && $configuredAdminEmail !== $this->license->user->email) {

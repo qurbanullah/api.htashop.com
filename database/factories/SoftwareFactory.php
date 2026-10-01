@@ -23,7 +23,7 @@ class SoftwareFactory extends Factory
         // ]) . ' ' . fake()->randomElement(['Pro', 'Studio', 'Suite', 'Tools', 'Manager', 'Engine']);
 
         $name = fake()->randomElement([
-            'Volvicon', 'Volvicon Render', 'Volvicon Simulator', 'Volvicon Mesh', 'Real3D VR', 'Volvicon Core'
+            'HTAShop', 'HTAShop Render', 'HTAShop Simulator', 'HTAShop Mesh', 'Real3D VR', 'HTAShop Core'
         ]);
 
         return [

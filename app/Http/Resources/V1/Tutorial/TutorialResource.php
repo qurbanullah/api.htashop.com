@@ -15,7 +15,7 @@ class TutorialResource extends JsonResource
     public function toArray(Request $request): array
     {
         // Generate frontend URL
-        $frontendBase = config('app.frontend_url', 'https://volvicon.com');
+        $frontendBase = config('app.frontend_url', 'https://htashop.com');
         $slug = $this->slug ?? $this->uuid;
         $frontendUrl = rtrim($frontendBase, '/') . '/tutorials/' . $slug;
 

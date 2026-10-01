@@ -13,10 +13,10 @@ it('sends contact notifications to admin users and the configured contact recipi
     Role::findOrCreate('admin', 'api');
     Role::findOrCreate('super-admin', 'api');
 
-    config()->set('mail.contact_recipient_email', 'contact@volvicon.com');
+    config()->set('mail.contact_recipient_email', 'contact@htashop.com');
 
     $admin = User::factory()->create([
-        'email' => 'admin@volvicon.com',
+        'email' => 'admin@htashop.com',
     ]);
     $admin->assignRole('admin');
 
@@ -24,9 +24,9 @@ it('sends contact notifications to admin users and the configured contact recipi
         'name' => 'Website Visitor',
         'email' => 'visitor@example.com',
         'subject' => 'General Inquiry',
-        'message' => 'I would like to know more about Volvicon.',
+        'message' => 'I would like to know more about HTAShop.',
         'status' => 'new',
-        'metadata' => ['source_page' => 'https://frontend.volvicon.com/about/contact'],
+        'metadata' => ['source_page' => 'https://frontend.htashop.com/about/contact'],
     ]);
 
     Mail::fake();
@@ -37,11 +37,11 @@ it('sends contact notifications to admin users and the configured contact recipi
     Mail::assertSent(ContactMessageNotificationMail::class, 2);
     Mail::assertSent(ContactMessageNotificationMail::class, function (ContactMessageNotificationMail $mail) use ($message) {
         return $mail->contactMessage->is($message)
-            && $mail->hasTo('admin@volvicon.com');
+            && $mail->hasTo('admin@htashop.com');
     });
     Mail::assertSent(ContactMessageNotificationMail::class, function (ContactMessageNotificationMail $mail) use ($message) {
         return $mail->contactMessage->is($message)
-            && $mail->hasTo('contact@volvicon.com');
+            && $mail->hasTo('contact@htashop.com');
     });
 });
 
@@ -50,10 +50,10 @@ it('renders the contact notification email view', function () {
         'name' => 'Website Visitor',
         'email' => 'visitor@example.com',
         'subject' => 'General Inquiry',
-        'message' => 'I would like to know more about Volvicon.',
+        'message' => 'I would like to know more about HTAShop.',
         'status' => 'new',
         'metadata' => [
-            'source_page' => 'https://frontend.volvicon.com/about/contact',
+            'source_page' => 'https://frontend.htashop.com/about/contact',
             'subject_key' => 'general',
         ],
     ]);
@@ -62,5 +62,5 @@ it('renders the contact notification email view', function () {
 
     expect(Str::contains($html, 'New Contact Message'))->toBeTrue();
     expect(Str::contains($html, 'visitor@example.com'))->toBeTrue();
-    expect(Str::contains($html, 'https://frontend.volvicon.com/about/contact'))->toBeTrue();
+    expect(Str::contains($html, 'https://frontend.htashop.com/about/contact'))->toBeTrue();
 });

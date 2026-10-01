@@ -389,9 +389,9 @@
 
         <!-- Footer -->
         <div class="footer">
-            <p><strong>Volvicon Team</strong></p>
-            <p><a href="mailto:support@volvicon.com">support@volvicon.com</a></p>
-            <p><a href="https://volvicon.com">www.volvicon.com</a></p>
+            <p><strong>HTAShop Team</strong></p>
+            <p><a href="mailto:support@htashop.com">support@htashop.com</a></p>
+            <p><a href="https://htashop.com">www.htashop.com</a></p>
             <p style="margin-top: 20px; font-size: 12px; opacity: 0.8;">
                 This email was sent because your license status was updated.<br>
                 If you have any questions, please contact our support team.

@@ -23,13 +23,13 @@ it('stores a public contact message', function () {
         'first_name' => 'Smoke',
         'last_name' => 'Contact',
         'email' => 'smoke-contact@example.com',
-        'company' => 'Volvicon QA',
+        'company' => 'HTAShop QA',
         'phone' => '+1 555 0100',
         'country' => 'USA',
         'subject' => 'general',
         'message' => 'This is a smoke test contact message.',
         'consent' => true,
-        'source_page' => 'https://frontend.volvicon.com/about/contact',
+        'source_page' => 'https://frontend.htashop.com/about/contact',
     ]);
 
     $response->assertCreated()->assertJson([
@@ -45,7 +45,7 @@ it('stores a public contact message', function () {
     expect($message->subject)->toBe('General Inquiry');
     expect($message->status)->toBe('new');
     expect($message->metadata['subject_key'])->toBe('general');
-    expect($message->metadata['source_page'])->toBe('https://frontend.volvicon.com/about/contact');
+    expect($message->metadata['source_page'])->toBe('https://frontend.htashop.com/about/contact');
 
     Queue::assertPushed(SendContactMessageNotificationJob::class);
 });
@@ -58,7 +58,7 @@ it('stores a public support ticket as an internal guest ticket', function () {
         'priority' => 'medium',
         'subject' => 'Smoke support issue',
         'message' => 'This is a smoke test support request from the public website.',
-        'source_page' => 'https://frontend.volvicon.com/services/support',
+        'source_page' => 'https://frontend.htashop.com/services/support',
     ]);
 
     $response->assertCreated()->assertJson([
@@ -76,7 +76,7 @@ it('stores a public support ticket as an internal guest ticket', function () {
     expect($ticket->description)->toContain('smoke test support request');
     expect($ticket->is_visible)->toBeFalse();
     expect($ticket->additional_information)->toContain('Portal access: unavailable for guest submissions.');
-    expect($ticket->additional_information)->toContain('Source page: https://frontend.volvicon.com/services/support');
+    expect($ticket->additional_information)->toContain('Source page: https://frontend.htashop.com/services/support');
 
     Queue::assertPushed(SendTicketCreatedEmail::class);
 });

@@ -46,7 +46,7 @@ Route::get('/.well-known/apple-app-site-association', [WellKnownController::clas
 // Default password reset (for backward compatibility and main frontend)
 Route::get('/password/reset/{token}', function ($token) {
     $email = request('email');
-    $frontendUrl = env('FRONTEND_URL', 'https://volvicon.com');
+    $frontendUrl = env('FRONTEND_URL', 'https://htashop.com');
 
     return redirect($frontendUrl.'/reset-password?token='.$token.'&email='.urlencode($email));
 })->name('password.reset');
@@ -54,7 +54,7 @@ Route::get('/password/reset/{token}', function ($token) {
 // Manage submission system password reset
 Route::get('/manage/password/reset/{token}', function ($token) {
     $email = request('email');
-    $frontendUrl = env('MANAGE_FRONTEND_URL', 'https://manage.volvicon.com');
+    $frontendUrl = env('MANAGE_FRONTEND_URL', 'https://manage.htashop.com');
 
     return redirect($frontendUrl.'/reset-password?token='.$token.'&email='.urlencode($email));
 })->name('password.reset.manage');
@@ -62,7 +62,7 @@ Route::get('/manage/password/reset/{token}', function ($token) {
 // Admin panel password reset
 Route::get('/admin/password/reset/{token}', function ($token) {
     $email = request('email');
-    $frontendUrl = env('ADMIN_FRONTEND_URL', 'https://admin.volvicon.com');
+    $frontendUrl = env('ADMIN_FRONTEND_URL', 'https://admin.htashop.com');
 
     return redirect($frontendUrl.'/reset-password?token='.$token.'&email='.urlencode($email));
 })->name('password.reset.admin');

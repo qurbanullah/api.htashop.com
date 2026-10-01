@@ -16,10 +16,10 @@ class UserSeeder_Simple extends Seeder
     {
         // Create admin user
         $admin = User::updateOrCreate(
-            ['email' => 'admin@volvicon.com'],
+            ['email' => 'admin@htashop.com'],
             [
                 'name' => 'Admin User',
-                'email' => 'admin@volvicon.com',
+                'email' => 'admin@htashop.com',
                 'email_verified_at' => now(),
                 'password' => Hash::make('password'),
             ]
@@ -122,6 +122,6 @@ class UserSeeder_Simple extends Seeder
         $this->command->info('- 1 associate-editor + author');
         $this->command->info('- 1 reviewer + author');
         $this->command->info('Total: 17 users with appropriate roles');
-        $this->command->info('Admin login: admin@volvicon.com / password');
+        $this->command->info('Admin login: admin@htashop.com / password');
     }
 }
