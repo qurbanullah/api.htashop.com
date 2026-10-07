@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Category;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 class CategorySeeder extends Seeder
@@ -109,7 +109,7 @@ class CategorySeeder extends Seeder
         }
 
         for ($i = 0; $i < 676; $i++) {
-            $candidate = chr(65 + intdiv($i, 26)) . chr(65 + ($i % 26));
+            $candidate = chr(65 + intdiv($i, 26)).chr(65 + ($i % 26));
             if (! $used->has($candidate)) {
                 return $candidate;
             }
@@ -597,6 +597,29 @@ class CategorySeeder extends Seeder
                     ['name' => 'Outdoor Decor', 'slug' => 'outdoor-decor', 'sort_order' => 7],
                     ['name' => 'Pots & Planters', 'slug' => 'pots-planters', 'sort_order' => 8],
                     ['name' => 'Snow & Ice Removal', 'slug' => 'snow-ice-removal', 'sort_order' => 9],
+                ],
+            ],
+
+            // ══════════════════════════════════════════
+            // 21. ROBOTICS & AUTOMATION
+            // ══════════════════════════════════════════
+            [
+                'name' => 'Robotics & Automation',
+                'code' => 'RB',
+                'slug' => 'robotics-automation',
+                'description' => 'Robotics components, drone & UAV parts, controllers, sensors, and automation hardware.',
+                'sort_order' => 21,
+                'children' => [
+                    ['name' => 'Educational & STEM Kits', 'slug' => 'educational-stem-kits', 'sort_order' => 1],
+                    ['name' => 'Motors & Actuators', 'slug' => 'motors-actuators', 'sort_order' => 2],
+                    ['name' => 'Sensors & Modules', 'slug' => 'sensors-modules', 'sort_order' => 3],
+                    ['name' => 'Controllers & Boards', 'slug' => 'controllers-boards', 'sort_order' => 4],
+                    ['name' => 'Power & Batteries', 'slug' => 'power-batteries', 'sort_order' => 5],
+                    ['name' => 'Drone & UAV Parts', 'slug' => 'drone-uav-parts', 'sort_order' => 6],
+                    ['name' => 'Agricultural Drone Components', 'slug' => 'agricultural-drone-components', 'sort_order' => 7],
+                    ['name' => 'Robot Chassis & Wheels', 'slug' => 'robot-chassis-wheels', 'sort_order' => 8],
+                    ['name' => 'Industrial Automation', 'slug' => 'industrial-automation', 'sort_order' => 9],
+                    ['name' => 'Cables, Connectors & Hardware', 'slug' => 'cables-connectors-hardware', 'sort_order' => 10],
                 ],
             ],
         ];

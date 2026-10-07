@@ -5,6 +5,7 @@ namespace App\Services\Checkout;
 use App\Models\Cart;
 use App\Models\User;
 use App\Services\Coupon\CouponService;
+use App\Services\Pricing\DutyRateService;
 use App\Support\Checkout\CheckoutTotals;
 
 /**
@@ -20,6 +21,7 @@ class CheckoutPricing
     public function __construct(
         protected CartPricing $cartPricing,
         protected CouponService $coupons,
+        protected DutyRateService $dutyRates,
     ) {}
 
     /**
@@ -40,6 +42,7 @@ class CheckoutPricing
         $currency = $this->currencyFor($cart);
 
         $shipping = $this->shippingFor($subtotal, $currency);
+        $duty = $this->dutyForCart($cart);
 
         $coupon = filled($couponCode)
             ? $this->coupons->resolve((string) $couponCode, $subtotal, $user, $cart->session_id, $tenantId, $organizationId)
@@ -63,6 +66,7 @@ class CheckoutPricing
             freeShippingThreshold: $shipping['threshold'],
             couponCode: $coupon?->code,
             couponLabel: $coupon?->label,
+            dutyEstimate: $duty,
         );
     }
 
@@ -103,6 +107,36 @@ class CheckoutPricing
     private function currencyFor(Cart $cart): string
     {
         return strtoupper((string) ($cart->currency ?: config('payment.currency', 'PKR')));
+    }
+
+    /**
+     * Estimated customs duty for the imported lines in the basket.
+     *
+     * Only on-demand/drop-ship/pre-order items are included: in-stock goods
+     * already have their landed cost folded into the price. The figure is an
+     * estimate the buyer will likely pay at customs on delivery — it is not
+     * added to the order total.
+     */
+    private function dutyForCart(Cart $cart): float
+    {
+        $duty = 0.0;
+
+        foreach ($cart->items()->with(['product', 'variant'])->get() as $item) {
+            $product = $item->product;
+
+            if (! $product || ! $product->requiresAdvancePayment()) {
+                continue;
+            }
+
+            $unit = $this->cartPricing->linePrice($product, $item->variant)['unit_price'];
+            $duty += $this->dutyRates->estimate(
+                $unit * (float) $item->quantity,
+                $product->hs_code,
+                $product->origin_country,
+            );
+        }
+
+        return round($duty, 2);
     }
 
     /** Config values arrive as strings from env; `0` and `''` mean "no threshold". */

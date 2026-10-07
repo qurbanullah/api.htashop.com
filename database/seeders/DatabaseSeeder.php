@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Create default test user first (only if it doesn't exist)
-        if (!User::where('email', 'test@example.com')->exists()) {
+        if (! User::where('email', 'test@example.com')->exists()) {
             $testUser = User::factory()->create([
                 'name' => 'Test User',
                 'email' => 'test@example.com',
@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
         } else {
             $testUser = User::where('email', 'test@example.com')->first();
             // Ensure the test user has super-admin role
-            if (!$testUser->hasRole('super-admin')) {
+            if (! $testUser->hasRole('super-admin')) {
                 $testUser->assignRole('super-admin');
                 $this->command->info('✅ Assigned super-admin role to existing test user');
             } else {
@@ -52,6 +52,7 @@ class DatabaseSeeder extends Seeder
             TicketSeeder::class,
             MeasurementSeeder::class,
             CurrencySeeder::class,
+            DutyRateSeeder::class,
             CountrySeeder::class,
             CitySeeder::class,
             DefinitionSeeder::class,
@@ -60,6 +61,7 @@ class DatabaseSeeder extends Seeder
             ManufacturerSeeder::class,
             BrandSeeder::class,
             ProductSeeder::class,
+            RoboticsProductSeeder::class,
             VariantSeeder::class,
             OrderSeeder::class,
             KnowledgeEntrySeeder::class,

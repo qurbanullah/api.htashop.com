@@ -3,6 +3,7 @@
 namespace App\Actions\Product;
 
 use App\Actions\Sku\SkuGeneratorAction;
+use App\Enums\Sourcing;
 use App\Models\Category;
 use App\Models\Feature;
 use App\Models\Organization;
@@ -15,8 +16,7 @@ class ProductCreateAction
 {
     public function __construct(
         protected SkuGeneratorAction $skuGenerator,
-    ) {
-    }
+    ) {}
 
     public function handle(array $data): Product
     {
@@ -48,7 +48,7 @@ class ProductCreateAction
             'name' => data_get($data, 'name'),
             'slug' => $this->resolveSlug(data_get($data, 'slug'), data_get($data, 'name'), data_get($data, 'tenant_id')),
             'sku' => $this->skuGenerator->product(
-                $organization ?? new Organization(),
+                $organization ?? new Organization,
                 $category,
                 (int) data_get($data, 'tenant_id'),
             ),
@@ -59,6 +59,11 @@ class ProductCreateAction
             'ntn' => data_get($data, 'ntn'),
             'barcode' => data_get($data, 'barcode'),
             'model_number' => data_get($data, 'model_number'),
+            'sourcing' => data_get($data, 'sourcing') ?: Sourcing::IN_STOCK,
+            'lead_time_days' => data_get($data, 'lead_time_days'),
+            'origin_country' => data_get($data, 'origin_country'),
+            'sourcing_url' => data_get($data, 'sourcing_url'),
+            'supplier_reference' => data_get($data, 'supplier_reference'),
             'status' => data_get($data, 'status', 'draft'),
             'summary' => data_get($data, 'summary'),
             'description' => data_get($data, 'description'),
@@ -141,7 +146,7 @@ class ProductCreateAction
             ->where('tenant_id', $tenantId)
             ->where('slug', $candidate)
             ->exists()) {
-            $candidate = $base . '-' . $suffix;
+            $candidate = $base.'-'.$suffix;
             $suffix++;
         }
 

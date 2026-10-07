@@ -2,10 +2,12 @@
 
 namespace App\Http\Requests\V1\Product;
 
+use App\Enums\Sourcing;
 use App\Models\Organization;
 use App\Models\Product;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ProductUpdateRequest extends FormRequest
 {
@@ -28,6 +30,11 @@ class ProductUpdateRequest extends FormRequest
             'ntn' => ['nullable', 'string', 'max:50'],
             'barcode' => ['nullable', 'string', 'max:100'],
             'model_number' => ['nullable', 'string', 'max:100'],
+            'sourcing' => ['nullable', 'string', Rule::in(Sourcing::ALL)],
+            'lead_time_days' => ['nullable', 'integer', 'min:0', 'max:365'],
+            'origin_country' => ['nullable', 'string', 'max:2'],
+            'sourcing_url' => ['nullable', 'string', 'max:2048'],
+            'supplier_reference' => ['nullable', 'string', 'max:100'],
             'status' => ['sometimes', 'string', 'max:100'],
             'summary' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
@@ -53,7 +60,7 @@ class ProductUpdateRequest extends FormRequest
         $validator->after(function ($validator): void {
             $product = Product::query()->where('uuid', $this->route('uuid'))->first();
 
-            if (!$product) {
+            if (! $product) {
                 return;
             }
 

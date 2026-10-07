@@ -2,14 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\Sourcing;
 use App\Traits\Dam\Damable;
-use App\Models\Code;
-use App\Models\Organization;
-use App\Models\Price;
-use App\Models\Revision;
-use App\Models\Tenant;
-use App\Models\Value;
-use App\Models\Variant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,6 +31,11 @@ class Product extends Model
         'ntn',
         'barcode',
         'model_number',
+        'sourcing',
+        'lead_time_days',
+        'origin_country',
+        'sourcing_url',
+        'supplier_reference',
         'status',
         'summary',
         'description',
@@ -46,7 +45,18 @@ class Product extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'lead_time_days' => 'integer',
         'metadata' => 'array',
+    ];
+
+    /**
+     * New products are ordinary stock unless told otherwise. Eloquent applies
+     * this default on new instances, so the in-memory model and the database
+     * column default always agree (the column default alone would leave a
+     * freshly-created model's `sourcing` null until reloaded).
+     */
+    protected $attributes = [
+        'sourcing' => Sourcing::IN_STOCK,
     ];
 
     protected static function booted(): void
@@ -156,5 +166,35 @@ class Product extends Model
         return $this->morphToMany(Highlight::class, 'highlightable')
             ->withPivot(['sort_order', 'heading_override', 'body_override'])
             ->orderByPivot('sort_order');
+    }
+
+    /**
+     * Whether this product is ordered from a supplier only after the customer
+     * pays, rather than being picked from held stock.
+     */
+    public function requiresAdvancePayment(): bool
+    {
+        return Sourcing::requiresAdvancePayment((string) ($this->sourcing ?: Sourcing::IN_STOCK));
+    }
+
+    /**
+     * A customer-facing availability label derived from the sourcing mode and
+     * lead time, e.g. "In Stock" or "Ships in 18 days".
+     */
+    public function availabilityLabel(): string
+    {
+        $sourcing = $this->sourcing ?: Sourcing::IN_STOCK;
+        $lead = $this->lead_time_days;
+
+        if ($sourcing === Sourcing::IN_STOCK) {
+            return 'In Stock';
+        }
+
+        return match ($sourcing) {
+            Sourcing::ON_DEMAND => $lead ? "Ships in {$lead} days" : 'Import on Demand',
+            Sourcing::DROPSHIP => $lead ? "Ships in {$lead} days" : 'Drop-ship',
+            Sourcing::PREORDER => $lead ? "Pre-order · ships in {$lead} days" : 'Pre-order',
+            default => Sourcing::label($sourcing),
+        };
     }
 }

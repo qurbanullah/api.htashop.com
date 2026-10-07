@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\V1\Product;
 
+use App\Enums\Sourcing;
 use App\Models\Organization;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ProductStoreRequest extends FormRequest
 {
@@ -27,6 +29,11 @@ class ProductStoreRequest extends FormRequest
             'ntn' => ['nullable', 'string', 'max:50'],
             'barcode' => ['nullable', 'string', 'max:100'],
             'model_number' => ['nullable', 'string', 'max:100'],
+            'sourcing' => ['nullable', 'string', Rule::in(Sourcing::ALL)],
+            'lead_time_days' => ['nullable', 'integer', 'min:0', 'max:365'],
+            'origin_country' => ['nullable', 'string', 'max:2'],
+            'sourcing_url' => ['nullable', 'string', 'max:2048'],
+            'supplier_reference' => ['nullable', 'string', 'max:100'],
             'status' => ['nullable', 'string', 'max:100'],
             'summary' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
@@ -50,7 +57,7 @@ class ProductStoreRequest extends FormRequest
     protected function passedValidation(): void
     {
         // Auto-resolve tenant/organization from user's active membership
-        if (!$this->input('tenant_id') || !$this->input('organization_id')) {
+        if (! $this->input('tenant_id') || ! $this->input('organization_id')) {
             $user = $this->user();
             $membership = $user?->memberships()->where('is_active', true)->first();
 

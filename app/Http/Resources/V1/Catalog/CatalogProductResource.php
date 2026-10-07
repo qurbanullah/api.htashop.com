@@ -15,13 +15,16 @@ class CatalogProductResource extends JsonResource
             'uuid' => $this->uuid,
             'name' => $this->name,
             'slug' => $this->slug,
-            'route_key' => $this->slug . '-' . substr($this->uuid, 0, 8),
+            'route_key' => $this->slug.'-'.substr($this->uuid, 0, 8),
             'summary' => $this->summary,
             'status' => $this->status,
             'is_active' => $this->is_active,
             'price' => data_get($this->metadata, 'price'),
             'sale_price' => data_get($this->metadata, 'sale_price'),
             'currency' => data_get($this->metadata, 'currency', 'USD'),
+            'sourcing' => $this->sourcing,
+            'lead_time_days' => $this->lead_time_days,
+            'availability' => $this->availabilityLabel(),
             'image_url' => $this->resolveImageUrl(),
             'image_urls' => $this->resolveImageUrls(),
             'categories' => $this->whenLoaded('categories'),
@@ -51,7 +54,7 @@ class CatalogProductResource extends JsonResource
 
         $key = data_get($dam->metadata, "variants.{$size}", $dam->object_key);
 
-        return 'https://cdn.htashop.com/' . ltrim((string) $key, '/');
+        return 'https://cdn.htashop.com/'.ltrim((string) $key, '/');
     }
 
     /**
@@ -83,7 +86,7 @@ class CatalogProductResource extends JsonResource
         $variants = data_get($dam->metadata, 'variants', []);
         $variants = is_array($variants) ? $variants : [];
 
-        $urlFor = fn (string $key): string => 'https://cdn.htashop.com/' . ltrim($key, '/');
+        $urlFor = fn (string $key): string => 'https://cdn.htashop.com/'.ltrim($key, '/');
 
         $originalKey = (string) data_get($variants, 'original', $dam->object_key);
 

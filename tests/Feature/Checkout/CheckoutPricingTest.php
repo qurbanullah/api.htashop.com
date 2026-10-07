@@ -2,10 +2,12 @@
 
 use App\Enums\CouponType;
 use App\Enums\OrderStatus;
+use App\Enums\Sourcing;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Coupon;
 use App\Models\CouponRedemption;
+use App\Models\DutyRate;
 use App\Models\Order;
 use App\Models\Organization;
 use App\Models\Product;
@@ -351,5 +353,55 @@ describe('checkout totals are server-authoritative', function () {
             ->postJson('/api/v1/checkout/quote', ['coupon_code' => 'RELEASE'])
             ->assertOk()
             ->assertJsonPath('data.discount', 100);
+    });
+});
+
+describe('customs duty estimate', function () {
+    it('estimates duty for import-on-demand items with a matching HS code', function () {
+        DutyRate::query()->create(['hs_code' => '8807', 'customs_duty' => 10]);
+
+        $tenant = ckTenant();
+        $product = ckProduct($tenant, 1000, [
+            'sourcing' => Sourcing::ON_DEMAND,
+            'hs_code' => '8807.30.00',
+        ]);
+        $cart = ckCart('duty-od');
+        ckCartItem($cart, $product, 2);
+
+        $response = $this->withHeader('X-Cart-Token', 'duty-od')
+            ->postJson('/api/v1/checkout/quote')
+            ->assertOk();
+
+        // 2 × 1000 = 2000 subtotal; duty = 10% of 2000 = 200.
+        expect((float) $response->json('data.duty_estimate'))->toBe(200.0)
+            ->and((float) $response->json('data.landed_cost'))->toBeGreaterThan((float) $response->json('data.total'));
+    });
+
+    it('does not estimate duty for in-stock items', function () {
+        DutyRate::query()->create(['hs_code' => '8807', 'customs_duty' => 10]);
+
+        $tenant = ckTenant();
+        $product = ckProduct($tenant, 1000, ['hs_code' => '8807.30.00']);
+        $cart = ckCart('duty-stock');
+        ckCartItem($cart, $product, 2);
+
+        $response = $this->withHeader('X-Cart-Token', 'duty-stock')
+            ->postJson('/api/v1/checkout/quote')
+            ->assertOk();
+
+        expect((float) $response->json('data.duty_estimate'))->toBe(0.0);
+    });
+
+    it('estimates zero duty without a matching HS code', function () {
+        $tenant = ckTenant();
+        $product = ckProduct($tenant, 1000, ['sourcing' => Sourcing::ON_DEMAND]);
+        $cart = ckCart('duty-nohs');
+        ckCartItem($cart, $product, 1);
+
+        $response = $this->withHeader('X-Cart-Token', 'duty-nohs')
+            ->postJson('/api/v1/checkout/quote')
+            ->assertOk();
+
+        expect((float) $response->json('data.duty_estimate'))->toBe(0.0);
     });
 });

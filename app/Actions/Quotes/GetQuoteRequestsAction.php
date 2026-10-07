@@ -9,10 +9,6 @@ class GetQuoteRequestsAction
 {
     /**
      * Get paginated quote requests with filters.
-     *
-     * @param array $filters
-     * @param int $perPage
-     * @return LengthAwarePaginator
      */
     public function execute(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
@@ -26,9 +22,10 @@ class GetQuoteRequestsAction
         if (isset($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('company', 'like', "%{$search}%");
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('organization', 'like', "%{$search}%");
             });
         }
 

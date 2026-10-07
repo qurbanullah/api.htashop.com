@@ -24,6 +24,7 @@ class CartReadAction
             'sku' => data_get($item->metadata, 'sku'),
             'variant_name' => data_get($item->metadata, 'variant_name'),
             'image_url' => data_get($item->metadata, 'image_url'),
+            'requires_advance_payment' => (bool) ($item->product?->requiresAdvancePayment() ?? false),
         ])->all();
 
         $subtotal = $items->sum(fn ($item) => (float) $item->unit_price * $item->quantity);

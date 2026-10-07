@@ -25,6 +25,7 @@ final class CheckoutTotals
         public readonly ?float $freeShippingThreshold = null,
         public readonly ?string $couponCode = null,
         public readonly ?string $couponLabel = null,
+        public readonly float $dutyEstimate = 0.0,
     ) {}
 
     /**
@@ -40,6 +41,15 @@ final class CheckoutTotals
         $remaining = round($this->freeShippingThreshold - $this->subtotal, 2);
 
         return $remaining > 0 ? $remaining : null;
+    }
+
+    /**
+     * The estimated total the buyer pays once customs duty is added on
+     * delivery. Informational only — duty is not part of the order total.
+     */
+    public function landedCost(): float
+    {
+        return round($this->total + $this->dutyEstimate, 2);
     }
 
     /**
@@ -59,6 +69,8 @@ final class CheckoutTotals
             'amount_until_free_shipping' => $this->amountUntilFreeShipping(),
             'coupon_code' => $this->couponCode,
             'coupon_label' => $this->couponLabel,
+            'duty_estimate' => $this->dutyEstimate,
+            'landed_cost' => $this->landedCost(),
         ];
     }
 }

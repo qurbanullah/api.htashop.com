@@ -8,6 +8,7 @@ use App\Enums\PaymentStatus;
 use App\Gateways\PaymentGatewayManager;
 use App\Models\Address;
 use App\Models\Cart;
+use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Organization;
@@ -82,6 +83,8 @@ class CheckoutService
             throw ValidationException::withMessages(['cart' => 'Your cart is empty.']);
         }
 
+        $this->assertPaymentAllowedForSourcing($cart, $paymentMethod);
+
         $user = $request->user('api');
 
         // Scope is resolved before pricing: a coupon belongs to an organization,
@@ -136,6 +139,7 @@ class CheckoutService
                         'label' => $totals->couponLabel,
                         'discount' => $totals->discount,
                     ] : null,
+                    'duty_estimate' => $totals->dutyEstimate,
                 ]),
             ]);
 
@@ -221,6 +225,30 @@ class CheckoutService
             fn (Payment $payment) => $payment->status === PaymentStatus::PENDING
                 && $payment->payment_method !== PaymentMethod::COD
         );
+    }
+
+    /**
+     * Cash on delivery cannot fund an import-on-demand order: the merchant pays
+     * the supplier and freight up front, so a refusal at the door is a total
+     * loss. Any basket that contains an advance-payment product is rejected for
+     * COD and directed to an online payment method.
+     */
+    private function assertPaymentAllowedForSourcing(Cart $cart, string $paymentMethod): void
+    {
+        if ($paymentMethod !== PaymentMethod::COD) {
+            return;
+        }
+
+        $hasAdvancePaymentItems = $cart->items()
+            ->with('product')
+            ->get()
+            ->contains(fn (CartItem $item) => $item->product?->requiresAdvancePayment() === true);
+
+        if ($hasAdvancePaymentItems) {
+            throw ValidationException::withMessages([
+                'payment_method' => 'Cash on delivery is not available for import-on-demand items. Please choose an online payment method.',
+            ]);
+        }
     }
 
     public function read(string $uuid): Order

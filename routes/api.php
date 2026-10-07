@@ -8,6 +8,8 @@ use App\Http\Controllers\V1\Audit\AuditController;
 use App\Http\Controllers\V1\Auth\AuthController;
 use App\Http\Controllers\V1\AvailabilityController;
 use App\Http\Controllers\V1\Banner\BannerController;
+use App\Http\Controllers\V1\Bom\BomRequestAdminController;
+use App\Http\Controllers\V1\Bom\BomRequestController;
 use App\Http\Controllers\V1\Brand\BrandController;
 use App\Http\Controllers\V1\Cart\CartController;
 use App\Http\Controllers\V1\Catalog\CatalogController;
@@ -66,6 +68,7 @@ use App\Http\Controllers\V1\ProductReview\ProductReviewController;
 use App\Http\Controllers\V1\Profile\ProfileController;
 use App\Http\Controllers\V1\Punchout\AdminPunchoutSessionController;
 use App\Http\Controllers\V1\Punchout\PunchoutController;
+use App\Http\Controllers\V1\Purchasing\SupplierOrderController;
 use App\Http\Controllers\V1\Quote\QuoteController;
 use App\Http\Controllers\V1\Search\SearchController;
 use App\Http\Controllers\V1\SellerDashboard\SellerDashboardController;
@@ -180,6 +183,16 @@ Route::prefix('v1')->group(function () {
         Route::patch('/contact-messages/{id}/mark-read', [ContactMessageAdminController::class, 'markAsRead'])->whereNumber('id');
         Route::patch('/contact-messages/{id}/reply', [ContactMessageAdminController::class, 'reply'])->whereNumber('id');
         Route::delete('/contact-messages/{id}', [ContactMessageAdminController::class, 'destroy'])->whereNumber('id');
+
+        // Admin BOM / kit sourcing routes. `statistics` is registered before
+        // `{uuid}` so the literal path is not swallowed by the wildcard.
+        Route::get('/bom-requests', [BomRequestAdminController::class, 'index']);
+        Route::get('/bom-requests/statistics', [BomRequestAdminController::class, 'statistics']);
+        Route::get('/bom-requests/{uuid}', [BomRequestAdminController::class, 'show']);
+        Route::patch('/bom-requests/{uuid}/status', [BomRequestAdminController::class, 'updateStatus']);
+
+        // Supplier purchase list — open import-on-demand orders rolled up by SKU.
+        Route::get('/supplier-orders', [SupplierOrderController::class, 'index']);
 
         // Admin - discount codes. `statistics` must be registered before
         // `{coupon}` so it is not captured by the wildcard.
@@ -395,6 +408,10 @@ Route::prefix('v1')->group(function () {
     Route::post('/quotes', [QuoteController::class, 'submitQuoteRequest'])->middleware('throttle:10,1');
     Route::get('/quotes/{uuid}', [QuoteController::class, 'getQuoteRequest'])->middleware('throttle:60,1');
     Route::post('/quotes/responses/{uuid}/track-view', [QuoteController::class, 'trackView']);
+
+    // BOM / kit sourcing (public) — submit a bill of materials for a quote.
+    Route::post('/bom-requests', [BomRequestController::class, 'store'])->middleware('throttle:10,1');
+    Route::get('/bom-requests/{uuid}', [BomRequestController::class, 'show'])->middleware('throttle:60,1');
 
     // Categories - Public routes
     Route::get('/categories', [CategoryController::class, 'index']);

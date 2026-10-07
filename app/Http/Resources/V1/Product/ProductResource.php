@@ -14,7 +14,7 @@ class ProductResource extends JsonResource
             'uuid' => $this->uuid,
             'name' => $this->name,
             'slug' => $this->slug,
-            'route_key' => $this->slug . '-' . substr($this->uuid, 0, 8),
+            'route_key' => $this->slug.'-'.substr($this->uuid, 0, 8),
             'sku' => $this->sku,
             'seller_sku' => $this->seller_sku,
             'part_number' => $this->part_number,
@@ -23,6 +23,12 @@ class ProductResource extends JsonResource
             'ntn' => $this->ntn,
             'barcode' => $this->barcode,
             'model_number' => $this->model_number,
+            'sourcing' => $this->sourcing,
+            'lead_time_days' => $this->lead_time_days,
+            'origin_country' => $this->origin_country,
+            'sourcing_url' => $this->sourcing_url,
+            'supplier_reference' => $this->supplier_reference,
+            'availability' => $this->availabilityLabel(),
             'status' => $this->status,
             'summary' => $this->summary,
             'description' => $this->description,
@@ -58,6 +64,6 @@ class ProductResource extends JsonResource
             return null;
         }
 
-        return config('app.cdn_url', 'https://cdn.htashop.com') . '/' . ltrim($featured->object_key, '/');
+        return config('app.cdn_url', 'https://cdn.htashop.com').'/'.ltrim($featured->object_key, '/');
     }
 }

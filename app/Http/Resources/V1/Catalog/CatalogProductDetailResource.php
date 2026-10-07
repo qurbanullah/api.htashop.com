@@ -15,7 +15,7 @@ class CatalogProductDetailResource extends JsonResource
             'uuid' => $this->uuid,
             'name' => $this->name,
             'slug' => $this->slug,
-            'route_key' => $this->slug . '-' . substr($this->uuid, 0, 8),
+            'route_key' => $this->slug.'-'.substr($this->uuid, 0, 8),
             'summary' => $this->summary,
             'description' => $this->description,
             'status' => $this->status,
@@ -23,6 +23,9 @@ class CatalogProductDetailResource extends JsonResource
             'price' => data_get($this->metadata, 'price'),
             'sale_price' => data_get($this->metadata, 'sale_price'),
             'currency' => data_get($this->metadata, 'currency', 'USD'),
+            'sourcing' => $this->sourcing,
+            'lead_time_days' => $this->lead_time_days,
+            'availability' => $this->availabilityLabel(),
             'specs' => data_get($this->metadata, 'specs', []),
             'image_url' => $this->resolveImageUrl(),
             'image_original_url' => $this->resolveOriginalImageUrl(),
@@ -140,7 +143,7 @@ class CatalogProductDetailResource extends JsonResource
         $variants = data_get($dam->metadata, 'variants', []);
         $variants = is_array($variants) ? $variants : [];
 
-        $urlFor = fn (string $key): string => 'https://cdn.htashop.com/' . ltrim($key, '/');
+        $urlFor = fn (string $key): string => 'https://cdn.htashop.com/'.ltrim($key, '/');
         $originalKey = (string) data_get($variants, 'original', $dam->object_key ?? '');
 
         $ladder = ['original' => $originalKey !== '' ? $urlFor($originalKey) : null];
@@ -208,6 +211,6 @@ class CatalogProductDetailResource extends JsonResource
 
         $key = data_get($dam->metadata, "variants.{$size}", $dam->object_key);
 
-        return 'https://cdn.htashop.com/' . ltrim((string) $key, '/');
+        return 'https://cdn.htashop.com/'.ltrim((string) $key, '/');
     }
 }

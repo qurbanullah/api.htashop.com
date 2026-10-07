@@ -3,6 +3,7 @@
 namespace App\Actions\Product;
 
 use App\Actions\Revision\RevisionCreateAction;
+use App\Enums\Sourcing;
 use App\Models\Category;
 use App\Models\Feature;
 use App\Models\Product;
@@ -13,8 +14,7 @@ class ProductUpdateAction
 {
     public function __construct(
         protected RevisionCreateAction $revisionCreateAction,
-    ) {
-    }
+    ) {}
 
     public function handle(Product $product, array $data): Product
     {
@@ -37,6 +37,11 @@ class ProductUpdateAction
                 'ntn' => array_key_exists('ntn', $data) ? data_get($data, 'ntn') : $product->ntn,
                 'barcode' => array_key_exists('barcode', $data) ? data_get($data, 'barcode') : $product->barcode,
                 'model_number' => array_key_exists('model_number', $data) ? data_get($data, 'model_number') : $product->model_number,
+                'sourcing' => array_key_exists('sourcing', $data) ? (data_get($data, 'sourcing') ?: Sourcing::IN_STOCK) : $product->sourcing,
+                'lead_time_days' => array_key_exists('lead_time_days', $data) ? data_get($data, 'lead_time_days') : $product->lead_time_days,
+                'origin_country' => array_key_exists('origin_country', $data) ? data_get($data, 'origin_country') : $product->origin_country,
+                'sourcing_url' => array_key_exists('sourcing_url', $data) ? data_get($data, 'sourcing_url') : $product->sourcing_url,
+                'supplier_reference' => array_key_exists('supplier_reference', $data) ? data_get($data, 'supplier_reference') : $product->supplier_reference,
                 'status' => data_get($data, 'status', $product->status),
                 'summary' => array_key_exists('summary', $data) ? data_get($data, 'summary') : $product->summary,
                 'description' => array_key_exists('description', $data) ? data_get($data, 'description') : $product->description,
@@ -179,7 +184,7 @@ class ProductUpdateAction
             ->where('slug', $candidate)
             ->where('id', '!=', $product->id)
             ->exists()) {
-            $candidate = $base . '-' . $suffix;
+            $candidate = $base.'-'.$suffix;
             $suffix++;
         }
 
