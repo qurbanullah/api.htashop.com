@@ -6,12 +6,19 @@ use App\Http\Controllers\V1\Unsubscribe\UnsubscribeController;
 use App\Http\Controllers\V1\WellKnown\WellKnownController;
 use Illuminate\Support\Facades\Route;
 
-// Route::get('/', function () {
-//     return view('welcome');
-// });
-
+// Root: this host serves an API, not a website. Answer with a small JSON
+// identity payload instead of a framework welcome page (the old view was the
+// Laravel welcome template). JSON, and marked noindex.
 Route::get('/', function () {
-    return view('api-info');
+    return response()
+        ->json([
+            'service' => 'HTAShop API',
+            'status' => 'ok',
+            'version' => 'v1',
+            'docs' => 'https://htashop.com',
+            'health' => '/up',
+        ])
+        ->header('X-Robots-Tag', 'noindex, nofollow');
 })->name('home');
 
 // Post "view online" pages (linked from post emails)
