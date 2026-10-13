@@ -28,3 +28,10 @@ Homestead.yaml
 Thumbs.db
 local.env
 Dockerfile.dev
+
+# Local debug / smoke scripts — never commit these. They tend to carry
+# hardcoded credentials: a `smoke_s3_check.php` with IDrive E2 keys WAS committed
+# here and had to be removed (see deploy/BACKUP.md). If you need a one-off probe,
+# read credentials from the environment instead of inlining them.
+smoke_*.php
+*_smoke.php
