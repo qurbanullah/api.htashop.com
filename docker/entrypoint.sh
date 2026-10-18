@@ -257,6 +257,11 @@ run_migrations_with_lock() {
 
 if [ "${SKIP_MIGRATIONS:-}" != "" ]; then
   echo "[entrypoint] SKIP_MIGRATIONS is set, skipping migration execution"
+elif [ "${RUN_MIGRATIONS:-0}" != "1" ]; then
+  # Off by default so worker/scheduler containers never race the web tier for
+  # schema changes. The `api` service sets RUN_MIGRATIONS=1. Ideally migrations
+  # move to the release pipeline and this block is removed entirely.
+  echo "[entrypoint] RUN_MIGRATIONS is not 1, skipping migration execution"
 elif [ -x /usr/bin/php ] || [ -x /usr/local/bin/php ]; then
   # `set -e` would abort on the non-zero statuses we deliberately handle below,
   # so capture the exit code with -e temporarily disabled. (`$?` inside the

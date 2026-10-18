@@ -11,23 +11,27 @@ Artisan::command('inspire', function () {
 // Send posts that are due (status = scheduled, scheduled_at <= now).
 Schedule::command('post:send-scheduled')
     ->everyMinute()
-    ->withoutOverlapping();
+    ->withoutOverlapping(5)
+    ->onOneServer();
 
 // Regenerate the storefront sitemaps daily so crawler requests are always served
 // from a warm cache (robots.txt + pages, products, posts and categories).
 Schedule::command('sitemap:generate')
     ->dailyAt('02:30')
-    ->withoutOverlapping();
+    ->withoutOverlapping(30)
+    ->onOneServer();
 
 // Refresh draft knowledge entries from published content (posts, tutorials).
 // Entries are created as drafts and must be published in the admin portal.
 Schedule::command('knowledge:ingest')
     ->dailyAt('03:15')
-    ->withoutOverlapping();
+    ->withoutOverlapping(60)
+    ->onOneServer();
 
 // Drop refresh tokens that expired past their retention window. Rows past their
 // absolute expiry can no longer be exchanged, and pruning keeps the table (and
 // the reuse-detection lookups) small.
 Schedule::command('auth:prune-refresh-tokens')
     ->dailyAt('03:45')
-    ->withoutOverlapping();
+    ->withoutOverlapping(30)
+    ->onOneServer();
