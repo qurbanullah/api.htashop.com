@@ -29,25 +29,22 @@ echo "[entrypoint] waiting for database at ${DB_HOST}:${DB_PORT}..."
 # without any of them being baked into the image or written in plain sight in
 # the stack file.
 #
+# The implementation lives in /usr/local/bin/load-secrets so that ad-hoc
+# `docker exec ... php artisan ...` commands can hydrate the same variables;
+# exec starts a fresh process and does NOT inherit this one's runtime
+# environment. Sourcing it exports into this shell, and `exec "$@"` at the end
+# passes that environment on to php-fpm / queue:work / schedule:work.
+#
 # This only reaches PHP because the image preserves the environment across
 # `sudo` (Defaults:ubuntu !env_reset in the Dockerfile) and the FPM pool sets
 # `clear_env = no`.
 # ---------------------------------------------------------------------------
-export_secret_files() {
-    local entry name file value
-    # `env`/`sed` matching nothing is not an error; the loop simply does not run.
-    while IFS= read -r entry; do
-        name="${entry%_FILE}"
-        file="${!entry}"
-        [[ -n "${file}" && -r "${file}" ]] || continue
-        value="$(cat "${file}")"
-        # Docker secrets frequently end with a newline; strip exactly one.
-        value="${value%$'\n'}"
-        export "${name}=${value}"
-        echo "[entrypoint] loaded ${name} from ${file}"
-    done < <(env | sed -n 's/^\([A-Z0-9_]*_FILE\)=.*/\1/p')
-}
-export_secret_files
+if [ ! -r /usr/local/bin/load-secrets ]; then
+    echo "[entrypoint] FATAL: /usr/local/bin/load-secrets missing from image" >&2
+    exit 1
+fi
+# shellcheck source=/dev/null
+source /usr/local/bin/load-secrets
 
 # Fast-path for one-off debug commands: if SKIP_STARTUP is set, exec the
 # provided command immediately instead of performing DB waits/migrations.

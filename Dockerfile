@@ -107,9 +107,11 @@ RUN getent group www-data >/dev/null 2>&1 || groupadd -r www-data && \
 
 EXPOSE 20050
 
-# Ensure our entrypoint is present and executable
+# Ensure our entrypoint is present and executable, plus the shared
+# secret-hydration helper it sources (also used by ad-hoc `docker exec` commands).
 COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY docker/load-secrets.sh /usr/local/bin/load-secrets
+RUN chmod +x /entrypoint.sh /usr/local/bin/load-secrets
 
 # Ensure runtime directories and php log exist and are writable by the runtime user
 # supervisord will run as root (default) so it can correctly start services that
