@@ -97,6 +97,11 @@ return [
             'secret' => env('E2_OBSERVABILITY_SECRET_KEY'),
             'region' => env('E2_OBSERVABILITY_REGION', 'eu-central-2'),
             'bucket' => env('E2_OBSERVABILITY_BUCKET', 'observability'),
+            // The bucket is shared with other servers. Keep every HTAShop
+            // object under `htashop/`, mirroring the backup bucket. This is
+            // applied to every path the disk reads or writes, so the logical
+            // paths stored in audit_exports stay portable (`audits/...`).
+            'root' => trim((string) env('E2_OBSERVABILITY_PREFIX', 'htashop'), '/'),
             'endpoint' => env('E2_OBSERVABILITY_ENDPOINT'),
             'use_path_style_endpoint' => env('E2_OBSERVABILITY_USE_PATH_STYLE_ENDPOINT', true),
             'throw' => false,
