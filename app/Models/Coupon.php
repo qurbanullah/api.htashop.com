@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\CouponType;
+use App\Traits\Audit\Auditable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +21,30 @@ use Illuminate\Support\Str;
  */
 class Coupon extends Model
 {
-    use HasFactory, SoftDeletes;
+    use Auditable, HasFactory, SoftDeletes;
+
+    /**
+     * `used_count` changes on every redemption and is already represented by
+     * `coupon_redemptions`; auditing it would drown the useful edits.
+     */
+    public function getAuditInclude(): array
+    {
+        return [
+            'code',
+            'label',
+            'type',
+            'value',
+            'min_order_amount',
+            'max_discount_amount',
+            'starts_at',
+            'ends_at',
+            'usage_limit',
+            'per_user_limit',
+            'is_active',
+            'tenant_id',
+            'organization_id',
+        ];
+    }
 
     protected $fillable = [
         'uuid',

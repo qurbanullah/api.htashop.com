@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Audit\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,18 @@ use Illuminate\Support\Str;
 
 class Payment extends Model
 {
-    use HasFactory, SoftDeletes;
+    use Auditable, HasFactory, SoftDeletes;
+
+    public function getAuditInclude(): array
+    {
+        return [
+            'payment_method',
+            'status',
+            'amount',
+            'currency',
+            'transaction_reference',
+        ];
+    }
 
     protected $fillable = [
         'uuid',

@@ -15,6 +15,7 @@ use App\Http\Responses\V1\ApiResponse;
 use App\Models\User;
 use App\Notifications\EmailVerificationNotification;
 use App\Services\Auth\RefreshTokenService;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -55,6 +56,10 @@ class AuthController extends Controller
         // Assign default roles
         $user->assignRole(['Guest']);
         $user->load('roles');
+
+        $this->auditAuth('auth.registered', $user, $request, [
+            'description' => 'User registered',
+        ]);
 
         // Generate email verification token
         $verificationToken = $user->generateEmailVerificationToken();
@@ -102,6 +107,8 @@ class AuthController extends Controller
         }
 
         if (! Auth::attempt($request->only('email', 'password'))) {
+            $this->auditLoginFailure($request, $userByEmail);
+
             return ApiResponse::error('Invalid credentials', null, 401);
         }
 
@@ -175,6 +182,11 @@ class AuthController extends Controller
             'client' => $isStorefront ? 'storefront' : 'api',
         ]);
 
+        $this->auditAuth('auth.login', $user, $request, [
+            'description' => 'User signed in',
+            'meta' => ['client' => $isStorefront ? 'storefront' : 'api'],
+        ]);
+
         return $response;
     }
 
@@ -210,6 +222,10 @@ class AuthController extends Controller
                 RefreshTokenRevokedReasonEnum::LOGOUT
             );
         }
+
+        $this->auditAuth('auth.logout', $user, $request, [
+            'description' => 'User signed out',
+        ]);
 
         return response()->json([
             'success' => true,
@@ -453,10 +469,10 @@ class AuthController extends Controller
         // Get the plain token (it comes already decoded from the request body, not from URL)
         $plainToken = $request->token;
 
-        Log::info('Password reset attempt', [
-            'email' => $request->email,
-            'token' => substr($plainToken, 0, 20).'...',
-            'token_length' => strlen($plainToken),
+        // Never log the token, not even a prefix: a leaked prefix plus the
+        // database row is a meaningful offline-attack hint.
+        Log::info('Password reset attempt received', [
+            'email_hash' => hash('sha256', strtolower((string) $request->email)),
         ]);
 
         // Check if token exists in database
@@ -464,10 +480,8 @@ class AuthController extends Controller
             ->where('email', $request->email)
             ->first();
 
-        Log::info('Token record from database', [
-            'exists' => $tokenRecord ? 'yes' : 'no',
-            'db_token' => $tokenRecord ? substr($tokenRecord->token, 0, 20).'...' : 'N/A',
-            'created_at' => $tokenRecord ? $tokenRecord->created_at : 'N/A',
+        Log::info('Password reset token lookup', [
+            'exists' => $tokenRecord !== null,
         ]);
 
         // Verify token exists
@@ -531,7 +545,10 @@ class AuthController extends Controller
 
             Log::info('Password reset successful', [
                 'user_id' => $user->id,
-                'email' => $user->email,
+            ]);
+
+            $this->auditAuth('auth.password.reset', $user, $request, [
+                'description' => 'Password reset completed',
             ]);
 
             // Delete the used token
@@ -981,6 +998,42 @@ class AuthController extends Controller
             Log::error('Turnstile validation failed: '.$e->getMessage());
 
             return false;
+        }
+    }
+
+    /**
+     * Best-effort audit write for a successful auth action. An audit storage
+     * failure must not turn a valid login/logout into a 500.
+     */
+    private function auditAuth(string $event, User $user, Request $request, array $meta = []): void
+    {
+        try {
+            app(AuditLogger::class)->record($user, $event, $user, $meta);
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+    }
+
+    /**
+     * Failed logins are evidence for brute-force detection. The email is
+     * hashed; the raw address is supplied to the logger as a hash only.
+     */
+    private function auditLoginFailure(Request $request, ?User $user): void
+    {
+        try {
+            app(AuditLogger::class)->record(
+                null,
+                'auth.login_failed',
+                $user ? ['type' => User::class, 'id' => $user->id] : null,
+                [
+                    'description' => 'Invalid credentials',
+                    'meta' => [
+                        'email_hash' => hash('sha256', strtolower((string) $request->input('email'))),
+                    ],
+                ],
+            );
+        } catch (\Throwable $exception) {
+            report($exception);
         }
     }
 }

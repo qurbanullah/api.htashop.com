@@ -4,113 +4,107 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Str;
 
+/**
+ * @deprecated Use {@see Audit}. This class is retained as a backwards-compatible
+ *             alias for older code/tests; it now reads and writes the canonical
+ *             `audits` table. New code must use AuditLogger/Audit.
+ */
 class AuditLog extends Model
 {
     use HasFactory;
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
-    protected $table = 'audit_logs';
+    protected $table = 'audits';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
+        'uuid',
+        'tenant_id',
+        'user_id',
+        'actor_type',
+        'actor_id',
+        'event',
         'auditable_type',
         'auditable_id',
-        'user_id',
-        'event',
         'auditable_type_name',
         'old_values',
         'new_values',
-        'ip_address',
+        'changed_columns',
+        'reason',
+        'request_id',
+        'ip_hash',
         'user_agent',
         'description',
+        'occurred_at',
     ];
 
-    /**
-     * Attribute casting for Eloquent
-     *
-     * @var array<string,string>
-     */
     protected $casts = [
         'old_values' => 'array',
         'new_values' => 'array',
+        'changed_columns' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'occurred_at' => 'datetime',
     ];
 
-    /**
-     * Get the auditable model (polymorphic relationship).
-     */
+    protected static function booted(): void
+    {
+        static::creating(function (AuditLog $auditLog): void {
+            if (empty($auditLog->uuid)) {
+                $auditLog->uuid = (string) Str::ulid();
+            }
+
+            if (empty($auditLog->occurred_at)) {
+                $auditLog->occurred_at = now();
+            }
+        });
+    }
+
     public function auditable(): MorphTo
     {
         return $this->morphTo();
     }
 
-    /**
-     * Get the user who performed the action.
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Get the causer (alias for user for compatibility).
-     */
     public function causer(): BelongsTo
     {
         return $this->user();
     }
 
-    /**
-     * Scope to filter by event type.
-     */
     public function scopeEvent($query, string $event)
     {
         return $query->where('event', $event);
     }
 
-    /**
-     * Scope to filter by user.
-     */
     public function scopeByUser($query, int $userId)
     {
         return $query->where('user_id', $userId);
     }
 
-    /**
-     * Scope to filter by auditable type.
-     */
     public function scopeForModel($query, string $modelType)
     {
         return $query->where('auditable_type', $modelType);
     }
 
-    /**
-     * Get the changes made (difference between old and new values).
-     */
     public function getChangesAttribute(): array
     {
-        if (!$this->old_values || !$this->new_values) {
+        if (! $this->old_values || ! $this->new_values) {
             return [];
         }
 
         $changes = [];
+
         foreach ($this->new_values as $key => $newValue) {
             $oldValue = $this->old_values[$key] ?? null;
+
             if ($oldValue !== $newValue) {
                 $changes[$key] = [
                     'old' => $oldValue,
@@ -122,9 +116,6 @@ class AuditLog extends Model
         return $changes;
     }
 
-    /**
-     * Get a human-readable description of the event.
-     */
     public function getEventDescriptionAttribute(): string
     {
         $modelName = $this->auditable_type_name ?? class_basename($this->auditable_type);

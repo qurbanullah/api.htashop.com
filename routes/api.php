@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\V1\Account\AccountController;
 use App\Http\Controllers\V1\Address\AddressController;
+use App\Http\Controllers\V1\Analytics\EventController;
 use App\Http\Controllers\V1\Asset\PublicAssetController;
 use App\Http\Controllers\V1\Assignment\AssignmentController;
 use App\Http\Controllers\V1\Audit\AuditController;
@@ -429,6 +430,11 @@ Route::prefix('v1')->group(function () {
     Route::get('/search/trending', [SearchController::class, 'trending'])->middleware('throttle:120,1');
     Route::get('/search', [SearchController::class, 'index'])->middleware('throttle:120,1');
     Route::post('/search/click', [SearchController::class, 'click'])->middleware('throttle:120,1');
+
+    // Consent-gated first-party product analytics. Batch beacons only; the
+    // endpoint returns 202 and never writes to MariaDB on the request path.
+    Route::post('/analytics/events', [EventController::class, 'store'])
+        ->middleware('throttle:120,1');
 
     // Public product review routes
     Route::get('/catalog/products/{key}/reviews', [ProductReviewController::class, 'index']);

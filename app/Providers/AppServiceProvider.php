@@ -14,6 +14,7 @@ use App\Actions\Users\CreateUserAction;
 use App\Actions\Users\DeleteUserAction;
 use App\Actions\Users\RestoreUserAction;
 use App\Actions\Users\UpdateUserAction;
+use App\Contracts\Analytics\AnalyticsBuffer;
 use App\Gateways\PaymentGatewayManager;
 use App\Gateways\Safepay\SafepayClient;
 use App\Gateways\SafepayGateway;
@@ -28,6 +29,7 @@ use App\Models\ForumPost;
 use App\Models\KnowledgeEntry;
 use App\Models\Label;
 use App\Models\Measurement;
+use App\Models\Order;
 use App\Models\Post;
 use App\Models\Price;
 use App\Models\Product;
@@ -37,6 +39,7 @@ use App\Models\User;
 use App\Models\Value;
 use App\Models\Variant;
 use App\Observers\KnowledgeEntryObserver;
+use App\Observers\OrderAnalyticsObserver;
 use App\Observers\ProductSearchObserver;
 use App\Observers\SeoIndexingObserver;
 use App\Policies\AssignmentPolicy;
@@ -61,6 +64,9 @@ use App\Services\Ai\Tools\CreateSupportTicketTool;
 use App\Services\Ai\Tools\EscalateToHumanTool;
 use App\Services\Ai\Tools\SearchKnowledgeBaseTool;
 use App\Services\Ai\Tools\SearchProductsTool;
+use App\Services\Analytics\AnalyticsService;
+use App\Services\Analytics\Buffers\ArrayAnalyticsBuffer;
+use App\Services\Analytics\Buffers\RedisAnalyticsBuffer;
 use App\Services\Assignment\AssignmentService;
 use App\Services\Chat\ChatService;
 use App\Services\Chat\ConversationService;
@@ -152,6 +158,17 @@ class AppServiceProvider extends ServiceProvider
         // Search services (Typesense + analytics)
         $this->app->singleton(ProductSearchService::class);
         $this->app->singleton(SearchAnalyticsService::class);
+
+        // Product analytics: Redis in production, an in-memory buffer in tests
+        // and for `ANALYTICS_BUFFER=array` local runs.
+        $this->app->singleton(AnalyticsBuffer::class, function () {
+            if (app()->environment('testing') || config('analytics.buffer') === 'array') {
+                return new ArrayAnalyticsBuffer();
+            }
+
+            return new RedisAnalyticsBuffer();
+        });
+        $this->app->singleton(AnalyticsService::class);
 
         // AI support assistant
         $this->registerSupportAssistant();
@@ -296,6 +313,10 @@ class AppServiceProvider extends ServiceProvider
 
         // Keep the Typesense knowledge index in sync with curated entries.
         KnowledgeEntry::observe(KnowledgeEntryObserver::class);
+
+        // Server-side purchase/refund analytics, independent of the audit
+        // observer and of the request path.
+        Order::observe(OrderAnalyticsObserver::class);
 
         // Throttle the assistant per visitor, so one client cannot monopolise
         // the provider. Token spend is separately capped by EnsureChatTokenBudget.

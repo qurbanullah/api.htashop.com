@@ -88,6 +88,31 @@ return [
             ],
         ],
 
+        // Long-term observability storage: Loki chunks, audit NDJSON exports and
+        // cold analytics events. This MUST be a separate bucket/prefix with a
+        // dedicated key; never the restic repository and never the DAM bucket.
+        'observability' => [
+            'driver' => 's3',
+            'key' => env('E2_OBSERVABILITY_ACCESS_KEY'),
+            'secret' => env('E2_OBSERVABILITY_SECRET_KEY'),
+            'region' => env('E2_OBSERVABILITY_REGION', 'eu-central-2'),
+            'bucket' => env('E2_OBSERVABILITY_BUCKET', 'observability'),
+            'endpoint' => env('E2_OBSERVABILITY_ENDPOINT'),
+            'use_path_style_endpoint' => env('E2_OBSERVABILITY_USE_PATH_STYLE_ENDPOINT', true),
+            'throw' => false,
+            'report' => false,
+            'options' => [
+                'http' => [
+                    'connect_timeout' => 30,
+                    'timeout' => 120,
+                ],
+                'retries' => [
+                    'mode' => 'adaptive',
+                    'max_attempts' => 5,
+                ],
+            ],
+        ],
+
         'journals' => [
             'driver' => 'local',
             'root' => storage_path('app/journals'),

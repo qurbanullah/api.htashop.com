@@ -35,3 +35,35 @@ Schedule::command('auth:prune-refresh-tokens')
     ->dailyAt('03:45')
     ->withoutOverlapping(30)
     ->onOneServer();
+
+// Audit evidence: export the previous UTC day to object storage, verify the
+// hash chain, then prune only days that have a completed export. Export MUST
+// run before prune.
+Schedule::command('audit:export')
+    ->dailyAt('01:30')
+    ->withoutOverlapping(30)
+    ->onOneServer();
+
+Schedule::command('audit:verify')
+    ->dailyAt('02:00')
+    ->withoutOverlapping(30)
+    ->onOneServer();
+
+Schedule::command('audit:prune')
+    ->dailyAt('03:00')
+    ->withoutOverlapping(30)
+    ->onOneServer();
+
+// Product analytics: Redis counters become daily aggregates. The lock inside
+// the command plus onOneServer/withoutOverlapping keeps this single-run.
+Schedule::command('analytics:flush')
+    ->everyMinute()
+    ->withoutOverlapping(2)
+    ->onOneServer();
+
+// Data-quality check: purchase events vs confirmed orders. A failure is a
+// warning signal, not a customer-facing outage.
+Schedule::command('analytics:reconcile')
+    ->hourly()
+    ->withoutOverlapping(10)
+    ->onOneServer();

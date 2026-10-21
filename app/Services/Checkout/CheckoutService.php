@@ -134,6 +134,7 @@ class CheckoutService
                 'total_amount' => $totals->total,
                 'metadata' => array_filter([
                     'payment_method' => data_get($data, 'payment_method', PaymentMethod::COD),
+                    'analytics' => $this->analyticsMetadata(data_get($data, 'analytics')),
                     'coupon' => $totals->couponCode ? [
                         'code' => $totals->couponCode,
                         'label' => $totals->couponLabel,
@@ -334,6 +335,43 @@ class CheckoutService
         }
 
         return $cart;
+    }
+
+    /**
+     * Keep only the attribution fields the analytics pipeline understands.
+     * This is stored on the order and copied into the server-side purchase
+     * event; it is never used for pricing.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function analyticsMetadata(mixed $analytics): ?array
+    {
+        if (! is_array($analytics)) {
+            return null;
+        }
+
+        $campaign = is_array($analytics['campaign'] ?? null) ? $analytics['campaign'] : [];
+        $campaign = array_intersect_key($campaign, array_flip([
+            'utm_source',
+            'utm_medium',
+            'utm_campaign',
+            'utm_term',
+            'utm_content',
+            'gclid',
+            'fbclid',
+        ]));
+
+        $clean = array_filter([
+            'session_id' => is_string($analytics['session_id'] ?? null)
+                ? mb_substr($analytics['session_id'], 0, 120)
+                : null,
+            'anonymous_id' => is_string($analytics['anonymous_id'] ?? null)
+                ? mb_substr($analytics['anonymous_id'], 0, 120)
+                : null,
+            'campaign' => $campaign !== [] ? $campaign : null,
+        ]);
+
+        return $clean !== [] ? $clean : null;
     }
 
     private function resolveTenantId(Cart $cart, ?User $user): int

@@ -49,6 +49,7 @@ class SearchController extends Controller
             $categoryId ? ['category_id' => $categoryId] : null,
             $sessionId,
             auth()->id(),
+            $this->consent($request),
         );
 
         return ApiResponse::success(['data' => $suggestions], 'Suggestions retrieved successfully');
@@ -93,6 +94,7 @@ class SearchController extends Controller
             $filters,
             $sessionId,
             auth()->id(),
+            $this->consent($request),
         );
 
         return ApiResponse::success([
@@ -138,6 +140,8 @@ class SearchController extends Controller
             $validated['q'],
             (int) $validated['product_id'],
             $validated['session_id'] ?? null,
+            auth()->id(),
+            $this->consent($request),
         );
 
         return ApiResponse::success(null, 'Click recorded successfully');
@@ -175,6 +179,7 @@ class SearchController extends Controller
             $filters,
             $sessionId,
             auth()->id(),
+            $this->consent($request),
         );
 
         $items = \App\Http\Resources\V1\Catalog\CatalogProductResource::collection($products->items())->resolve();
@@ -213,5 +218,10 @@ class SearchController extends Controller
     private function sessionId(Request $request): ?string
     {
         return $request->string('session_id')->trim()->toString() ?: null;
+    }
+
+    private function consent(Request $request): bool
+    {
+        return $request->boolean('analytics_consent', true);
     }
 }

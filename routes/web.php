@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\V1\Observability\MetricsController;
 use App\Http\Controllers\V1\Post\PostViewController;
 use App\Http\Controllers\V1\Seo\SitemapController;
 use App\Http\Controllers\V1\Unsubscribe\UnsubscribeController;
@@ -20,6 +21,10 @@ Route::get('/', function () {
         ])
         ->header('X-Robots-Tag', 'noindex, nofollow');
 })->name('home');
+
+// Prometheus scrape endpoint. Internal only (the API port is not published);
+// set APP_METRICS_TOKEN to require a bearer token as well.
+Route::get('/metrics', MetricsController::class)->name('metrics');
 
 // Post "view online" pages (linked from post emails)
 // NOTE: the token-gated route must be declared before the slug route.

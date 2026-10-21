@@ -1,5 +1,6 @@
 <?php
 
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -101,7 +102,39 @@ return [
             'handler_with' => [
                 'stream' => 'php://stderr',
             ],
-            'formatter' => env('LOG_STDERR_FORMATTER'),
+            // Alloy parses this as JSON. Without an explicit formatter the
+            // handler uses Monolog's LineFormatter and every field is lost.
+            'formatter' => env('LOG_STDERR_FORMATTER', JsonFormatter::class),
+            'processors' => [PsrLogMessageProcessor::class],
+        ],
+
+        // Dedicated compliance channel. One JSON line per audit event, written
+        // to stderr so Alloy can ship it to Loki as {log_channel="audit"}.
+        // The durable hot mirror remains the MariaDB `audits` table; this
+        // channel is for search/alerting, not for the record of truth.
+        'audit' => [
+            'driver' => 'monolog',
+            'level' => env('AUDIT_LOG_LEVEL', 'info'),
+            'handler' => StreamHandler::class,
+            'handler_with' => [
+                'stream' => env('AUDIT_LOG_STREAM', 'php://stderr'),
+            ],
+            'formatter' => JsonFormatter::class,
+            'processors' => [PsrLogMessageProcessor::class],
+        ],
+
+        // Product-analytics events, one JSON line each, so Alloy can expose
+        // device/browser/campaign/top-product panels in Loki. The durable
+        // aggregates are written by `analytics:flush`; this channel is for
+        // search/exploration only.
+        'analytics' => [
+            'driver' => 'monolog',
+            'level' => env('ANALYTICS_LOG_LEVEL', 'info'),
+            'handler' => StreamHandler::class,
+            'handler_with' => [
+                'stream' => env('ANALYTICS_LOG_STREAM', 'php://stderr'),
+            ],
+            'formatter' => JsonFormatter::class,
             'processors' => [PsrLogMessageProcessor::class],
         ],
 

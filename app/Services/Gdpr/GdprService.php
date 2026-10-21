@@ -6,6 +6,7 @@ namespace App\Services\Gdpr;
 
 use App\Models\User;
 use App\Models\DeletedUser;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -14,6 +15,9 @@ use Illuminate\Support\Facades\Log;
  */
 class GdprService
 {
+    public function __construct(
+        protected AuditLogger $auditLogger,
+    ) {}
     /**
      * Permanently delete a user after GDPR retention period
      * This method handles the complete process of permanent deletion
@@ -47,6 +51,20 @@ class GdprService
 
             // Update related records to handle the permanent deletion
             $this->updateRelatedRecords($user->id);
+
+            // Audit before the row disappears. Keep a hash, not the email: the
+            // deletion is supposed to remove that PII.
+            $this->auditLogger->record($deletedBy, 'gdpr.user.deleted', $user, [
+                'old_values' => [
+                    'email_hash' => hash('sha256', strtolower((string) $user->email)),
+                    'status' => $user->status,
+                ],
+                'new_values' => ['anonymized' => $anonymize],
+                'reason' => json_encode($deletionReason, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                'description' => $anonymize
+                    ? 'User permanently deleted and anonymised'
+                    : 'User permanently deleted',
+            ]);
 
             // Force delete the user (permanent deletion)
             $user->forceDelete();

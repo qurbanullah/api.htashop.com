@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Audit\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,26 @@ use Illuminate\Support\Str;
 
 class Order extends Model
 {
-    use HasFactory, SoftDeletes;
+    use Auditable, HasFactory, SoftDeletes;
+
+    /**
+     * Orders contain customer PII in addresses and notes; only the commercial
+     * and lifecycle fields belong in the audit trail.
+     */
+    public function getAuditInclude(): array
+    {
+        return [
+            'status',
+            'subtotal',
+            'shipping_fee',
+            'tax',
+            'discount',
+            'total_amount',
+            'currency',
+            'placed_at',
+            'confirmed_at',
+        ];
+    }
 
     protected $fillable = [
         'uuid',

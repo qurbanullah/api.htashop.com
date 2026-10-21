@@ -2,10 +2,12 @@
 
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\ApiAuthenticate;
+use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\ForceHttps;
 use App\Http\Middleware\ForceJsonResponse;
 use App\Http\Middleware\LoadUserRoles;
 use App\Http\Middleware\PermissionMiddleware;
+use App\Http\Middleware\RecordApiMetrics;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\TrustProxies;
@@ -33,6 +35,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Add API-specific middleware after CORS
         $middleware->api(prepend: [
+            AssignRequestId::class,
+            RecordApiMetrics::class,
             ForceHttps::class,
             ForceJsonResponse::class,
         ]);

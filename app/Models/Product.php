@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Sourcing;
+use App\Traits\Audit\Auditable;
 use App\Traits\Dam\Damable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,28 @@ use Illuminate\Support\Str;
 
 class Product extends Model
 {
-    use Damable, HasFactory, SoftDeletes;
+    use Auditable, Damable, HasFactory, SoftDeletes;
+
+    /**
+     * Audit the commercial identity and availability fields, not the large
+     * description/metadata blobs.
+     */
+    public function getAuditInclude(): array
+    {
+        return [
+            'name',
+            'slug',
+            'sku',
+            'status',
+            'is_active',
+            'sourcing',
+            'lead_time_days',
+            'origin_country',
+            'part_number',
+            'barcode',
+            'model_number',
+        ];
+    }
 
     protected $fillable = [
         'uuid',

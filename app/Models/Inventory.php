@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Audit\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,20 @@ use Illuminate\Support\Str;
 
 class Inventory extends Model
 {
-    use HasFactory, SoftDeletes;
+    use Auditable, HasFactory, SoftDeletes;
+
+    public function getAuditInclude(): array
+    {
+        return [
+            'warehouse_id',
+            'sku',
+            'quantity',
+            'reserved',
+            'low_stock_threshold',
+            'track_inventory',
+            'is_active',
+        ];
+    }
 
     protected $fillable = [
         'uuid', 'tenant_id', 'warehouse_id',

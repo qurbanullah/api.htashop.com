@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Audit\Auditable;
 use App\Traits\Dam\Damable;
 use App\Models\Organization;
 use App\Models\PunchoutSession;
@@ -14,7 +15,12 @@ use Illuminate\Support\Str;
 
 class Tenant extends Model
 {
-    use Damable, HasFactory, SoftDeletes;
+    use Auditable, Damable, HasFactory, SoftDeletes;
+
+    public function getAuditInclude(): array
+    {
+        return ['name', 'slug', 'domain', 'is_active', 'settings'];
+    }
 
     protected $fillable = [
         'uuid',

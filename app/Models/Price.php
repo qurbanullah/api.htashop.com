@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-
+use App\Traits\Audit\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +10,24 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Price extends Model
 {
-        use HasFactory;
+    use Auditable, HasFactory;
+
+    public function getAuditInclude(): array
+    {
+        return [
+            'base_price',
+            'sale_price',
+            'currency_id',
+            'is_active',
+            'starts_at',
+            'ends_at',
+            'type',
+            'min_quantity',
+            'max_quantity',
+            'priceable_type',
+            'priceable_id',
+        ];
+    }
 
     protected $fillable = [
         'tenant_id',

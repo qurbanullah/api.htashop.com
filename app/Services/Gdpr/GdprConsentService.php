@@ -3,9 +3,14 @@
 namespace App\Services\Gdpr;
 
 use App\Models\GdprConsent;
+use App\Models\User;
+use App\Services\Audit\AuditLogger;
 
 class GdprConsentService
 {
+    public function __construct(
+        protected AuditLogger $auditLogger,
+    ) {}
     /**
      * Record a GDPR consent choice (banner, settings, or account).
      */
@@ -18,7 +23,7 @@ class GdprConsentService
         ?string $ipAddress = null,
         ?string $userAgent = null
     ): GdprConsent {
-        return GdprConsent::create([
+        $consent = GdprConsent::create([
             'consent_token' => $consentToken,
             'user_id' => $userId,
             'categories' => $categories,
@@ -28,6 +33,25 @@ class GdprConsentService
             'user_agent' => $userAgent ? mb_substr($userAgent, 0, 500) : null,
             'accepted_at' => now(),
         ]);
+
+        $this->auditLogger->record(
+            $userId ? User::find($userId) : null,
+            'gdpr.consent.recorded',
+            $consent,
+            [
+                'new_values' => [
+                    'categories' => $categories,
+                    'policy_version' => $policyVersion,
+                    'source' => $source,
+                ],
+                'description' => 'GDPR consent recorded',
+                'meta' => [
+                    'consent_token_hash' => hash('sha256', $consentToken),
+                ],
+            ],
+        );
+
+        return $consent;
     }
 
     /**
@@ -51,6 +75,21 @@ class GdprConsentService
             $query->orWhere('user_id', $userId);
         }
 
-        return $query->delete();
+        $deleted = $query->delete();
+
+        $this->auditLogger->record(
+            $userId ? User::find($userId) : null,
+            'gdpr.consent.withdrawn',
+            ['type' => GdprConsent::class],
+            [
+                'description' => 'GDPR consent withdrawn',
+                'meta' => [
+                    'consent_token_hash' => hash('sha256', $consentToken),
+                    'deleted' => $deleted,
+                ],
+            ],
+        );
+
+        return $deleted;
     }
 }

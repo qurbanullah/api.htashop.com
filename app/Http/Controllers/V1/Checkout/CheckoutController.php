@@ -48,7 +48,18 @@ class CheckoutController extends Controller
             // cannot discount itself.
             'coupon_code' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:2000'],
+            // Consent-gated attribution, stored on the order and attached to
+            // the server-side purchase event. Never trusted for money math.
+            'analytics' => ['nullable', 'array'],
+            'analytics.session_id' => ['nullable', 'string', 'max:120'],
+            'analytics.anonymous_id' => ['nullable', 'string', 'max:120'],
+            'analytics.campaign' => ['nullable', 'array'],
+            'analytics.campaign.*' => ['nullable', 'string', 'max:200'],
         ]);
+
+        $data['analytics'] = is_array($request->input('analytics'))
+            ? $request->input('analytics')
+            : null;
 
         try {
             $result = $this->checkoutService->checkout($request, $data);

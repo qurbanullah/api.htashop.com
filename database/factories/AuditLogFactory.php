@@ -28,7 +28,7 @@ class AuditLogFactory extends Factory
             'auditable_type_name' => 'User',
             'old_values' => ['name' => fake()->name()],
             'new_values' => ['name' => fake()->name()],
-            'ip_address' => fake()->ipv4(),
+            'ip_hash' => hash('sha256', fake()->ipv4()),
             'user_agent' => fake()->userAgent(),
             'description' => fake()->sentence(),
         ];

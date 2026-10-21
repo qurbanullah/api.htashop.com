@@ -1,53 +1,38 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\V1\Audit;
 
 use App\Http\Controllers\Controller;
 use App\Models\Audit;
 use App\Services\Audit\AuditService;
-use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 
 class AuditController extends Controller
 {
-    protected AuditService $auditService;
+    public function __construct(
+        protected AuditService $auditService,
+    ) {}
 
-    public function __construct(AuditService $auditService)
-    {
-        $this->auditService = $auditService;
-    }
     public function index(Request $request): JsonResponse
     {
-        $user = $request->user();
-        // Only admin/super-admin allowed
-        if (!$user || !$user->hasAnyRole(['admin', 'super-admin'])) {
-            abort(403);
-        }
+        $this->authorizeAuditAccess($request);
 
-        $q = Audit::with('user');
+        $audits = $this->filtered($request)
+            ->with('user')
+            ->latest('occurred_at')
+            ->paginate((int) $request->input('per_page', 25));
 
-        if ($request->filled('actor_id')) {
-            $q->where('user_id', $request->input('actor_id'));
-        }
-        if ($request->filled('event')) {
-            $q->where('event', $request->input('event'));
-        }
-        if ($request->filled('auditable_type')) {
-            $q->where('auditable_type', $request->input('auditable_type'));
-        }
-        if ($request->filled('auditable_id')) {
-            $q->where('auditable_id', $request->input('auditable_id'));
-        }
+        $audits->getCollection()->transform(function (Audit $audit): Audit {
+            $audit->auditable_type_name ??= $audit->auditable_type
+                ? class_basename($audit->auditable_type)
+                : null;
 
-        $perPage = intval($request->input('per_page', 25));
-
-        $audits = $q->latest()->paginate($perPage);
-
-        // add a friendly auditable type name for UI
-        $audits->getCollection()->transform(function ($a) {
-            $a->auditable_type_name = $a->auditable_type ? class_basename($a->auditable_type) : null;
-            return $a;
+            return $audit;
         });
 
         return response()->json($audits);
@@ -55,94 +40,63 @@ class AuditController extends Controller
 
     public function show(Request $request, int $id): JsonResponse
     {
-        $user = $request->user();
-        if (!$user || !$user->hasAnyRole(['admin', 'super-admin'])) {
-            abort(403);
-        }
+        $this->authorizeAuditAccess($request);
 
         $audit = Audit::with('user')->findOrFail($id);
-        $audit->auditable_type_name = $audit->auditable_type ? class_basename($audit->auditable_type) : null;
+        $audit->auditable_type_name ??= $audit->auditable_type
+            ? class_basename($audit->auditable_type)
+            : null;
 
         return response()->json(['data' => $audit]);
     }
 
-    /**
-     * Get admin audit statistics and analytics.
-     */
     public function adminStats(Request $request): JsonResponse
     {
-        $user = $request->user();
-        if (!$user || !$user->hasAnyRole(['admin', 'super-admin'])) {
-            abort(403);
-        }
+        $this->authorizeAuditAccess($request);
 
         try {
             $filters = [];
+
             if ($request->filled('start_date')) {
                 $filters['start_date'] = $request->input('start_date');
             }
+
             if ($request->filled('end_date')) {
                 $filters['end_date'] = $request->input('end_date');
             }
 
-            $stats = $this->auditService->getAdminStats($filters);
-
             return response()->json([
                 'success' => true,
-                'data' => $stats,
+                'data' => $this->auditService->getAdminStats($filters),
             ]);
-        } catch (\Exception $e) {
+        } catch (\Exception $exception) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve statistics',
-                'error' => $e->getMessage(),
+                'error' => $exception->getMessage(),
             ], 500);
         }
     }
 
-    /**
-     * Get audits with enhanced filtering for admin.
-     */
     public function adminIndex(Request $request): JsonResponse
     {
-        $user = $request->user();
-        if (!$user || !$user->hasAnyRole(['admin', 'super-admin'])) {
-            abort(403);
-        }
+        $this->authorizeAuditAccess($request);
 
-        $query = Audit::with('user');
+        $audits = $this->filtered($request)
+            ->with('user')
+            ->latest('occurred_at')
+            ->paginate((int) $request->input('per_page', 25));
 
-        // Apply filters
-        if ($request->filled('actor_id')) {
-            $query->where('user_id', $request->input('actor_id'));
-        }
-        if ($request->filled('event')) {
-            $query->where('event', $request->input('event'));
-        }
-        if ($request->filled('auditable_type')) {
-            $query->where('auditable_type', 'like', '%' . $request->input('auditable_type') . '%');
-        }
-        if ($request->filled('auditable_id')) {
-            $query->where('auditable_id', $request->input('auditable_id'));
-        }
-        if ($request->filled('start_date')) {
-            $query->where('created_at', '>=', $request->input('start_date'));
-        }
-        if ($request->filled('end_date')) {
-            $query->where('created_at', '<=', $request->input('end_date'));
-        }
-        if ($request->filled('ip_address')) {
-            $query->where('ip_address', $request->input('ip_address'));
-        }
+        $items = $audits->getCollection()
+            ->transform(function (Audit $audit): Audit {
+                $audit->auditable_type_name ??= $audit->auditable_type
+                    ? class_basename($audit->auditable_type)
+                    : null;
 
-        $perPage = intval($request->input('per_page', 25));
-        $audits = $query->latest()->paginate($perPage);
-
-        // add auditable_type_name on each item for easier display in UI
-        $items = $audits->getCollection()->transform(function ($a) {
-            $a->auditable_type_name = $a->auditable_type ? class_basename($a->auditable_type) : null;
-            return $a;
-        })->values()->all();
+                return $audit;
+            })
+            ->values()
+            ->all();
 
         return response()->json([
             'success' => true,
@@ -156,64 +110,107 @@ class AuditController extends Controller
         ]);
     }
 
-    /**
-     * Export audits to CSV.
-     */
     public function exportCsv(Request $request)
     {
-        $user = $request->user();
-        if (!$user || !$user->hasAnyRole(['admin', 'super-admin'])) {
-            abort(403);
+        $this->authorizeAuditAccess($request);
+
+        $audits = $this->filtered($request)
+            ->latest('occurred_at')
+            ->limit(10000)
+            ->get();
+
+        $handle = fopen('php://temp', 'w+');
+
+        if ($handle === false) {
+            abort(500, 'Could not build the CSV export.');
         }
 
-        $query = Audit::query();
-
-        // Apply same filters as adminIndex
-        if ($request->filled('actor_id')) {
-            $query->where('user_id', $request->input('actor_id'));
-        }
-        if ($request->filled('event')) {
-            $query->where('event', $request->input('event'));
-        }
-        if ($request->filled('auditable_type')) {
-            $query->where('auditable_type', 'like', '%' . $request->input('auditable_type') . '%');
-        }
-        if ($request->filled('auditable_id')) {
-            $query->where('auditable_id', $request->input('auditable_id'));
-        }
-        if ($request->filled('start_date')) {
-            $query->where('created_at', '>=', $request->input('start_date'));
-        }
-        if ($request->filled('end_date')) {
-            $query->where('created_at', '<=', $request->input('end_date'));
-        }
-        if ($request->filled('ip_address')) {
-            $query->where('ip_address', $request->input('ip_address'));
-        }
-
-        $audits = $query->latest()->limit(10000)->get();
-
-        $csv = "ID,Actor ID,Event,Auditable Type,Auditable ID,Description,IP Address,User Agent,Created At\n";
+        fputcsv($handle, [
+            'ID',
+            'UUID',
+            'Actor Type',
+            'Actor ID',
+            'Event',
+            'Auditable Type',
+            'Auditable ID',
+            'Changed Columns',
+            'Reason',
+            'Description',
+            'Request ID',
+            'IP Hash',
+            'User Agent',
+            'Occurred At',
+        ]);
 
         foreach ($audits as $audit) {
-            $csv .= implode(',', [
+            fputcsv($handle, [
                 $audit->id,
-                $audit->user_id ?? 'System',
-                $audit->event ?? '',
+                $audit->uuid,
+                $audit->actor_type,
+                $audit->actor_id ?? $audit->user_id ?? 'System',
+                $audit->event,
                 $audit->auditable_type ? class_basename($audit->auditable_type) : '',
                 $audit->auditable_id ?? '',
-                '"' . str_replace('"', '""', $audit->description ?? '') . '"',
-                $audit->ip_address ?? '',
-                '"' . str_replace('"', '""', $audit->user_agent ?? '') . '"',
-                $audit->created_at,
-            ]) . "\n";
+                implode(', ', $audit->changed_columns ?? []),
+                $this->csvCell($audit->reason),
+                $this->csvCell($audit->description),
+                $audit->request_id,
+                $audit->ip_hash,
+                $this->csvCell($audit->user_agent),
+                $audit->occurred_at?->toIso8601String(),
+            ]);
         }
 
-        $filename = 'audits_' . now()->format('Y-m-d_His') . '.csv';
+        rewind($handle);
+        $csv = (string) stream_get_contents($handle);
+        fclose($handle);
+
+        $filename = 'audits_'.now()->format('Y-m-d_His').'.csv';
 
         return Response::make($csv, 200, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
+    }
+
+    private function filtered(Request $request): Builder
+    {
+        return Audit::query()
+            ->when($request->filled('actor_id'), function (Builder $query) use ($request): void {
+                $actorId = $request->input('actor_id');
+                $query->where(function (Builder $inner) use ($actorId): void {
+                    $inner->where('actor_id', $actorId)->orWhere('user_id', $actorId);
+                });
+            })
+            ->when($request->filled('actor_type'), fn (Builder $query) => $query->where('actor_type', $request->input('actor_type')))
+            ->when($request->filled('event'), fn (Builder $query) => $query->where('event', $request->input('event')))
+            ->when($request->filled('auditable_type'), fn (Builder $query) => $query->where('auditable_type', 'like', '%'.$request->input('auditable_type').'%'))
+            ->when($request->filled('auditable_id'), fn (Builder $query) => $query->where('auditable_id', $request->input('auditable_id')))
+            ->when($request->filled('tenant_id'), fn (Builder $query) => $query->where('tenant_id', $request->input('tenant_id')))
+            ->when($request->filled('request_id'), fn (Builder $query) => $query->where('request_id', $request->input('request_id')))
+            ->when($request->filled('ip_hash'), fn (Builder $query) => $query->where('ip_hash', $request->input('ip_hash')))
+            ->when($request->filled('start_date'), fn (Builder $query) => $query->where('occurred_at', '>=', $request->input('start_date')))
+            ->when($request->filled('end_date'), fn (Builder $query) => $query->where('occurred_at', '<=', $request->input('end_date')));
+    }
+
+    private function authorizeAuditAccess(Request $request): void
+    {
+        $user = $request->user();
+
+        if (! $user || ! $user->hasAnyRole(['admin', 'super-admin'])) {
+            abort(403);
+        }
+    }
+
+    private function csvCell(mixed $value): string
+    {
+        $value = (string) ($value ?? '');
+
+        // Neutralise spreadsheet formula injection.
+        if ($value !== '' && in_array($value[0], ['=', '+', '-', '@'], true)) {
+            return "'".$value;
+        }
+
+        return $value;
     }
 }
