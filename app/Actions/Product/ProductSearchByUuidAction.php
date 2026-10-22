@@ -21,6 +21,7 @@ class ProductSearchByUuidAction
                 'tags',
                 'manufacturers',
                 'brands',
+                'salesChannels',
                 'variants.dams.collections',
                 'variants.categories',
                 'variants.features',
@@ -44,7 +45,7 @@ class ProductSearchByUuidAction
                 // Composite {slug}-{uuid8} (or a bare uuid8 prefix): match the uuid prefix.
                 $segments = explode('-', $key);
                 $prefix = (string) end($segments);
-                $query->where('uuid', 'like', $prefix . '%');
+                $query->where('uuid', 'like', $prefix.'%');
             })
             ->firstOrFail();
     }

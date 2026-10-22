@@ -16,6 +16,7 @@ class Cart extends Model
     protected $fillable = [
         'uuid',
         'user_id',
+        'punchout_session_id',
         'session_id',
         'currency',
         'status',
@@ -52,5 +53,10 @@ class Cart extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function punchoutSession(): BelongsTo
+    {
+        return $this->belongsTo(PunchoutSession::class);
     }
 }

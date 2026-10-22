@@ -2,6 +2,7 @@
 
 namespace App\Services\Search;
 
+use App\Enums\SalesChannel;
 use App\Helpers\CacheHelper;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Collection;
@@ -161,18 +162,26 @@ class ProductSearchService
      *
      * @return array<int, array<string, mixed>>
      */
-    public function suggest(string $query, int $limit = 8, ?int $categoryId = null): array
+    public function suggest(string $query, int $limit = 8, ?int $categoryId = null, array $filters = []): array
     {
-        $cacheKey = 'search:suggest:' . md5(mb_strtolower($query) . '|' . ($categoryId ?? 'all') . '|' . $limit);
+        $channel = data_get($filters, 'channel', SalesChannel::STOREFRONT);
+        $tenantId = data_get($filters, 'tenant_id');
+        $cacheKey = 'search:suggest:'.md5(mb_strtolower($query).'|'.($categoryId ?? 'all').'|'.$limit.'|'.$channel.'|'.($tenantId ?? 'all'));
 
-        return CacheHelper::remember(self::CACHE_TAGS, $cacheKey, (int) config('typesense.suggest_cache_ttl', 300), function () use ($query, $limit, $categoryId) {
+        return CacheHelper::remember(self::CACHE_TAGS, $cacheKey, (int) config('typesense.suggest_cache_ttl', 300), function () use ($query, $limit, $categoryId, $channel, $tenantId) {
             if (! $this->isEnabled()) {
-                return $this->fallbackSuggest($query, $limit, $categoryId);
+                return $this->fallbackSuggest($query, $limit, $categoryId, ['channel' => $channel, 'tenant_id' => $tenantId]);
             }
 
             $filterBy = 'is_active:=true && status:=active';
             if ($categoryId) {
                 $filterBy .= " && category_ids:=[{$categoryId}]";
+            }
+            if ($tenantId) {
+                $filterBy .= ' && tenant_id:='.(int) $tenantId;
+            }
+            if ($channel) {
+                $filterBy .= " && channels:=[{$channel}]";
             }
 
             $response = $this->client()
@@ -200,7 +209,7 @@ class ProductSearchService
      *
      * @param  array<string, mixed>  $params  query, filters (category_ids, brand_ids,
      *                                        min_price, max_price), sort, page, per_page
-     * @return array<string, mixed>  Normalized response: 'hits', 'facets', 'found', 'page', 'per_page'
+     * @return array<string, mixed> Normalized response: 'hits', 'facets', 'found', 'page', 'per_page'
      */
     public function search(array $params = []): array
     {
@@ -216,29 +225,39 @@ class ProductSearchService
 
         $filterBy = 'is_active:=true && status:=active';
 
+        $tenantId = data_get($filters, 'tenant_id');
+        if ($tenantId) {
+            $filterBy .= ' && tenant_id:='.(int) $tenantId;
+        }
+
+        $channel = data_get($filters, 'channel', SalesChannel::STOREFRONT);
+        if ($channel) {
+            $filterBy .= " && channels:=[{$channel}]";
+        }
+
         $categoryIds = $this->intList(data_get($filters, 'category_ids'));
         if (! empty($categoryIds)) {
-            $filterBy .= ' && category_ids:[' . implode(',', $categoryIds) . ']';
+            $filterBy .= ' && category_ids:['.implode(',', $categoryIds).']';
         }
 
         $brandIds = $this->intList(data_get($filters, 'brand_ids'));
         if (! empty($brandIds)) {
-            $filterBy .= ' && brand_ids:[' . implode(',', $brandIds) . ']';
+            $filterBy .= ' && brand_ids:['.implode(',', $brandIds).']';
         }
 
         $featureIds = $this->intList(data_get($filters, 'feature_ids'));
         if (! empty($featureIds)) {
-            $filterBy .= ' && feature_ids:[' . implode(',', $featureIds) . ']';
+            $filterBy .= ' && feature_ids:['.implode(',', $featureIds).']';
         }
 
         $minPrice = data_get($filters, 'min_price');
         if (is_numeric($minPrice)) {
-            $filterBy .= ' && price:>=' . (float) $minPrice;
+            $filterBy .= ' && price:>='.(float) $minPrice;
         }
 
         $maxPrice = data_get($filters, 'max_price');
         if (is_numeric($maxPrice)) {
-            $filterBy .= ' && price:<=' . (float) $maxPrice;
+            $filterBy .= ' && price:<='.(float) $maxPrice;
         }
 
         $response = $this->client()
@@ -275,11 +294,13 @@ class ProductSearchService
      *
      * @return array<int, array<string, mixed>>
      */
-    public function fallbackSuggest(string $query, int $limit = 8, ?int $categoryId = null): array
+    public function fallbackSuggest(string $query, int $limit = 8, ?int $categoryId = null, array $filters = []): array
     {
         return Product::query()
             ->where('is_active', true)
             ->where('status', 'active')
+            ->forTenant(data_get($filters, 'tenant_id'))
+            ->forChannel(data_get($filters, 'channel', SalesChannel::STOREFRONT))
             ->with($this->indexRelations())
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
@@ -312,7 +333,7 @@ class ProductSearchService
             'uuid' => (string) $product->uuid,
             'name' => (string) $product->name,
             'slug' => (string) $product->slug,
-            'route_key' => $product->slug . '-' . substr((string) $product->uuid, 0, 8),
+            'route_key' => $product->slug.'-'.substr((string) $product->uuid, 0, 8),
             'summary' => (string) $product->summary,
             'description' => (string) $product->description,
             'sku' => (string) $product->sku,
@@ -331,6 +352,8 @@ class ProductSearchService
             'image_url' => $this->resolveImageUrl($product),
             'is_active' => (bool) $product->is_active,
             'status' => (string) $product->status,
+            'tenant_id' => (int) $product->tenant_id,
+            'channels' => $this->channelCodes($product),
             'popularity' => 0,
             'created_at' => $product->created_at?->getTimestamp() ?? time(),
         ];
@@ -346,11 +369,26 @@ class ProductSearchService
             'brands',
             'features',
             'tags',
+            'salesChannels',
             'dams' => fn ($query) => $query
                 ->where('collection_name', 'featured')
                 ->orderByRaw('CASE WHEN sort_order IS NULL THEN 1 ELSE 0 END')
                 ->orderBy('sort_order'),
         ];
+    }
+
+    /**
+     * Products created before the channel rollout have no memberships and are
+     * still storefront-visible. Index them as storefront so search matches the
+     * catalog query's legacy fallback.
+     *
+     * @return array<int, string>
+     */
+    protected function channelCodes(Product $product): array
+    {
+        $codes = $product->salesChannels->pluck('code')->filter()->values()->all();
+
+        return $codes === [] ? [SalesChannel::STOREFRONT] : $codes;
     }
 
     protected function resolveImageUrl(Product $product): ?string
@@ -363,7 +401,7 @@ class ProductSearchService
 
         $key = data_get($featured->metadata, 'variants.medium', $featured->object_key);
 
-        return config('app.cdn_url', 'https://cdn.htashop.com') . '/' . ltrim((string) $key, '/');
+        return config('app.cdn_url', 'https://cdn.htashop.com').'/'.ltrim((string) $key, '/');
     }
 
     /**
@@ -528,6 +566,8 @@ class ProductSearchService
                 ['name' => 'image_url', 'type' => 'string', 'optional' => true],
                 ['name' => 'is_active', 'type' => 'bool'],
                 ['name' => 'status', 'type' => 'string'],
+                ['name' => 'tenant_id', 'type' => 'int32', 'facet' => true],
+                ['name' => 'channels', 'type' => 'string[]', 'facet' => true],
                 ['name' => 'popularity', 'type' => 'int32'],
                 ['name' => 'created_at', 'type' => 'int64'],
             ],

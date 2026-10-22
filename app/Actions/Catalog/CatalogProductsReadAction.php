@@ -17,10 +17,13 @@ class CatalogProductsReadAction
         $query = Product::query()
             ->where('is_active', true)
             ->where('status', 'active')
+            ->forTenant(data_get($filters, 'tenant_id'))
+            ->forChannel(data_get($filters, 'channel'))
             ->with([
                 'categories',
                 'brands',
                 'features',
+                'salesChannels',
                 'dams' => fn ($query) => $query
                     ->where('collection_name', 'featured')
                     ->orderByRaw('CASE WHEN sort_order IS NULL THEN 1 ELSE 0 END')
@@ -28,12 +31,12 @@ class CatalogProductsReadAction
             ])
             ->when(data_get($filters, 'search'), function ($query, $search) {
                 $query->where(function ($inner) use ($search) {
-                    $inner->where('name', 'like', '%' . $search . '%')
-                        ->orWhere('slug', 'like', '%' . $search . '%')
-                        ->orWhere('summary', 'like', '%' . $search . '%')
-                        ->orWhere('sku', 'like', '%' . $search . '%')
-                        ->orWhere('part_number', 'like', '%' . $search . '%')
-                        ->orWhere('model_number', 'like', '%' . $search . '%');
+                    $inner->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('slug', 'like', '%'.$search.'%')
+                        ->orWhere('summary', 'like', '%'.$search.'%')
+                        ->orWhere('sku', 'like', '%'.$search.'%')
+                        ->orWhere('part_number', 'like', '%'.$search.'%')
+                        ->orWhere('model_number', 'like', '%'.$search.'%');
                 });
             })
             ->when(! empty(data_get($filters, 'category_ids')), function ($query) use ($filters) {
@@ -72,6 +75,7 @@ class CatalogProductsReadAction
     {
         if (empty($ranking)) {
             $query->orderByDesc('created_at');
+
             return;
         }
 

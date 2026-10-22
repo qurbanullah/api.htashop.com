@@ -3,9 +3,9 @@
 namespace App\Actions\Value;
 
 use App\Models\Definition;
-use App\Support\Punchout\ValuableTypeRegistry;
 use App\Models\Unit;
 use App\Models\Value;
+use App\Support\Value\ValuableTypeRegistry;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -71,7 +71,7 @@ class ValueUpdateAction
 
     private function normalizeNumber(mixed $value, Definition $definition, ?Unit $unit): ?float
     {
-        if (is_null($value) || !$unit || !$definition->measurement_id) {
+        if (is_null($value) || ! $unit || ! $definition->measurement_id) {
             return is_null($value) ? null : (float) $value;
         }
 

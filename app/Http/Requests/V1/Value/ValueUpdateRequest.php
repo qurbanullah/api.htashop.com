@@ -4,11 +4,11 @@ namespace App\Http\Requests\V1\Value;
 
 use App\Models\Definition;
 use App\Models\Option;
-use App\Support\Punchout\ValuableTypeRegistry;
 use App\Models\Unit;
 use App\Models\Value;
-use Illuminate\Database\Eloquent\Model;
+use App\Support\Value\ValuableTypeRegistry;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -45,7 +45,7 @@ class ValueUpdateRequest extends FormRequest
         $validator->after(function ($validator): void {
             $value = Value::query()->with(['valuable', 'definition'])->find($this->route('id'));
 
-            if (!$value) {
+            if (! $value) {
                 return;
             }
 
@@ -63,7 +63,7 @@ class ValueUpdateRequest extends FormRequest
                 $validator->errors()->add('definition_id', 'The selected definition does not belong to the selected tenant.');
             }
 
-            if ($definition && !$definition->supportsTargetType($this->resolvedValuableType($valuable ?? $value->valuable))) {
+            if ($definition && ! $definition->supportsTargetType($this->resolvedValuableType($valuable ?? $value->valuable))) {
                 $validator->errors()->add('valuable_type', 'This definition cannot be assigned to the selected record type.');
             }
 
@@ -86,7 +86,7 @@ class ValueUpdateRequest extends FormRequest
         $type = $this->input('valuable_type');
         $uuid = $this->input('valuable_uuid');
 
-        if (!$type || !$uuid) {
+        if (! $type || ! $uuid) {
             return $value->valuable;
         }
 

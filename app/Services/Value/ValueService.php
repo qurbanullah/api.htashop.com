@@ -8,9 +8,10 @@ use App\Actions\Value\ValueReadAction;
 use App\Actions\Value\ValueSearchByIdAction;
 use App\Actions\Value\ValueUpdateAction;
 use App\Models\Product;
+use App\Models\User;
 use App\Models\Value;
 use App\Models\Variant;
-use App\Support\Punchout\ValuableTypeRegistry;
+use App\Support\Value\ValuableTypeRegistry;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -18,7 +19,7 @@ class ValueService
 {
     public function create(array $data): Value
     {
-        return (new ValueCreateAction())->handle($data);
+        return (new ValueCreateAction)->handle($data);
     }
 
     public function read(array $filters = []): LengthAwarePaginator
@@ -32,12 +33,12 @@ class ValueService
             $this->assertCanAccessValuable($filters, $user);
         }
 
-        return (new ValueReadAction())->handle($filters);
+        return (new ValueReadAction)->handle($filters);
     }
 
     public function searchById(int $id): Value
     {
-        $value = (new ValueSearchByIdAction())->handle($id);
+        $value = (new ValueSearchByIdAction)->handle($id);
         $this->assertCanAccessValue($value);
 
         return $value;
@@ -45,17 +46,17 @@ class ValueService
 
     public function update(Value $value, array $data): Value
     {
-        return (new ValueUpdateAction())->handle($value, $data);
+        return (new ValueUpdateAction)->handle($value, $data);
     }
 
     public function delete(Value $value): bool
     {
-        return (new ValueDeleteAction())->handle($value);
+        return (new ValueDeleteAction)->handle($value);
     }
 
     protected function assertCanAccessValuable(array $filters, $user): void
     {
-        if (! $user instanceof \App\Models\User) {
+        if (! $user instanceof User) {
             throw new AuthorizationException('Unauthenticated values access is not allowed.');
         }
 
@@ -105,7 +106,7 @@ class ValueService
             return;
         }
 
-        if (! $user instanceof \App\Models\User) {
+        if (! $user instanceof User) {
             throw new AuthorizationException('Unauthenticated values access is not allowed.');
         }
 

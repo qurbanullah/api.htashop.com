@@ -18,13 +18,13 @@ class NormalizePunchoutSetupDataAction
 
     private function normalizeCxml(?string $rawBody): PunchoutSetupData
     {
-        if (!$rawBody) {
+        if (! $rawBody) {
             throw new InvalidArgumentException('A cXML setup request body is required.');
         }
 
         $xml = @simplexml_load_string($rawBody);
 
-        if (!$xml) {
+        if (! $xml) {
             throw new InvalidArgumentException('The cXML setup request body is invalid.');
         }
 

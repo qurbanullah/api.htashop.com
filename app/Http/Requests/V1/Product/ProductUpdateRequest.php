@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\V1\Product;
 
+use App\Enums\SalesChannel;
 use App\Enums\Sourcing;
 use App\Models\Organization;
 use App\Models\Product;
@@ -40,6 +41,8 @@ class ProductUpdateRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'is_active' => ['sometimes', 'boolean'],
             'metadata' => ['nullable', 'array'],
+            'channel_codes' => ['sometimes', 'array'],
+            'channel_codes.*' => ['string', Rule::in(SalesChannel::ALL)],
             'category_ids' => ['nullable', 'array'],
             'category_ids.*' => ['integer', 'exists:categories,id'],
             'feature_ids' => ['nullable', 'array'],

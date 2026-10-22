@@ -26,12 +26,14 @@ return [
             'http://localhost:21050',  // Admin panel
             'http://localhost:22050',  // Manage panel
             'http://localhost:23050',  // Frontend SPA
+            'http://localhost:24050',  // Punchout SPA
 
             // Local development (127.0.0.1)
             'http://127.0.0.1:20050',
             'http://127.0.0.1:21050',
             'http://127.0.0.1:22050',
             'http://127.0.0.1:23050',
+            'http://127.0.0.1:24050',
 
             // Local development — internal Docker service names (used by the
             // prerender headless browser, which loads pages from inside the network)
@@ -45,6 +47,7 @@ return [
             'https://api.htashop.com',
             'https://manage.htashop.com',
             'https://admin.htashop.com',
+            'https://punchout.htashop.com',
 
             // Capacitor native shells. The WebView is its own origin, so the
             // API must allow it or every request from the app fails preflight.

@@ -31,6 +31,12 @@ class PunchoutSessionAuditResource extends JsonResource
                 'slug' => $this->tenant?->slug,
                 'name' => $this->tenant?->name,
             ],
+            'buyer' => $this->buyer === null ? null : [
+                'id' => $this->buyer->id,
+                'uuid' => $this->buyer->uuid,
+                'code' => $this->buyer->code,
+                'name' => $this->buyer->name,
+            ],
         ];
     }
 }

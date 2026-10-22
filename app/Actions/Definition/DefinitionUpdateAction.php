@@ -3,9 +3,9 @@
 namespace App\Actions\Definition;
 
 use App\Models\Definition;
+use App\Support\Value\ValuableTypeRegistry;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use App\Support\Punchout\ValuableTypeRegistry;
 
 class DefinitionUpdateAction
 {
@@ -34,7 +34,7 @@ class DefinitionUpdateAction
                 'config' => array_key_exists('config', $data) ? data_get($data, 'config') : $definition->config,
             ]);
 
-            if (array_key_exists('applicable_types', $data) || !$definition->targets()->exists()) {
+            if (array_key_exists('applicable_types', $data) || ! $definition->targets()->exists()) {
                 $definition->targets()->delete();
 
                 $definition->targets()->createMany(
@@ -78,7 +78,7 @@ class DefinitionUpdateAction
         $suffix = 1;
 
         while (Definition::query()->where('tenant_id', $tenantId)->where('code', $candidate)->where('id', '!=', $definition->id)->exists()) {
-            $candidate = $base . '_' . $suffix;
+            $candidate = $base.'_'.$suffix;
             $suffix++;
         }
 

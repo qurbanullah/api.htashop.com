@@ -38,6 +38,7 @@ class Price extends Model
         'unit_id',
         'type',
         'base_price',
+        'base_price',
         'sale_price',
         'min_quantity',
         'max_quantity',

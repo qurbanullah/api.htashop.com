@@ -24,6 +24,7 @@ class PriceCreateAction
                 'unit_id' => data_get($data, 'unit_id'),
                 'type' => data_get($data, 'type', 'fixed'),
                 'base_price' => data_get($data, 'base_price'),
+                'sale_price' => data_get($data, 'sale_price'),
                 'min_quantity' => data_get($data, 'min_quantity', 1),
                 'max_quantity' => data_get($data, 'max_quantity'),
                 'starts_at' => data_get($data, 'starts_at'),

@@ -9,14 +9,16 @@ class BuildPunchoutSessionStartUrlAction
 {
     public function handle(Tenant $tenant, PunchoutSession $session): string
     {
-        return rtrim((string) config('app.url', 'http://localhost'), '/')
-            . '/api/v1/punchout/'
-            . $tenant->uuid
-            . '/start?session='
-            . urlencode($session->uuid)
-            . '&token='
-            . urlencode($session->token)
-            . '&protocol='
-            . urlencode($session->protocol);
+        // Build the path from the named route (so a version/prefix change cannot
+        // drift) but take the origin from config: the API may be behind a proxy
+        // whose request host is not the public host.
+        $path = route('punchout.start', [
+            'tenantIdentifier' => $tenant->uuid,
+            'session' => $session->uuid,
+            'token' => $session->token,
+            'protocol' => $session->protocol,
+        ], false);
+
+        return rtrim((string) config('app.url', 'http://localhost'), '/').$path;
     }
 }

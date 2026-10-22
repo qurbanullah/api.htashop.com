@@ -9,7 +9,7 @@ class PunchoutSessionSearchByUuidAction
     public function handle(string $uuid): PunchoutSession
     {
         return PunchoutSession::query()
-            ->with('tenant')
+            ->with(['tenant', 'buyer'])
             ->where('uuid', $uuid)
             ->firstOrFail();
     }

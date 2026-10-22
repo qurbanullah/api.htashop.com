@@ -163,10 +163,10 @@ class AppServiceProvider extends ServiceProvider
         // and for `ANALYTICS_BUFFER=array` local runs.
         $this->app->singleton(AnalyticsBuffer::class, function () {
             if (app()->environment('testing') || config('analytics.buffer') === 'array') {
-                return new ArrayAnalyticsBuffer();
+                return new ArrayAnalyticsBuffer;
             }
 
-            return new RedisAnalyticsBuffer();
+            return new RedisAnalyticsBuffer;
         });
         $this->app->singleton(AnalyticsService::class);
 
@@ -335,5 +335,55 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(max(1, (int) config('payment.webhooks.per_minute', 120)))
                 ->by($request->ip());
         });
+
+        // Punchout buyers often share one egress IP (Ariba, Coupa), so setup is
+        // bounded per tenant + IP rather than per IP alone.
+        RateLimiter::for('punchout-setup', function (Request $request) {
+            return Limit::perMinute(20)->by(
+                ((string) $request->route('tenantIdentifier') ?: 'unknown').':'.$request->ip(),
+            );
+        });
+
+        RateLimiter::for('punchout-start', function (Request $request) {
+            return Limit::perMinute(30)->by(
+                hash('sha256', (string) ($request->input('session') ?: $request->ip())),
+            );
+        });
+
+        RateLimiter::for('punchout-exchange', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip());
+        });
+
+        RateLimiter::for('punchout-api', function (Request $request) {
+            return Limit::perMinute(300)->by($this->punchoutRateKey($request));
+        });
+
+        RateLimiter::for('punchout-cart', function (Request $request) {
+            return Limit::perMinute(60)->by($this->punchoutRateKey($request));
+        });
+
+        // CSP reports come from browsers, not from the session. They are cheap
+        // and purely observational, so this is bounded per IP rather than per
+        // session; a buyer site with many violations must not flood the logs.
+        RateLimiter::for('punchout-csp', function (Request $request) {
+            return Limit::perMinute(30)->by((string) $request->ip());
+        });
+
+        // Inbound purchase orders are heavier than catalog reads and arrive
+        // from procurement networks that share egress IPs.
+        RateLimiter::for('punchout-order', function (Request $request) {
+            return Limit::perMinute(60)->by(
+                ((string) $request->route('tenantIdentifier') ?: 'unknown').':'.$request->ip(),
+            );
+        });
+    }
+
+    private function punchoutRateKey(Request $request): string
+    {
+        $value = $request->route('uuid')
+            ?: $request->header('Authorization')
+            ?: $request->ip();
+
+        return hash('sha256', (string) $value);
     }
 }

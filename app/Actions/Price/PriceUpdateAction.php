@@ -31,6 +31,7 @@ class PriceUpdateAction
                 'unit_id' => array_key_exists('unit_id', $data) ? data_get($data, 'unit_id') : $price->unit_id,
                 'type' => data_get($data, 'type', $price->type),
                 'base_price' => data_get($data, 'base_price', $price->base_price),
+                'sale_price' => array_key_exists('sale_price', $data) ? data_get($data, 'sale_price') : $price->sale_price,
                 'min_quantity' => data_get($data, 'min_quantity', $price->min_quantity),
                 'max_quantity' => array_key_exists('max_quantity', $data) ? data_get($data, 'max_quantity') : $price->max_quantity,
                 'starts_at' => array_key_exists('starts_at', $data) ? data_get($data, 'starts_at') : $price->starts_at,

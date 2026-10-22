@@ -11,30 +11,29 @@ class ResolvePunchoutSessionAction
 {
     public function __construct(
         protected ExpirePunchoutSessionAction $expirePunchoutSessionAction,
-    ) {
-    }
+        protected TouchPunchoutSessionAction $touchPunchoutSessionAction,
+    ) {}
 
     public function handle(Tenant $tenant, string $sessionUuid, string $token): PunchoutSession
     {
         $session = PunchoutSession::query()
             ->where('tenant_id', $tenant->id)
             ->where('uuid', $sessionUuid)
-            ->where('token', $token)
             ->first();
 
-        if (!$session) {
-            throw (new ModelNotFoundException())->setModel(PunchoutSession::class, [$sessionUuid]);
+        if (! $session || ! $this->tokenMatches($session, $token)) {
+            throw (new ModelNotFoundException)->setModel(PunchoutSession::class, [$sessionUuid]);
         }
 
-        if ($session->expires_at && $session->expires_at->isPast()) {
-            $this->expirePunchoutSessionAction->handle($session);
-
+        if ($session->isCancelled()) {
             throw ValidationException::withMessages([
-                'session' => ['Punchout session has expired.'],
+                'session' => ['Punchout session has been cancelled.'],
             ]);
         }
 
-        if ($session->status === 'expired') {
+        if ($session->isExpired() || $session->status === 'expired') {
+            $this->expirePunchoutSessionAction->handle($session);
+
             throw ValidationException::withMessages([
                 'session' => ['Punchout session has expired.'],
             ]);
@@ -49,11 +48,21 @@ class ResolvePunchoutSessionAction
         if ($session->status === 'pending') {
             $session->status = 'started';
             $session->started_at = now();
+            $session->save();
         }
 
-        $session->last_activity_at = now();
-        $session->save();
+        return $this->touchPunchoutSessionAction->handle($session);
+    }
 
-        return $session->fresh();
+    private function tokenMatches(PunchoutSession $session, string $token): bool
+    {
+        $hash = hash('sha256', $token);
+
+        if ($session->token_hash !== null && hash_equals($session->token_hash, $hash)) {
+            return true;
+        }
+
+        // One-release compatibility with the legacy plaintext token column.
+        return $session->token !== null && hash_equals($session->token, $token);
     }
 }

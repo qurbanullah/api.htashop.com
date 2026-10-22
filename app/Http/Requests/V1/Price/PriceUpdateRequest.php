@@ -31,6 +31,7 @@ class PriceUpdateRequest extends FormRequest
             'priceable_uuid' => ['sometimes', 'string', 'max:36'],
             'type' => ['sometimes', 'string', 'max:100'],
             'base_price' => ['sometimes', 'numeric', 'min:0'],
+            'sale_price' => ['nullable', 'numeric', 'min:0'],
             'min_quantity' => ['sometimes', 'numeric', 'min:0.000001'],
             'max_quantity' => ['nullable', 'numeric', 'min:0.000001'],
             'starts_at' => ['nullable', 'date'],
@@ -46,7 +47,7 @@ class PriceUpdateRequest extends FormRequest
         $validator->after(function ($validator): void {
             $price = Price::query()->with('priceable')->find($this->route('id'));
 
-            if (!$price) {
+            if (! $price) {
                 return;
             }
 
@@ -76,6 +77,15 @@ class PriceUpdateRequest extends FormRequest
             if ($catalog && ($catalog->tenant_id !== $tenantId || $catalog->organization_id !== $organizationId)) {
                 $validator->errors()->add('catalog_id', 'The selected catalog is not valid for the selected tenant and organization.');
             }
+
+            $basePrice = (float) ($this->input('base_price') ?? $price->base_price);
+            $salePrice = $this->exists('sale_price')
+                ? (float) $this->input('sale_price')
+                : (float) $price->sale_price;
+
+            if ($salePrice > 0 && $salePrice > $basePrice) {
+                $validator->errors()->add('sale_price', 'The sale price must not exceed the base price.');
+            }
         });
     }
 
@@ -84,7 +94,7 @@ class PriceUpdateRequest extends FormRequest
         $type = $this->input('priceable_type');
         $uuid = $this->input('priceable_uuid');
 
-        if (!$type || !$uuid) {
+        if (! $type || ! $uuid) {
             return $price->priceable;
         }
 

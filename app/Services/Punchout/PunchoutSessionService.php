@@ -12,8 +12,7 @@ class PunchoutSessionService
     public function __construct(
         protected PunchoutSessionReadAction $readAction,
         protected PunchoutSessionSearchByUuidAction $searchByUuidAction,
-    ) {
-    }
+    ) {}
 
     public function read(array $filters = []): LengthAwarePaginator
     {

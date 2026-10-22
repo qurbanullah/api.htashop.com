@@ -10,6 +10,5 @@ class PunchoutSetupData
         public readonly string $returnUrl,
         public readonly ?string $buyerCookie,
         public readonly array $payload = [],
-    ) {
-    }
+    ) {}
 }

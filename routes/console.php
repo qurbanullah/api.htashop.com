@@ -36,6 +36,14 @@ Schedule::command('auth:prune-refresh-tokens')
     ->withoutOverlapping(30)
     ->onOneServer();
 
+// Expire timed-out punchout sessions and prune terminal ones past their
+// retention window. Expiry is enforced on every request too; this only keeps
+// the sessions table from growing without bound between buyer engagements.
+Schedule::command('punchout:sessions:cleanup')
+    ->hourly()
+    ->withoutOverlapping(10)
+    ->onOneServer();
+
 // Audit evidence: export the previous UTC day to object storage, verify the
 // hash chain, then prune only days that have a completed export. Export MUST
 // run before prune.

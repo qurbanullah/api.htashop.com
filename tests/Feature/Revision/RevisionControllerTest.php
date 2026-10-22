@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Revision;
 
+use App\Http\Controllers\V1\Product\ProductRevisionController;
+use App\Http\Controllers\V1\Variant\VariantRevisionController;
 use App\Http\Middleware\ApiAuthenticate;
 use App\Models\Membership;
 use App\Models\Organization;
@@ -47,24 +49,24 @@ beforeEach(function () {
 });
 
 test('revision controller classes exist', function () {
-    expect(class_exists(\App\Http\Controllers\V1\Product\ProductRevisionController::class))->toBeTrue();
-    expect(class_exists(\App\Http\Controllers\V1\Variant\VariantRevisionController::class))->toBeTrue();
+    expect(class_exists(ProductRevisionController::class))->toBeTrue();
+    expect(class_exists(VariantRevisionController::class))->toBeTrue();
 });
 
 test('product revisions can be listed and restored', function () {
     $product = Product::create([
         'tenant_id' => $this->tenant->id,
         'organization_id' => $this->organization->id,
-        'name' => 'Punchout Drill',
-        'slug' => 'punchout-drill',
+        'name' => 'Test Drill',
+        'slug' => 'test-drill',
         'status' => 'draft',
         'summary' => 'Primary drill listing',
         'description' => 'Product description',
         'is_active' => true,
     ]);
 
-    $this->putJson('/api/v1/products/' . $product->uuid, [
-        'name' => 'Punchout Drill Pro',
+    $this->putJson('/api/v1/products/'.$product->uuid, [
+        'name' => 'Test Drill Pro',
         'metadata' => ['source' => 'catalog'],
     ])
         ->assertOk()
@@ -73,14 +75,14 @@ test('product revisions can be listed and restored', function () {
             'message' => 'Product updated successfully',
             'data' => [
                 'uuid' => $product->uuid,
-                'name' => 'Punchout Drill Pro',
-                'slug' => 'punchout-drill-pro',
+                'name' => 'Test Drill Pro',
+                'slug' => 'test-drill-pro',
                 'status' => 'draft',
                 'metadata' => ['source' => 'catalog'],
             ],
         ]);
 
-    $revisionsResponse = $this->getJson('/api/v1/products/' . $product->uuid . '/revisions');
+    $revisionsResponse = $this->getJson('/api/v1/products/'.$product->uuid.'/revisions');
 
     $revisionsResponse
         ->assertOk()
@@ -92,7 +94,7 @@ test('product revisions can be listed and restored', function () {
 
     $revisionUuid = $revisionsResponse->json('data.0.uuid');
 
-    $this->getJson('/api/v1/products/' . $product->uuid . '/revisions/' . $revisionUuid)
+    $this->getJson('/api/v1/products/'.$product->uuid.'/revisions/'.$revisionUuid)
         ->assertOk()
         ->assertJson([
             'success' => true,
@@ -103,23 +105,23 @@ test('product revisions can be listed and restored', function () {
             ],
         ]);
 
-    $this->postJson('/api/v1/products/' . $product->uuid . '/revisions/' . $revisionUuid . '/restore')
+    $this->postJson('/api/v1/products/'.$product->uuid.'/revisions/'.$revisionUuid.'/restore')
         ->assertOk()
         ->assertJson([
             'success' => true,
             'message' => 'Product restored successfully',
             'data' => [
                 'uuid' => $product->uuid,
-                'name' => 'Punchout Drill',
-                'slug' => 'punchout-drill',
+                'name' => 'Test Drill',
+                'slug' => 'test-drill',
                 'status' => 'draft',
             ],
         ]);
 
     $this->assertDatabaseHas('products', [
         'id' => $product->id,
-        'name' => 'Punchout Drill',
-        'slug' => 'punchout-drill',
+        'name' => 'Test Drill',
+        'slug' => 'test-drill',
         'status' => 'draft',
     ]);
 });
@@ -128,16 +130,16 @@ test('variant revisions can be listed and restored', function () {
     $product = Product::create([
         'tenant_id' => $this->tenant->id,
         'organization_id' => $this->organization->id,
-        'name' => 'Punchout Drill',
-        'slug' => 'punchout-drill',
+        'name' => 'Test Drill',
+        'slug' => 'test-drill',
         'status' => 'active',
         'is_active' => true,
     ]);
 
     $variant = Variant::create([
         'product_id' => $product->id,
-        'name' => 'Punchout Drill Blue',
-        'slug' => 'punchout-drill-blue',
+        'name' => 'Test Drill Blue',
+        'slug' => 'test-drill-blue',
         'status' => 'draft',
         'summary' => 'Blue finish variant',
         'description' => 'Variant description',
@@ -146,8 +148,8 @@ test('variant revisions can be listed and restored', function () {
         'is_active' => true,
     ]);
 
-    $this->putJson('/api/v1/variants/' . $variant->uuid, [
-        'name' => 'Punchout Drill Blue Pro',
+    $this->putJson('/api/v1/variants/'.$variant->uuid, [
+        'name' => 'Test Drill Blue Pro',
         'configuration' => ['color' => 'blue', 'size' => 'pro'],
         'is_default' => true,
     ])
@@ -157,14 +159,14 @@ test('variant revisions can be listed and restored', function () {
             'message' => 'Variant updated successfully',
             'data' => [
                 'uuid' => $variant->uuid,
-                'name' => 'Punchout Drill Blue Pro',
-                'slug' => 'punchout-drill-blue-pro',
+                'name' => 'Test Drill Blue Pro',
+                'slug' => 'test-drill-blue-pro',
                 'configuration' => ['color' => 'blue', 'size' => 'pro'],
                 'is_default' => true,
             ],
         ]);
 
-    $revisionsResponse = $this->getJson('/api/v1/variants/' . $variant->uuid . '/revisions');
+    $revisionsResponse = $this->getJson('/api/v1/variants/'.$variant->uuid.'/revisions');
 
     $revisionsResponse
         ->assertOk()
@@ -176,7 +178,7 @@ test('variant revisions can be listed and restored', function () {
 
     $revisionUuid = $revisionsResponse->json('data.0.uuid');
 
-    $this->getJson('/api/v1/variants/' . $variant->uuid . '/revisions/' . $revisionUuid)
+    $this->getJson('/api/v1/variants/'.$variant->uuid.'/revisions/'.$revisionUuid)
         ->assertOk()
         ->assertJson([
             'success' => true,
@@ -187,15 +189,15 @@ test('variant revisions can be listed and restored', function () {
             ],
         ]);
 
-    $this->postJson('/api/v1/variants/' . $variant->uuid . '/revisions/' . $revisionUuid . '/restore')
+    $this->postJson('/api/v1/variants/'.$variant->uuid.'/revisions/'.$revisionUuid.'/restore')
         ->assertOk()
         ->assertJson([
             'success' => true,
             'message' => 'Variant restored successfully',
             'data' => [
                 'uuid' => $variant->uuid,
-                'name' => 'Punchout Drill Blue',
-                'slug' => 'punchout-drill-blue',
+                'name' => 'Test Drill Blue',
+                'slug' => 'test-drill-blue',
                 'configuration' => ['color' => 'blue'],
                 'is_default' => false,
             ],
@@ -203,8 +205,8 @@ test('variant revisions can be listed and restored', function () {
 
     $this->assertDatabaseHas('variants', [
         'id' => $variant->id,
-        'name' => 'Punchout Drill Blue',
-        'slug' => 'punchout-drill-blue',
+        'name' => 'Test Drill Blue',
+        'slug' => 'test-drill-blue',
         'is_default' => false,
     ]);
 });

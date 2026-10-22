@@ -45,19 +45,19 @@ class CxmlPunchoutProtocol implements PunchoutProtocolInterface
         $startPageUrl = data_get(
             $configuration,
             'start_page_url',
-            rtrim((string) config('app.url', 'http://localhost'), '/') . '/punchout/' . $tenant->slug . '/start?protocol=' . $this->protocol()
+            rtrim((string) config('app.url', 'http://localhost'), '/').'/punchout/'.$tenant->slug.'/start?protocol='.$this->protocol()
         );
 
-        $payloadId = $tenant->uuid . '-setup-' . now()->format('YmdHis') . '-' . Str::random(8);
+        $payloadId = $tenant->uuid.'-setup-'.now()->format('YmdHis').'-'.Str::random(8);
 
         $content = implode("\n", [
             '<?xml version="1.0" encoding="UTF-8"?>',
-            '<cXML payloadID="' . e($payloadId) . '" timestamp="' . now()->toIso8601String() . '">',
+            '<cXML payloadID="'.e($payloadId).'" timestamp="'.now()->toIso8601String().'">',
             '  <Response>',
             '    <Status code="200" text="OK">Success</Status>',
             '    <PunchOutSetupResponse>',
             '      <StartPage>',
-            '        <URL>' . e($startPageUrl) . '</URL>',
+            '        <URL>'.e($startPageUrl).'</URL>',
             '      </StartPage>',
             '    </PunchOutSetupResponse>',
             '  </Response>',
@@ -69,24 +69,28 @@ class CxmlPunchoutProtocol implements PunchoutProtocolInterface
 
     public function renderCartResponse(Tenant $tenant, PunchoutCartData $cartData, array $configuration = []): PunchoutResponseData
     {
-        $cartPayloadId = $tenant->uuid . '-cart-' . now()->format('YmdHis') . '-' . Str::random(8);
+        $cartPayloadId = $tenant->uuid.'-cart-'.now()->format('YmdHis').'-'.Str::random(8);
 
         $messageXml = implode('', [
             '<?xml version="1.0" encoding="UTF-8"?>',
-            '<cXML payloadID="' . e($cartPayloadId) . '" timestamp="' . now()->toIso8601String() . '">',
+            '<cXML payloadID="'.e($cartPayloadId).'" timestamp="'.now()->toIso8601String().'">',
             '<Message>',
             '<PunchOutOrderMessage>',
-            '<BuyerCookie>' . e((string) $cartData->buyerCookie) . '</BuyerCookie>',
+            '<BuyerCookie>'.e((string) $cartData->buyerCookie).'</BuyerCookie>',
             '<PunchOutOrderMessageHeader operationAllowed="create"/>',
             collect($cartData->items)->map(function (array $item, int $index): string {
-                return '<ItemIn quantity="' . e((string) $item['quantity']) . '" lineNumber="' . ($index + 1) . '">'
-                    . '<ItemID><SupplierPartID>' . e($item['supplier_part_id']) . '</SupplierPartID></ItemID>'
-                    . '<ItemDetail>'
-                    . '<UnitPrice><Money currency="' . e($item['currency']) . '">' . e($item['price']) . '</Money></UnitPrice>'
-                    . '<Description xml:lang="en">' . e($item['description']) . '</Description>'
-                    . '<UnitOfMeasure>' . e($item['unit_of_measure']) . '</UnitOfMeasure>'
-                    . '</ItemDetail>'
-                    . '</ItemIn>';
+                $buyerPartId = trim((string) ($item['customer_part_number'] ?? ''));
+
+                return '<ItemIn quantity="'.e((string) $item['quantity']).'" lineNumber="'.($index + 1).'">'
+                    .'<ItemID><SupplierPartID>'.e($item['supplier_part_id']).'</SupplierPartID>'
+                    .($buyerPartId !== '' ? '<BuyerPartID>'.e($buyerPartId).'</BuyerPartID>' : '')
+                    .'</ItemID>'
+                    .'<ItemDetail>'
+                    .'<UnitPrice><Money currency="'.e($item['currency']).'">'.e($item['price']).'</Money></UnitPrice>'
+                    .'<Description xml:lang="en">'.e($item['description']).'</Description>'
+                    .'<UnitOfMeasure>'.e($item['unit_of_measure']).'</UnitOfMeasure>'
+                    .'</ItemDetail>'
+                    .'</ItemIn>';
             })->implode(''),
             '</PunchOutOrderMessage>',
             '</Message>',
@@ -103,11 +107,11 @@ class CxmlPunchoutProtocol implements PunchoutProtocolInterface
     private function renderAutoSubmitHtml(string $action, array $fields): string
     {
         $inputs = collect($fields)
-            ->map(fn ($value, $name) => '<input type="hidden" name="' . e($name) . '" value="' . e($value) . '">')
+            ->map(fn ($value, $name) => '<input type="hidden" name="'.e($name).'" value="'.e($value).'">')
             ->implode('');
 
         return '<!DOCTYPE html><html><body onload="document.forms[0].submit()">'
-            . '<form method="POST" action="' . e($action) . '">' . $inputs . '</form>'
-            . '</body></html>';
+            .'<form method="POST" action="'.e($action).'">'.$inputs.'</form>'
+            .'</body></html>';
     }
 }

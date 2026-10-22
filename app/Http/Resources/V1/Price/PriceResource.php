@@ -20,6 +20,7 @@ class PriceResource extends JsonResource
             'unit_id' => $this->unit_id,
             'type' => $this->type,
             'base_price' => $this->base_price,
+            'sale_price' => $this->sale_price,
             'min_quantity' => $this->min_quantity,
             'max_quantity' => $this->max_quantity,
             'starts_at' => $this->starts_at?->toISOString(),

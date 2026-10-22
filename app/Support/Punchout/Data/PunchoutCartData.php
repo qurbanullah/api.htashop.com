@@ -13,6 +13,5 @@ class PunchoutCartData
         public readonly ?string $buyerCookie,
         public readonly array $items,
         public readonly array $payload = [],
-    ) {
-    }
+    ) {}
 }

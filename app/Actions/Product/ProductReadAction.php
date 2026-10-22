@@ -19,6 +19,7 @@ class ProductReadAction
                 'tags',
                 'manufacturers',
                 'brands',
+                'salesChannels',
                 'variants.dams.collections',
                 'variants',
                 'attributeValues.definition.measurement',
@@ -32,7 +33,8 @@ class ProductReadAction
             ])
             ->when(data_get($filters, 'tenant_id'), fn ($query, $tenantId) => $query->where('tenant_id', $tenantId))
             ->when(data_get($filters, 'organization_id'), fn ($query, $organizationId) => $query->where('organization_id', $organizationId))
-            ->when(!is_null(data_get($filters, 'is_active')), fn ($query) => $query->where('is_active', (bool) data_get($filters, 'is_active')))
+            ->forChannel(data_get($filters, 'channel'))
+            ->when(! is_null(data_get($filters, 'is_active')), fn ($query) => $query->where('is_active', (bool) data_get($filters, 'is_active')))
             ->when(data_get($filters, 'status'), fn ($query, $status) => $query->where('status', $status))
             ->when(data_get($filters, 'category_id'), fn ($query, $categoryId) => $query->whereHas('categories', fn ($categoryQuery) => $categoryQuery->where('categories.id', $categoryId)))
             ->when(data_get($filters, 'definition_group_name') || data_get($filters, 'definition_section_name') || data_get($filters, 'definition_kind'), function ($query) use ($filters) {
@@ -45,14 +47,14 @@ class ProductReadAction
             })
             ->when(data_get($filters, 'search'), function ($query, $search) {
                 $query->where(function ($inner) use ($search) {
-                    $inner->where('name', 'like', '%' . $search . '%')
-                        ->orWhere('slug', 'like', '%' . $search . '%')
-                        ->orWhere('summary', 'like', '%' . $search . '%')
-                        ->orWhere('sku', 'like', '%' . $search . '%')
-                        ->orWhere('seller_sku', 'like', '%' . $search . '%')
-                        ->orWhere('part_number', 'like', '%' . $search . '%')
-                        ->orWhere('barcode', 'like', '%' . $search . '%')
-                        ->orWhere('model_number', 'like', '%' . $search . '%');
+                    $inner->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('slug', 'like', '%'.$search.'%')
+                        ->orWhere('summary', 'like', '%'.$search.'%')
+                        ->orWhere('sku', 'like', '%'.$search.'%')
+                        ->orWhere('seller_sku', 'like', '%'.$search.'%')
+                        ->orWhere('part_number', 'like', '%'.$search.'%')
+                        ->orWhere('barcode', 'like', '%'.$search.'%')
+                        ->orWhere('model_number', 'like', '%'.$search.'%');
                 });
             })
             ->orderByDesc('created_at')

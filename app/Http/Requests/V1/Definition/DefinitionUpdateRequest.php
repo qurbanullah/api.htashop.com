@@ -5,8 +5,8 @@ namespace App\Http\Requests\V1\Definition;
 use App\Models\Definition;
 use App\Models\Label;
 use App\Models\Measurement;
-use App\Support\Punchout\ValuableTypeRegistry;
 use App\Models\Unit;
+use App\Support\Value\ValuableTypeRegistry;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -51,7 +51,7 @@ class DefinitionUpdateRequest extends FormRequest
         $validator->after(function ($validator): void {
             $definition = Definition::query()->where('uuid', $this->route('uuid'))->first();
 
-            if (!$definition) {
+            if (! $definition) {
                 return;
             }
 

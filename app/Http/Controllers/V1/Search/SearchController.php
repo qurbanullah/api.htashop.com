@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\V1\Search;
 
+use App\Enums\SalesChannel;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\V1\Catalog\CatalogProductResource;
 use App\Http\Responses\V1\ApiResponse;
+use App\Services\Catalog\CatalogService;
 use App\Services\Search\ProductSearchService;
 use App\Services\Search\SearchAnalyticsService;
 use Illuminate\Http\JsonResponse;
@@ -17,8 +20,7 @@ class SearchController extends Controller
     public function __construct(
         protected ProductSearchService $searchService,
         protected SearchAnalyticsService $analytics,
-    ) {
-    }
+    ) {}
 
     /**
      * Instant typeahead suggestions for the search dropdown.
@@ -34,12 +36,13 @@ class SearchController extends Controller
         $categoryId = $request->integer('category_id') ?: null;
         $limit = min(10, max(1, (int) $request->integer('limit', config('typesense.suggest_limit', 8))));
         $sessionId = $this->sessionId($request);
+        $scope = $this->channelScope($request);
 
         try {
-            $suggestions = $this->searchService->suggest($query, $limit, $categoryId);
+            $suggestions = $this->searchService->suggest($query, $limit, $categoryId, $scope);
         } catch (TypesenseClientError|Throwable $e) {
             Log::warning("Search suggest fallback to database: {$e->getMessage()}");
-            $suggestions = $this->searchService->fallbackSuggest($query, $limit, $categoryId);
+            $suggestions = $this->searchService->fallbackSuggest($query, $limit, $categoryId, $scope);
         }
 
         $this->analytics->recordQuery(
@@ -67,6 +70,7 @@ class SearchController extends Controller
             'feature_ids' => $this->arrayParam($request, 'feature_ids'),
             'min_price' => $request->input('min_price'),
             'max_price' => $request->input('max_price'),
+            ...$this->channelScope($request),
         ];
         $sort = $request->string('sort', 'newest')->toString();
         $page = max(1, (int) $request->integer('page', 1));
@@ -160,7 +164,7 @@ class SearchController extends Controller
         int $perPage,
         ?string $sessionId,
     ): JsonResponse {
-        $products = app(\App\Services\Catalog\CatalogService::class)->products([
+        $products = app(CatalogService::class)->products([
             'search' => $query,
             'category_ids' => $filters['category_ids'],
             'brand_ids' => $filters['brand_ids'],
@@ -170,6 +174,8 @@ class SearchController extends Controller
             'sort' => $sort,
             'per_page' => $perPage,
             'page' => $page,
+            'channel' => data_get($filters, 'channel', SalesChannel::STOREFRONT),
+            'tenant_id' => data_get($filters, 'tenant_id'),
         ]);
 
         $this->analytics->recordQuery(
@@ -182,7 +188,7 @@ class SearchController extends Controller
             $this->consent($request),
         );
 
-        $items = \App\Http\Resources\V1\Catalog\CatalogProductResource::collection($products->items())->resolve();
+        $items = CatalogProductResource::collection($products->items())->resolve();
 
         return ApiResponse::success([
             'data' => $items,
@@ -218,6 +224,20 @@ class SearchController extends Controller
     private function sessionId(Request $request): ?string
     {
         return $request->string('session_id')->trim()->toString() ?: null;
+    }
+
+    /**
+     * The public catalog is storefront-scoped by default. Punchout endpoints
+     * never use this controller; they force tenant and channel server-side.
+     */
+    private function channelScope(Request $request): array
+    {
+        // The unauthenticated search API only exposes the consumer storefront.
+        // Punchout search is a session-scoped endpoint, never this controller.
+        return [
+            'channel' => SalesChannel::STOREFRONT,
+            'tenant_id' => $request->integer('tenant_id') ?: null,
+        ];
     }
 
     private function consent(Request $request): bool

@@ -4,7 +4,6 @@ use App\Http\Middleware\ApiAuthenticate;
 use App\Models\PunchoutSession;
 use App\Models\Tenant;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
@@ -60,7 +59,7 @@ it('allows admins to list and filter punchout sessions', function () {
 
     $this->actingAs($admin, 'api');
 
-    $response = $this->getJson('/api/v1/admin/punchout/sessions?tenant_uuid=' . $targetTenant->uuid . '&status=completed&protocol=cxml&search=target-cookie');
+    $response = $this->getJson('/api/v1/admin/punchout/sessions?tenant_uuid='.$targetTenant->uuid.'&status=completed&protocol=cxml&search=target-cookie');
 
     $response->assertOk()
         ->assertJsonPath('success', true)
@@ -108,7 +107,7 @@ it('allows admins to inspect punchout session audit data', function () {
 
     $this->actingAs($admin, 'api');
 
-    $this->getJson('/api/v1/admin/punchout/sessions/' . $session->uuid)
+    $this->getJson('/api/v1/admin/punchout/sessions/'.$session->uuid)
         ->assertOk()
         ->assertJsonPath('success', true)
         ->assertJsonPath('message', 'Punchout session retrieved successfully')

@@ -3,7 +3,7 @@
 namespace App\Actions\Definition;
 
 use App\Models\Definition;
-use App\Support\Punchout\ValuableTypeRegistry;
+use App\Support\Value\ValuableTypeRegistry;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -66,7 +66,7 @@ class DefinitionCreateAction
         $suffix = 1;
 
         while (Definition::query()->where('tenant_id', $tenantId)->where('code', $candidate)->exists()) {
-            $candidate = $base . '_' . $suffix;
+            $candidate = $base.'_'.$suffix;
             $suffix++;
         }
 

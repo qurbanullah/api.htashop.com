@@ -30,13 +30,13 @@ class PunchoutProtocolService
         $configuration = $this->configuration($tenant);
         $requestedProtocol = $protocol ?: data_get($configuration, 'default_protocol');
 
-        if (!in_array($requestedProtocol, data_get($configuration, 'supported_protocols', []), true)) {
+        if (! in_array($requestedProtocol, data_get($configuration, 'supported_protocols', []), true)) {
             throw new InvalidArgumentException('Unsupported punchout protocol for the current tenant configuration.');
         }
 
         $handler = $this->protocols[$requestedProtocol] ?? null;
 
-        if (!$handler) {
+        if (! $handler) {
             throw new InvalidArgumentException('Punchout protocol handler is not registered.');
         }
 
@@ -61,7 +61,7 @@ class PunchoutProtocolService
         $resolvedSupportedProtocols = $tenantSupportedProtocols !== [] ? $tenantSupportedProtocols : $supportedProtocols;
         $resolvedDefaultProtocol = data_get($tenantPunchout, 'default_protocol', $defaultProtocol);
 
-        if (!in_array($resolvedDefaultProtocol, $resolvedSupportedProtocols, true)) {
+        if (! in_array($resolvedDefaultProtocol, $resolvedSupportedProtocols, true)) {
             $resolvedDefaultProtocol = $resolvedSupportedProtocols[0] ?? $defaultProtocol;
         }
 
@@ -87,9 +87,9 @@ class PunchoutProtocolService
 
     public function protocolConfiguration(?Tenant $tenant, string $protocol): array
     {
-        $baseConfiguration = config('punchout.protocols.' . $protocol, []);
+        $baseConfiguration = config('punchout.protocols.'.$protocol, []);
         $tenantConfiguration = is_array($tenant?->settings)
-            ? data_get($tenant->settings, 'punchout.protocols.' . $protocol, [])
+            ? data_get($tenant->settings, 'punchout.protocols.'.$protocol, [])
             : [];
 
         return array_merge($baseConfiguration, is_array($tenantConfiguration) ? $tenantConfiguration : []);

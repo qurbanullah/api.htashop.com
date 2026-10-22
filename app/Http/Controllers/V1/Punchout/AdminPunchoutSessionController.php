@@ -13,8 +13,7 @@ class AdminPunchoutSessionController extends Controller
 {
     public function __construct(
         protected PunchoutSessionService $punchoutSessionService,
-    ) {
-    }
+    ) {}
 
     public function index(AdminPunchoutSessionIndexRequest $request): JsonResponse
     {

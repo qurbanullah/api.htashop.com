@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Enums\SalesChannel as SalesChannelCode;
 use App\Enums\Sourcing;
 use App\Traits\Audit\Auditable;
 use App\Traits\Dam\Damable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
@@ -93,6 +96,44 @@ class Product extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function salesChannels(): BelongsToMany
+    {
+        return $this->belongsToMany(SalesChannel::class, 'product_sales_channel');
+    }
+
+    /**
+     * Scope to the channels a product is published in.
+     *
+     * A product with no channel memberships is treated as storefront-only so
+     * rows created before the channel rollout do not disappear from the B2C
+     * catalog. Punchout always requires an explicit membership.
+     */
+    public function scopeForChannel(Builder $query, string|array|null $channel): Builder
+    {
+        $channels = is_array($channel) ? $channel : [$channel];
+        $channels = array_values(array_filter($channels));
+
+        if ($channels === []) {
+            return $query;
+        }
+
+        return $query->where(function (Builder $inner) use ($channels): void {
+            $inner->whereHas(
+                'salesChannels',
+                fn (Builder $relation) => $relation->whereIn('code', $channels),
+            );
+
+            if (in_array(SalesChannelCode::STOREFRONT, $channels, true)) {
+                $inner->orWhereDoesntHave('salesChannels');
+            }
+        });
+    }
+
+    public function scopeForTenant(Builder $query, ?int $tenantId): Builder
+    {
+        return $query->when($tenantId, fn (Builder $inner) => $inner->where('tenant_id', $tenantId));
     }
 
     public function organization(): BelongsTo

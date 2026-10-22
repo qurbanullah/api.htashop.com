@@ -44,7 +44,7 @@ class OciPunchoutProtocol implements PunchoutProtocolInterface
         $startPageUrl = data_get(
             $configuration,
             'start_page_url',
-            rtrim((string) config('app.url', 'http://localhost'), '/') . '/punchout/' . $tenant->slug . '/start?protocol=' . $this->protocol()
+            rtrim((string) config('app.url', 'http://localhost'), '/').'/punchout/'.$tenant->slug.'/start?protocol='.$this->protocol()
         );
 
         $content = $this->renderAutoSubmitHtml($startPageUrl, [
@@ -65,12 +65,17 @@ class OciPunchoutProtocol implements PunchoutProtocolInterface
 
         foreach (array_values($cartData->items) as $index => $item) {
             $line = $index + 1;
-            $fields['NEW_ITEM-DESCRIPTION[' . $line . ']'] = $item['description'];
-            $fields['NEW_ITEM-QUANTITY[' . $line . ']'] = (string) $item['quantity'];
-            $fields['NEW_ITEM-PRICE[' . $line . ']'] = $item['price'];
-            $fields['NEW_ITEM-CURRENCY[' . $line . ']'] = $item['currency'];
-            $fields['NEW_ITEM-VENDORMAT[' . $line . ']'] = $item['supplier_part_id'];
-            $fields['NEW_ITEM-UNIT[' . $line . ']'] = $item['unit_of_measure'];
+            $fields['NEW_ITEM-DESCRIPTION['.$line.']'] = $item['description'];
+            $fields['NEW_ITEM-QUANTITY['.$line.']'] = (string) $item['quantity'];
+            $fields['NEW_ITEM-PRICE['.$line.']'] = $item['price'];
+            $fields['NEW_ITEM-CURRENCY['.$line.']'] = $item['currency'];
+            $fields['NEW_ITEM-VENDORMAT['.$line.']'] = $item['supplier_part_id'];
+            $fields['NEW_ITEM-UNIT['.$line.']'] = $item['unit_of_measure'];
+
+            $buyerPartId = trim((string) ($item['customer_part_number'] ?? ''));
+            if ($buyerPartId !== '') {
+                $fields['NEW_ITEM-EXT_PRODUCT_ID['.$line.']'] = $buyerPartId;
+            }
         }
 
         $content = $this->renderAutoSubmitHtml($cartData->returnUrl, $fields);
@@ -81,11 +86,11 @@ class OciPunchoutProtocol implements PunchoutProtocolInterface
     private function renderAutoSubmitHtml(string $action, array $fields): string
     {
         $inputs = collect($fields)
-            ->map(fn ($value, $name) => '<input type="hidden" name="' . e($name) . '" value="' . e($value) . '">')
+            ->map(fn ($value, $name) => '<input type="hidden" name="'.e($name).'" value="'.e($value).'">')
             ->implode('');
 
         return '<!DOCTYPE html><html><body onload="document.forms[0].submit()">'
-            . '<form method="POST" action="' . e($action) . '">' . $inputs . '</form>'
-            . '</body></html>';
+            .'<form method="POST" action="'.e($action).'">'.$inputs.'</form>'
+            .'</body></html>';
     }
 }

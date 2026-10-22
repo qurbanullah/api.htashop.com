@@ -30,6 +30,7 @@ class PriceStoreRequest extends FormRequest
             'priceable_uuid' => ['required', 'string', 'max:36'],
             'type' => ['nullable', 'string', 'max:100'],
             'base_price' => ['required', 'numeric', 'min:0'],
+            'sale_price' => ['nullable', 'numeric', 'min:0'],
             'min_quantity' => ['nullable', 'numeric', 'min:0.000001'],
             'max_quantity' => ['nullable', 'numeric', 'min:0.000001'],
             'starts_at' => ['nullable', 'date'],
@@ -71,6 +72,10 @@ class PriceStoreRequest extends FormRequest
 
             if ($this->filled('max_quantity') && (float) $this->input('max_quantity') < (float) $this->input('min_quantity', 1)) {
                 $validator->errors()->add('max_quantity', 'The maximum quantity must be greater than or equal to the minimum quantity.');
+            }
+
+            if ($this->filled('sale_price') && (float) $this->input('sale_price') > (float) $this->input('base_price')) {
+                $validator->errors()->add('sale_price', 'The sale price must not exceed the base price.');
             }
         });
     }

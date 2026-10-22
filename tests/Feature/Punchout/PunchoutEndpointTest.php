@@ -2,7 +2,6 @@
 
 use App\Models\PunchoutSession;
 use App\Models\Tenant;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 function createStartedPunchoutSession(Tenant $tenant, string $protocol, ?string $buyerCookie = null, ?string $returnUrl = null): PunchoutSession
 {
@@ -46,39 +45,39 @@ it('returns a cxml setup response for a tenant', function () {
 </cXML>
 XML;
 
-    $response = $this->call('POST', '/api/v1/punchout/' . $tenant->uuid . '/setup?protocol=cxml', [], [], [], ['CONTENT_TYPE' => 'text/xml'], $payload);
+    $response = $this->call('POST', '/api/v1/punchout/'.$tenant->uuid.'/setup?protocol=cxml', [], [], [], ['CONTENT_TYPE' => 'text/xml'], $payload);
 
     $response->assertOk();
     expect($response->headers->get('content-type'))->toContain('text/xml');
     $response->assertSee('PunchOutSetupResponse', false);
-    $response->assertSee('https://supplier.example/api/v1/punchout/' . $tenant->uuid . '/start?session=', false);
+    $response->assertSee('https://supplier.example/api/v1/punchout/'.$tenant->uuid.'/start?session=', false);
 
     expect(PunchoutSession::query()->count())->toBe(1);
     expect(PunchoutSession::query()->first()?->buyer_cookie)->toBe('buyer-cookie-123');
 });
 
 it('rejects a cxml setup request with invalid configured credentials', function () {
-        $tenant = Tenant::create([
-                'name' => 'Credential Tenant',
-                'slug' => 'credential-tenant',
-                'is_active' => true,
-                'settings' => [
-                        'punchout' => [
-                                'default_protocol' => 'cxml',
-                                'supported_protocols' => ['cxml'],
-                                'protocols' => [
-                                        'cxml' => [
-                                                'credentials' => [
-                                                        'sender_identity' => 'expected-sender',
-                                                        'shared_secret' => 'expected-secret',
-                                                ],
-                                        ],
-                                ],
+    $tenant = Tenant::create([
+        'name' => 'Credential Tenant',
+        'slug' => 'credential-tenant',
+        'is_active' => true,
+        'settings' => [
+            'punchout' => [
+                'default_protocol' => 'cxml',
+                'supported_protocols' => ['cxml'],
+                'protocols' => [
+                    'cxml' => [
+                        'credentials' => [
+                            'sender_identity' => 'expected-sender',
+                            'shared_secret' => 'expected-secret',
                         ],
+                    ],
                 ],
-        ]);
+            ],
+        ],
+    ]);
 
-        $payload = <<<'XML'
+    $payload = <<<'XML'
 <?xml version="1.0" encoding="UTF-8"?>
 <cXML>
     <Header>
@@ -100,36 +99,36 @@ it('rejects a cxml setup request with invalid configured credentials', function 
 </cXML>
 XML;
 
-        $response = $this->call('POST', '/api/v1/punchout/' . $tenant->uuid . '/setup?protocol=cxml', [], [], [], ['CONTENT_TYPE' => 'text/xml'], $payload);
+    $response = $this->call('POST', '/api/v1/punchout/'.$tenant->uuid.'/setup?protocol=cxml', [], [], [], ['CONTENT_TYPE' => 'text/xml'], $payload);
 
-        $response->assertStatus(422)
-                ->assertJsonPath('success', false)
-                ->assertJsonPath('status_code', 422);
+    $response->assertStatus(422)
+        ->assertJsonPath('success', false)
+        ->assertJsonPath('status_code', 422);
 
-        expect(PunchoutSession::query()->count())->toBe(0);
+    expect(PunchoutSession::query()->count())->toBe(0);
 });
 
 it('rejects a cxml setup request with invalid configured to identity', function () {
-        $tenant = Tenant::create([
-                'name' => 'To Identity Tenant',
-                'slug' => 'to-identity-tenant',
-                'is_active' => true,
-                'settings' => [
-                        'punchout' => [
-                                'default_protocol' => 'cxml',
-                                'supported_protocols' => ['cxml'],
-                                'protocols' => [
-                                        'cxml' => [
-                                                'credentials' => [
-                                                        'to_identity' => 'expected-target-system',
-                                                ],
-                                        ],
-                                ],
+    $tenant = Tenant::create([
+        'name' => 'To Identity Tenant',
+        'slug' => 'to-identity-tenant',
+        'is_active' => true,
+        'settings' => [
+            'punchout' => [
+                'default_protocol' => 'cxml',
+                'supported_protocols' => ['cxml'],
+                'protocols' => [
+                    'cxml' => [
+                        'credentials' => [
+                            'to_identity' => 'expected-target-system',
                         ],
+                    ],
                 ],
-        ]);
+            ],
+        ],
+    ]);
 
-        $payload = <<<'XML'
+    $payload = <<<'XML'
 <?xml version="1.0" encoding="UTF-8"?>
 <cXML>
     <Request>
@@ -153,13 +152,13 @@ it('rejects a cxml setup request with invalid configured to identity', function 
 </cXML>
 XML;
 
-        $response = $this->call('POST', '/api/v1/punchout/' . $tenant->uuid . '/setup?protocol=cxml', [], [], [], ['CONTENT_TYPE' => 'text/xml'], $payload);
+    $response = $this->call('POST', '/api/v1/punchout/'.$tenant->uuid.'/setup?protocol=cxml', [], [], [], ['CONTENT_TYPE' => 'text/xml'], $payload);
 
-        $response->assertStatus(422)
-                ->assertJsonPath('success', false)
-                ->assertJsonPath('status_code', 422);
+    $response->assertStatus(422)
+        ->assertJsonPath('success', false)
+        ->assertJsonPath('status_code', 422);
 
-        expect(PunchoutSession::query()->count())->toBe(0);
+    expect(PunchoutSession::query()->count())->toBe(0);
 });
 
 it('returns an oci setup response for a tenant', function () {
@@ -182,14 +181,14 @@ it('returns an oci setup response for a tenant', function () {
         ],
     ]);
 
-    $response = $this->post('/api/v1/punchout/' . $tenant->uuid . '/setup?protocol=oci', [
+    $response = $this->post('/api/v1/punchout/'.$tenant->uuid.'/setup?protocol=oci', [
         'HOOK_URL' => 'https://buyer.example/oci/hook',
         'BUYER_COOKIE' => 'oci-cookie-123',
     ]);
 
     $response->assertOk();
     expect($response->headers->get('content-type'))->toContain('text/html');
-    $response->assertSee('https://supplier.example/api/v1/punchout/' . $tenant->uuid . '/start?session=', false);
+    $response->assertSee('https://supplier.example/api/v1/punchout/'.$tenant->uuid.'/start?session=', false);
     $response->assertSee('HOOK_URL', false);
 });
 
@@ -214,7 +213,7 @@ it('rejects an oci setup request with invalid configured credentials', function 
         ],
     ]);
 
-    $response = $this->post('/api/v1/punchout/' . $tenant->uuid . '/setup?protocol=oci', [
+    $response = $this->post('/api/v1/punchout/'.$tenant->uuid.'/setup?protocol=oci', [
         'HOOK_URL' => 'https://buyer.example/oci/hook',
         'BUYER_COOKIE' => 'oci-cookie-123',
         'USERNAME' => 'wrong-user',
@@ -257,7 +256,7 @@ it('resolves a punchout start session as json when no catalog handoff is configu
 </cXML>
 XML;
 
-    $setupResponse = $this->call('POST', '/api/v1/punchout/' . $tenant->uuid . '/setup?protocol=cxml', [], [], [], ['CONTENT_TYPE' => 'text/xml'], $payload);
+    $setupResponse = $this->call('POST', '/api/v1/punchout/'.$tenant->uuid.'/setup?protocol=cxml', [], [], [], ['CONTENT_TYPE' => 'text/xml'], $payload);
 
     preg_match('/<URL>(.*?)<\/URL>/', $setupResponse->getContent(), $matches);
 
@@ -295,7 +294,7 @@ it('rejects an expired punchout start session and marks it expired', function ()
         'last_activity_at' => now()->subMinutes(2),
     ]);
 
-    $response = $this->get('/api/v1/punchout/' . $tenant->uuid . '/start?session=' . $session->uuid . '&token=' . $session->token);
+    $response = $this->get('/api/v1/punchout/'.$tenant->uuid.'/start?session='.$session->uuid.'&token='.$session->token);
 
     $response->assertStatus(422)
         ->assertJsonPath('success', false)
@@ -324,7 +323,7 @@ it('redirects a punchout start session to a configured catalog handoff url', fun
         ],
     ]);
 
-    $setupResponse = $this->post('/api/v1/punchout/' . $tenant->uuid . '/setup?protocol=oci', [
+    $setupResponse = $this->post('/api/v1/punchout/'.$tenant->uuid.'/setup?protocol=oci', [
         'HOOK_URL' => 'https://buyer.example/oci/hook',
         'BUYER_COOKIE' => 'redirect-cookie-123',
     ]);
@@ -335,12 +334,13 @@ it('redirects a punchout start session to a configured catalog handoff url', fun
 
     parse_str(parse_url(html_entity_decode($actionMatches[1], ENT_QUOTES | ENT_HTML5), PHP_URL_QUERY) ?? '', $query);
 
-    $startResponse = $this->get('/api/v1/punchout/' . $tenant->uuid . '/start?' . http_build_query($query));
+    $startResponse = $this->get('/api/v1/punchout/'.$tenant->uuid.'/start?'.http_build_query($query));
 
     $startResponse->assertRedirect();
     expect($startResponse->headers->get('location'))->toContain('https://manage.example/punchout/catalog');
     expect($startResponse->headers->get('location'))->toContain('session=');
-    expect($startResponse->headers->get('location'))->toContain('token=');
+    expect($startResponse->headers->get('location'))->toContain('code=');
+    expect(str_contains($startResponse->headers->get('location'), 'token='))->toBeFalse();
 });
 
 it('returns a cxml cart form post response', function () {
@@ -358,7 +358,7 @@ it('returns a cxml cart form post response', function () {
 
     $session = createStartedPunchoutSession($tenant, 'cxml', 'buyer-cookie-123', 'https://buyer.example/cxml/cart');
 
-    $response = $this->post('/api/v1/punchout/' . $tenant->uuid . '/cart?protocol=cxml', [
+    $response = $this->post('/api/v1/punchout/'.$tenant->uuid.'/cart?protocol=cxml', [
         'session' => $session->uuid,
         'token' => $session->token,
         'return_url' => 'https://buyer.example/cxml/cart',
@@ -389,6 +389,44 @@ it('returns a cxml cart form post response', function () {
     expect(data_get($session->fresh()?->cart_payload, 'return_url'))->toBe('https://buyer.example/cxml/cart');
 });
 
+it('rejects a cxml cart return to a different origin', function () {
+    $tenant = Tenant::create([
+        'name' => 'Return Guard Tenant',
+        'slug' => 'return-guard-tenant',
+        'is_active' => true,
+        'settings' => [
+            'punchout' => [
+                'default_protocol' => 'cxml',
+                'supported_protocols' => ['cxml'],
+            ],
+        ],
+    ]);
+
+    $session = createStartedPunchoutSession($tenant, 'cxml', 'buyer-cookie-123', 'https://buyer.example/cxml/cart');
+
+    $response = $this->post('/api/v1/punchout/'.$tenant->uuid.'/cart?protocol=cxml', [
+        'session' => $session->uuid,
+        'token' => $session->token,
+        'return_url' => 'https://evil.example/cxml/cart',
+        'items' => [
+            [
+                'supplier_part_id' => 'SKU-1',
+                'description' => 'Punchout Drill',
+                'quantity' => 1,
+                'price' => '19.99',
+                'currency' => 'USD',
+                'unit_of_measure' => 'EA',
+            ],
+        ],
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJsonPath('success', false)
+        ->assertJsonPath('status_code', 422);
+
+    expect($session->fresh()?->status)->toBe('started');
+});
+
 it('returns an oci cart form post response', function () {
     $tenant = Tenant::create([
         'name' => 'OCI Tenant',
@@ -404,7 +442,7 @@ it('returns an oci cart form post response', function () {
 
     $session = createStartedPunchoutSession($tenant, 'oci', 'buyer-cookie-oci', 'https://buyer.example/oci/cart');
 
-    $response = $this->post('/api/v1/punchout/' . $tenant->uuid . '/cart?protocol=oci', [
+    $response = $this->post('/api/v1/punchout/'.$tenant->uuid.'/cart?protocol=oci', [
         'session' => $session->uuid,
         'token' => $session->token,
         'HOOK_URL' => 'https://buyer.example/oci/cart',
@@ -456,7 +494,7 @@ it('rejects a cart request for a session that has not been started', function ()
         'last_activity_at' => now(),
     ]);
 
-    $response = $this->post('/api/v1/punchout/' . $tenant->uuid . '/cart?protocol=cxml', [
+    $response = $this->post('/api/v1/punchout/'.$tenant->uuid.'/cart?protocol=cxml', [
         'session' => $session->uuid,
         'token' => $session->token,
         'return_url' => 'https://buyer.example/cxml/cart',
@@ -504,7 +542,7 @@ it('rejects a cart request for an expired session and marks it expired', functio
         'last_activity_at' => now()->subMinutes(2),
     ]);
 
-    $response = $this->post('/api/v1/punchout/' . $tenant->uuid . '/cart?protocol=oci', [
+    $response = $this->post('/api/v1/punchout/'.$tenant->uuid.'/cart?protocol=oci', [
         'session' => $session->uuid,
         'token' => $session->token,
         'HOOK_URL' => 'https://buyer.example/oci/cart',

@@ -15,7 +15,7 @@ class ResolvePunchoutTenantAction
             ->first();
 
         if (! $tenant) {
-            throw (new ModelNotFoundException())->setModel(Tenant::class, [$identifier]);
+            throw (new ModelNotFoundException)->setModel(Tenant::class, [$identifier]);
         }
 
         return $tenant;

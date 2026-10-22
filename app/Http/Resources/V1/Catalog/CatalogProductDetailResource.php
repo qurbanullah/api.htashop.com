@@ -26,6 +26,7 @@ class CatalogProductDetailResource extends JsonResource
             'sourcing' => $this->sourcing,
             'lead_time_days' => $this->lead_time_days,
             'availability' => $this->availabilityLabel(),
+            'channels' => $this->whenLoaded('salesChannels', fn () => $this->salesChannels->pluck('code')->values()->all()),
             'specs' => data_get($this->metadata, 'specs', []),
             'image_url' => $this->resolveImageUrl(),
             'image_original_url' => $this->resolveOriginalImageUrl(),

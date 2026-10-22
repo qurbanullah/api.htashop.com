@@ -10,7 +10,7 @@ class PunchoutSessionReadAction
     public function handle(array $filters = []): LengthAwarePaginator
     {
         return PunchoutSession::query()
-            ->with('tenant')
+            ->with(['tenant', 'buyer'])
             ->when(data_get($filters, 'tenant_id'), fn ($query, $tenantId) => $query->where('tenant_id', $tenantId))
             ->when(data_get($filters, 'tenant_uuid'), function ($query, $tenantUuid) {
                 $query->whereHas('tenant', fn ($tenantQuery) => $tenantQuery->where('uuid', $tenantUuid));
@@ -19,13 +19,13 @@ class PunchoutSessionReadAction
             ->when(data_get($filters, 'protocol'), fn ($query, $protocol) => $query->where('protocol', $protocol))
             ->when(data_get($filters, 'search'), function ($query, $search) {
                 $query->where(function ($inner) use ($search) {
-                    $inner->where('uuid', 'like', '%' . $search . '%')
-                        ->orWhere('buyer_cookie', 'like', '%' . $search . '%')
-                        ->orWhere('return_url', 'like', '%' . $search . '%')
+                    $inner->where('uuid', 'like', '%'.$search.'%')
+                        ->orWhere('buyer_cookie', 'like', '%'.$search.'%')
+                        ->orWhere('return_url', 'like', '%'.$search.'%')
                         ->orWhereHas('tenant', function ($tenantQuery) use ($search) {
-                            $tenantQuery->where('uuid', 'like', '%' . $search . '%')
-                                ->orWhere('slug', 'like', '%' . $search . '%')
-                                ->orWhere('name', 'like', '%' . $search . '%');
+                            $tenantQuery->where('uuid', 'like', '%'.$search.'%')
+                                ->orWhere('slug', 'like', '%'.$search.'%')
+                                ->orWhere('name', 'like', '%'.$search.'%');
                         });
                 });
             })

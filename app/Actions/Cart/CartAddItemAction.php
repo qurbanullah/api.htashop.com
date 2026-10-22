@@ -9,7 +9,7 @@ use Illuminate\Validation\ValidationException;
 
 class CartAddItemAction
 {
-    public function handle(Cart $cart, array $data): Cart
+    public function handle(Cart $cart, array $data, ?array $pricing = null, array $metadata = []): Cart
     {
         $product = Product::query()->find(data_get($data, 'product_id'));
 
@@ -37,7 +37,7 @@ class CartAddItemAction
 
         $this->validateStock($product, $variant, $quantity);
 
-        $pricing = $this->resolvePricing($product, $variant);
+        $pricing = $pricing ?? $this->resolvePricing($product, $variant);
 
         $existing = $cart->items()
             ->where('product_id', $product->id)
@@ -50,6 +50,7 @@ class CartAddItemAction
                 'unit_price' => $pricing['unit_price'],
                 'base_price' => $pricing['base_price'],
                 'currency' => $pricing['currency'],
+                'metadata' => array_merge((array) $existing->metadata, $metadata),
             ]);
         } else {
             $cart->items()->create([
@@ -59,13 +60,13 @@ class CartAddItemAction
                 'unit_price' => $pricing['unit_price'],
                 'base_price' => $pricing['base_price'],
                 'currency' => $pricing['currency'],
-                'metadata' => [
+                'metadata' => array_merge([
                     'name' => $product->name,
                     'slug' => $product->slug,
                     'sku' => $variant?->sku ?? $product->sku,
                     'variant_name' => $variant?->name,
                     'image_url' => $this->resolveImageUrl($product, $variant),
-                ],
+                ], $metadata),
             ]);
         }
 
@@ -120,6 +121,6 @@ class CartAddItemAction
             return null;
         }
 
-        return 'https://cdn.htashop.com/' . ltrim($dam->object_key, '/');
+        return 'https://cdn.htashop.com/'.ltrim($dam->object_key, '/');
     }
 }

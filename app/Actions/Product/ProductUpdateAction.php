@@ -14,6 +14,7 @@ class ProductUpdateAction
 {
     public function __construct(
         protected RevisionCreateAction $revisionCreateAction,
+        protected SyncProductSalesChannelsAction $syncSalesChannels,
     ) {}
 
     public function handle(Product $product, array $data): Product
@@ -73,12 +74,17 @@ class ProductUpdateAction
                 $product->brands()->sync(data_get($data, 'brand_ids', []));
             }
 
+            if (array_key_exists('channel_codes', $data)) {
+                $this->syncSalesChannels->handle($product, (array) data_get($data, 'channel_codes', []));
+            }
+
             return $product->load([
                 'categories',
                 'features',
                 'tags',
                 'manufacturers',
                 'brands',
+                'salesChannels',
                 'variants',
                 'attributeValues.definition',
                 'attributeValues.option',

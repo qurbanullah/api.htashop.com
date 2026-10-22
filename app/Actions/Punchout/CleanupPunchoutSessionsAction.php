@@ -3,7 +3,6 @@
 namespace App\Actions\Punchout;
 
 use App\Models\PunchoutSession;
-use Carbon\CarbonInterface;
 
 class CleanupPunchoutSessionsAction
 {
@@ -19,7 +18,7 @@ class CleanupPunchoutSessionsAction
 
         $expiredCount = (clone $expirableQuery)->count();
 
-        if (!$dryRun && $expiredCount > 0) {
+        if (! $dryRun && $expiredCount > 0) {
             (clone $expirableQuery)->update([
                 'status' => 'expired',
                 'last_activity_at' => $now,
@@ -49,7 +48,7 @@ class CleanupPunchoutSessionsAction
 
         $prunedCount = (clone $prunableQuery)->count();
 
-        if (!$dryRun && $prunedCount > 0) {
+        if (! $dryRun && $prunedCount > 0) {
             (clone $prunableQuery)->delete();
         }
 

@@ -14,12 +14,12 @@ class AdminPunchoutSessionIndexRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tenant_id'   => ['nullable', 'integer'],
+            'tenant_id' => ['nullable', 'integer'],
             'tenant_uuid' => ['nullable', 'string', 'max:36'],
-            'status'      => ['nullable', 'string', 'max:50'],
-            'protocol'    => ['nullable', 'string', 'in:cxml,oci'],
-            'search'      => ['nullable', 'string', 'max:255'],
-            'per_page'    => ['nullable', 'integer', 'min:1', 'max:100'],
+            'status' => ['nullable', 'string', 'max:50'],
+            'protocol' => ['nullable', 'string', 'in:cxml,oci'],
+            'search' => ['nullable', 'string', 'max:255'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ];
     }
 }

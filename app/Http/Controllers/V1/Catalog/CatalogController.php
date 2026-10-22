@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\V1\Catalog;
 
+use App\Enums\SalesChannel;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\Catalog\CatalogProductDetailResource;
 use App\Http\Resources\V1\Catalog\CatalogProductResource;
@@ -15,8 +16,7 @@ class CatalogController extends Controller
 {
     public function __construct(
         protected CatalogService $catalogService,
-    ) {
-    }
+    ) {}
 
     public function products(Request $request): JsonResponse
     {
@@ -29,6 +29,8 @@ class CatalogController extends Controller
             'max_price' => $request->input('max_price'),
             'sort' => $request->string('sort', 'newest')->toString(),
             'per_page' => (int) $request->integer('per_page', 12),
+            'channel' => $this->publicChannel(),
+            'tenant_id' => $request->integer('tenant_id') ?: null,
         ];
 
         $products = $this->catalogService->products($filters);
@@ -49,10 +51,13 @@ class CatalogController extends Controller
         );
     }
 
-    public function filters(): JsonResponse
+    public function filters(Request $request): JsonResponse
     {
         return ApiResponse::success(
-            $this->catalogService->filters(),
+            $this->catalogService->filters([
+                'channel' => $this->publicChannel(),
+                'tenant_id' => $request->integer('tenant_id') ?: null,
+            ]),
             'Catalog filters retrieved successfully',
         );
     }
@@ -74,14 +79,26 @@ class CatalogController extends Controller
         );
     }
 
-    public function show(string $key): JsonResponse
+    public function show(Request $request, string $key): JsonResponse
     {
-        $product = $this->catalogService->show($key);
+        $product = $this->catalogService->show($key, [
+            'channel' => $this->publicChannel(),
+            'tenant_id' => $request->integer('tenant_id') ?: null,
+        ]);
 
         return ApiResponse::success(
             new CatalogProductDetailResource($product),
             'Product retrieved successfully',
         );
+    }
+
+    /**
+     * The unauthenticated catalog only exposes the consumer storefront. Punchout
+     * access is always mediated by a session token and its tenant.
+     */
+    private function publicChannel(): string
+    {
+        return SalesChannel::STOREFRONT;
     }
 
     private function arrayParam(Request $request, string $key): array

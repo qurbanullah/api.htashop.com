@@ -3,22 +3,21 @@
 namespace App\Http\Controllers\V1\Punchout;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\V1\Punchout\PunchoutCartRequest;
+use App\Http\Requests\V1\Punchout\PunchoutSetupRequest;
 use App\Http\Requests\V1\Punchout\PunchoutStartRequest;
 use App\Http\Resources\V1\Punchout\PunchoutSessionResource;
 use App\Http\Responses\V1\ApiResponse;
-use App\Http\Requests\V1\Punchout\PunchoutCartRequest;
-use App\Http\Requests\V1\Punchout\PunchoutSetupRequest;
 use App\Services\Punchout\PunchoutTransactionService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
-use Illuminate\Http\JsonResponse;
 
 class PunchoutController extends Controller
 {
     public function __construct(
         protected PunchoutTransactionService $punchoutTransactionService,
-    ) {
-    }
+    ) {}
 
     public function setup(PunchoutSetupRequest $request, string $tenantIdentifier): Response
     {

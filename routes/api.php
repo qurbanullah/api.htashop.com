@@ -67,8 +67,6 @@ use App\Http\Controllers\V1\Product\ProductController;
 use App\Http\Controllers\V1\Product\ProductRevisionController;
 use App\Http\Controllers\V1\ProductReview\ProductReviewController;
 use App\Http\Controllers\V1\Profile\ProfileController;
-use App\Http\Controllers\V1\Punchout\AdminPunchoutSessionController;
-use App\Http\Controllers\V1\Punchout\PunchoutController;
 use App\Http\Controllers\V1\Purchasing\SupplierOrderController;
 use App\Http\Controllers\V1\Quote\QuoteController;
 use App\Http\Controllers\V1\Search\SearchController;
@@ -125,11 +123,6 @@ Route::prefix('v1')->group(function () {
     Route::post('/check-account', [AuthController::class, 'checkAccount']);
     Route::post('/forgot-password', [AuthController::class, 'sendResetLink']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
-
-    // Public punchout entry points
-    Route::post('/punchout/{tenantIdentifier}/setup', [PunchoutController::class, 'setup'])->middleware('throttle:10,1');
-    Route::post('/punchout/{tenantIdentifier}/cart', [PunchoutController::class, 'cart'])->middleware('throttle:60,1');
-    Route::get('/punchout/{tenantIdentifier}/start', [PunchoutController::class, 'start'])->middleware('throttle:60,1');
 
     // Public EULA endpoint (for download consent)
     Route::get('/eulas/active', [EulaController::class, 'active']);
@@ -230,10 +223,6 @@ Route::prefix('v1')->group(function () {
         Route::get('/audits/stats', [AuditController::class, 'adminStats']);
         Route::get('/audits/export', [AuditController::class, 'exportCsv']);
         Route::get('/audits/{id}', [AuditController::class, 'show']);
-
-        // Admin Punchout session audit routes
-        Route::get('/punchout/sessions', [AdminPunchoutSessionController::class, 'index']);
-        Route::get('/punchout/sessions/{uuid}', [AdminPunchoutSessionController::class, 'show']);
 
         // Admin Post Management Routes
         Route::get('/posts', [AdminPostController::class, 'index']);

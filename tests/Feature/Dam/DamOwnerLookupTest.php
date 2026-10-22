@@ -5,7 +5,6 @@ use App\Models\Product;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Variant;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 it('searches dam owners by type and query', function () {
     $user = User::factory()->create();
@@ -28,16 +27,16 @@ it('searches dam owners by type and query', function () {
     $product = Product::create([
         'tenant_id' => $tenant->id,
         'organization_id' => $organization->id,
-        'name' => 'Punchout Drill',
-        'slug' => 'punchout-drill',
+        'name' => 'Test Drill',
+        'slug' => 'test-drill',
         'status' => 'active',
         'is_active' => true,
     ]);
 
     $variant = Variant::create([
         'product_id' => $product->id,
-        'name' => 'Punchout Drill Blue',
-        'slug' => 'punchout-drill-blue',
+        'name' => 'Test Drill Blue',
+        'slug' => 'test-drill-blue',
         'status' => 'active',
         'is_active' => true,
     ]);
@@ -48,7 +47,7 @@ it('searches dam owners by type and query', function () {
         ->assertOk()
         ->assertJsonPath('data.0.type', 'product')
         ->assertJsonPath('data.0.id', $product->id)
-        ->assertJsonPath('data.0.name', 'Punchout Drill')
+        ->assertJsonPath('data.0.name', 'Test Drill')
         ->assertJsonPath('data.0.uuid', $product->uuid);
 
     $this
@@ -56,7 +55,7 @@ it('searches dam owners by type and query', function () {
         ->assertOk()
         ->assertJsonPath('data.0.type', 'variant')
         ->assertJsonPath('data.0.id', $variant->id)
-        ->assertJsonPath('data.0.name', 'Punchout Drill Blue');
+        ->assertJsonPath('data.0.name', 'Test Drill Blue');
 
     $this
         ->getJson('/api/v1/dam/owners?type=organization&query=power')

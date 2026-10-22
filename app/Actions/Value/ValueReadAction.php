@@ -5,9 +5,9 @@ namespace App\Actions\Value;
 use App\Models\Product;
 use App\Models\Value;
 use App\Models\Variant;
-use App\Support\Punchout\ValuableTypeRegistry;
-use Illuminate\Support\Facades\DB;
+use App\Support\Value\ValuableTypeRegistry;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class ValueReadAction
 {
@@ -29,17 +29,17 @@ class ValueReadAction
                                     ->where('products.organization_id', $organizationId);
                             });
                     })
-                    ->orWhere(function ($query) use ($organizationId) {
-                        $query->where('valuable_type', Variant::class)
-                            ->whereExists(function ($exists) use ($organizationId) {
-                                $exists->select(DB::raw(1))
-                                    ->from('variants')
-                                    ->join('products', 'products.id', 'variants.product_id')
-                                    ->whereColumn('variants.id', 'values.valuable_id')
-                                    ->where('products.organization_id', $organizationId);
-                            });
-                    })
-                    ->orWhereNotIn('valuable_type', [Product::class, Variant::class]);
+                        ->orWhere(function ($query) use ($organizationId) {
+                            $query->where('valuable_type', Variant::class)
+                                ->whereExists(function ($exists) use ($organizationId) {
+                                    $exists->select(DB::raw(1))
+                                        ->from('variants')
+                                        ->join('products', 'products.id', 'variants.product_id')
+                                        ->whereColumn('variants.id', 'values.valuable_id')
+                                        ->where('products.organization_id', $organizationId);
+                                });
+                        })
+                        ->orWhereNotIn('valuable_type', [Product::class, Variant::class]);
                 });
             })
             ->when(data_get($filters, 'definition_id'), fn ($query, $definitionId) => $query->where('definition_id', $definitionId))
@@ -52,13 +52,13 @@ class ValueReadAction
 
     private function resolveValuable(?string $type, ?string $uuid): ?array
     {
-        if (!$type || !$uuid) {
+        if (! $type || ! $uuid) {
             return null;
         }
 
         $model = ValuableTypeRegistry::resolveModel($type, $uuid);
 
-        if (!$model) {
+        if (! $model) {
             return null;
         }
 

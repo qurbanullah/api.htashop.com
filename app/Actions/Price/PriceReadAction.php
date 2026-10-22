@@ -20,16 +20,16 @@ class PriceReadAction
             ->when(data_get($filters, 'contract_id'), fn ($query, $contractId) => $query->where('contract_id', $contractId))
             ->when(data_get($filters, 'catalog_id'), fn ($query, $catalogId) => $query->where('catalog_id', $catalogId))
             ->when(data_get($filters, 'currency_id'), fn ($query, $currencyId) => $query->where('currency_id', $currencyId))
-            ->when(!is_null(data_get($filters, 'is_active')), fn ($query) => $query->where('is_active', (bool) data_get($filters, 'is_active')))
+            ->when(! is_null(data_get($filters, 'is_active')), fn ($query) => $query->where('is_active', (bool) data_get($filters, 'is_active')))
             ->when($resolved, fn ($query) => $query->where('priceable_type', $resolved['type'])->where('priceable_id', $resolved['id']))
             ->orderByDesc('priority')
-            ->orderBy('amount')
+            ->orderBy('base_price')
             ->paginate((int) data_get($filters, 'per_page', 15));
     }
 
     private function resolvePriceable(?string $type, ?string $uuid): ?array
     {
-        if (!$type || !$uuid) {
+        if (! $type || ! $uuid) {
             return null;
         }
 
@@ -39,7 +39,7 @@ class PriceReadAction
             default => null,
         };
 
-        if (!$model) {
+        if (! $model) {
             return null;
         }
 

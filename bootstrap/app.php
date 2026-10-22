@@ -8,6 +8,8 @@ use App\Http\Middleware\ForceJsonResponse;
 use App\Http\Middleware\LoadUserRoles;
 use App\Http\Middleware\PermissionMiddleware;
 use App\Http\Middleware\RecordApiMetrics;
+use App\Http\Middleware\ResolvePunchoutManagerTenant;
+use App\Http\Middleware\ResolvePunchoutSession;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\TrustProxies;
@@ -17,6 +19,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Middleware\HandleCors;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -25,6 +28,9 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        then: function (): void {
+            Route::prefix('api')->middleware('api')->group(base_path('routes/punchout.php'));
+        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Trust proxies must be set before any other middleware
@@ -55,6 +61,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => PermissionMiddleware::class,
             'auth.api' => ApiAuthenticate::class,
             'admin' => AdminMiddleware::class,
+            'punchout.session' => ResolvePunchoutSession::class,
+            'punchout.manager' => ResolvePunchoutManagerTenant::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

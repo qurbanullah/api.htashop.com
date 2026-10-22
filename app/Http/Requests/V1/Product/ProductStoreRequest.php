@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\V1\Product;
 
+use App\Enums\SalesChannel;
 use App\Enums\Sourcing;
 use App\Models\Organization;
 use Illuminate\Contracts\Validation\Validator;
@@ -39,6 +40,8 @@ class ProductStoreRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'is_active' => ['nullable', 'boolean'],
             'metadata' => ['nullable', 'array'],
+            'channel_codes' => ['nullable', 'array'],
+            'channel_codes.*' => ['string', Rule::in(SalesChannel::ALL)],
             'category_ids' => ['nullable', 'array'],
             'category_ids.*' => ['integer', 'exists:categories,id'],
             'feature_ids' => ['nullable', 'array'],

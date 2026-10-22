@@ -6,16 +6,19 @@ use App\Models\Product;
 
 class CatalogProductShowAction
 {
-    public function handle(string $key): Product
+    public function handle(string $key, array $filters = []): Product
     {
         return Product::query()
             ->where('is_active', true)
             ->where('status', 'active')
+            ->forTenant(data_get($filters, 'tenant_id'))
+            ->forChannel(data_get($filters, 'channel'))
             ->with([
                 'categories',
                 'brands',
                 'features',
                 'manufacturers',
+                'salesChannels',
                 'highlights' => fn ($query) => $query->orderByPivot('sort_order'),
                 'dams' => fn ($query) => $query
                     ->whereIn('collection_name', ['featured', 'gallery'])
@@ -35,7 +38,7 @@ class CatalogProductShowAction
 
                 $segments = explode('-', $key);
                 $prefix = (string) end($segments);
-                $query->where('uuid', 'like', $prefix . '%');
+                $query->where('uuid', 'like', $prefix.'%');
             })
             ->firstOrFail();
     }

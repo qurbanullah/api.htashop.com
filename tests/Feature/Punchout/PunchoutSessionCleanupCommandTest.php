@@ -2,7 +2,6 @@
 
 use App\Models\PunchoutSession;
 use App\Models\Tenant;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 it('expires open timed out sessions and prunes old terminal sessions', function () {
     $tenant = Tenant::create([

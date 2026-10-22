@@ -16,6 +16,7 @@ class ProductCreateAction
 {
     public function __construct(
         protected SkuGeneratorAction $skuGenerator,
+        protected SyncProductSalesChannelsAction $syncSalesChannels,
     ) {}
 
     public function handle(array $data): Product
@@ -79,6 +80,7 @@ class ProductCreateAction
         $product->tags()->sync(data_get($data, 'tag_ids', []));
         $product->manufacturers()->sync(data_get($data, 'manufacturer_ids', []));
         $product->brands()->sync(data_get($data, 'brand_ids', []));
+        $this->syncSalesChannels->handle($product, (array) data_get($data, 'channel_codes', []));
 
         return $product->load([
             'categories',
@@ -86,6 +88,7 @@ class ProductCreateAction
             'tags',
             'manufacturers',
             'brands',
+            'salesChannels',
             'variants',
             'attributeValues.definition',
             'attributeValues.option',

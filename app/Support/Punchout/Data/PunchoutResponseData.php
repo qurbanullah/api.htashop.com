@@ -8,6 +8,5 @@ class PunchoutResponseData
         public readonly string $content,
         public readonly string $contentType,
         public readonly int $status = 200,
-    ) {
-    }
+    ) {}
 }

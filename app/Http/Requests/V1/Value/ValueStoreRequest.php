@@ -4,10 +4,10 @@ namespace App\Http\Requests\V1\Value;
 
 use App\Models\Definition;
 use App\Models\Option;
-use App\Support\Punchout\ValuableTypeRegistry;
 use App\Models\Unit;
-use Illuminate\Database\Eloquent\Model;
+use App\Support\Value\ValuableTypeRegistry;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -56,7 +56,7 @@ class ValueStoreRequest extends FormRequest
                 $validator->errors()->add('definition_id', 'The selected definition does not belong to the selected tenant.');
             }
 
-            if ($definition && !$definition->supportsTargetType((string) $this->input('valuable_type'))) {
+            if ($definition && ! $definition->supportsTargetType((string) $this->input('valuable_type'))) {
                 $validator->errors()->add('valuable_type', 'This definition cannot be assigned to the selected record type.');
             }
 
@@ -72,7 +72,7 @@ class ValueStoreRequest extends FormRequest
                 $validator->errors()->add('unit_id', 'The selected unit does not belong to the definition measurement.');
             }
 
-            if (!$this->hasAnyValue()) {
+            if (! $this->hasAnyValue()) {
                 $validator->errors()->add('value_text', 'At least one value field is required.');
             }
         });
@@ -90,6 +90,6 @@ class ValueStoreRequest extends FormRequest
 
     private function hasAnyValue(): bool
     {
-        return $this->filled('value_text') || !is_null($this->input('value_number')) || !is_null($this->input('value_boolean')) || $this->filled('value_date') || $this->filled('value_datetime') || !is_null($this->input('value_json')) || $this->filled('option_id');
+        return $this->filled('value_text') || ! is_null($this->input('value_number')) || ! is_null($this->input('value_boolean')) || $this->filled('value_date') || $this->filled('value_datetime') || ! is_null($this->input('value_json')) || $this->filled('option_id');
     }
 }

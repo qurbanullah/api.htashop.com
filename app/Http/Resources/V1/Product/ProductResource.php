@@ -38,6 +38,7 @@ class ProductResource extends JsonResource
             'sale_price' => data_get($this->metadata, 'sale_price'),
             'currency' => data_get($this->metadata, 'currency', 'USD'),
             'metadata' => $this->metadata,
+            'channels' => $this->whenLoaded('salesChannels', fn () => $this->salesChannels->pluck('code')->values()->all()),
             'tenant_id' => $this->tenant_id,
             'organization_id' => $this->organization_id,
             'created_at' => $this->created_at,

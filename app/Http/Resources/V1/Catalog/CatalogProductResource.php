@@ -25,6 +25,7 @@ class CatalogProductResource extends JsonResource
             'sourcing' => $this->sourcing,
             'lead_time_days' => $this->lead_time_days,
             'availability' => $this->availabilityLabel(),
+            'channels' => $this->whenLoaded('salesChannels', fn () => $this->salesChannels->pluck('code')->values()->all()),
             'image_url' => $this->resolveImageUrl(),
             'image_urls' => $this->resolveImageUrls(),
             'categories' => $this->whenLoaded('categories'),

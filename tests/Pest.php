@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Punchout\IssueHandoffCodeAction;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
@@ -7,8 +8,15 @@ use App\Gateways\CodGateway;
 use App\Gateways\PaymentGatewayManager;
 use App\Gateways\Safepay\SafepayClient;
 use App\Gateways\SafepayGateway;
+use App\Models\Currency;
 use App\Models\Order;
+use App\Models\Organization;
 use App\Models\Payment;
+use App\Models\Price;
+use App\Models\Product;
+use App\Models\PunchoutBuyer;
+use App\Models\PunchoutSession;
+use App\Models\SalesChannel;
 use App\Models\Tenant;
 use App\Services\Payment\PaymentReconciler;
 use App\Services\Payment\PaymentService;
@@ -189,4 +197,116 @@ function paymentRecord(Order $order, array $attributes = []): Payment
 function safepaySignature(string $body, string $secret = 'test_webhook_secret'): string
 {
     return hash_hmac('sha512', $body, $secret);
+}
+
+function punchoutTenant(string $slug): Tenant
+{
+    return Tenant::create([
+        'name' => Str::headline($slug),
+        'slug' => $slug,
+        'is_active' => true,
+    ]);
+}
+
+function punchoutOrganization(Tenant $tenant, string $slug): Organization
+{
+    return Organization::create([
+        'tenant_id' => $tenant->id,
+        'name' => Str::headline($slug),
+        'slug' => $slug,
+        'type' => 'vendor',
+        'is_active' => true,
+    ]);
+}
+
+function punchoutProduct(Tenant $tenant, Organization $organization, string $name, array $channels, array $metadata = []): Product
+{
+    $product = Product::create([
+        'tenant_id' => $tenant->id,
+        'organization_id' => $organization->id,
+        'name' => $name,
+        'slug' => Str::slug($name),
+        'status' => 'active',
+        'is_active' => true,
+        'metadata' => array_merge(['price' => 10.00, 'currency' => 'USD'], $metadata),
+    ]);
+
+    $ids = SalesChannel::query()->whereIn('code', $channels)->pluck('id')->all();
+    $product->salesChannels()->sync($ids);
+
+    return $product->load('salesChannels');
+}
+
+function punchoutSession(Tenant $tenant, string $protocol = 'cxml', string $returnUrl = 'https://buyer.example/return', ?PunchoutBuyer $buyer = null): PunchoutSession
+{
+    return PunchoutSession::create([
+        'tenant_id' => $tenant->id,
+        'buyer_id' => $buyer?->id,
+        'protocol' => $protocol,
+        'status' => 'started',
+        'buyer_cookie' => 'buyer-cookie',
+        'return_url' => $returnUrl,
+        'expires_at' => now()->addMinutes(30),
+        'idle_expires_at' => now()->addMinutes(15),
+        'started_at' => now(),
+        'last_activity_at' => now(),
+    ]);
+}
+
+function punchoutAccessToken($test, PunchoutSession $session): string
+{
+    $code = app(IssueHandoffCodeAction::class)->handle($session);
+
+    return (string) $test->postJson('/api/v1/punchout/sessions/exchange', ['code' => $code])
+        ->json('data.session.access_token');
+}
+
+function punchoutBuyer(Tenant $tenant, array $attributes = []): PunchoutBuyer
+{
+    return PunchoutBuyer::create(array_merge([
+        'tenant_id' => $tenant->id,
+        'name' => 'Buyer Co',
+        'code' => 'buyer-'.Str::lower(Str::random(8)),
+        'protocol' => 'cxml',
+        'sender_identity' => 'buyer-sender',
+        'from_identity' => 'buyer-from',
+        'to_identity' => 'htashop',
+        'shared_secret_hash' => PunchoutBuyer::hashSecret('buyer-shared-secret'),
+        'is_active' => true,
+    ], $attributes));
+}
+
+function punchoutBuyerOrganization(Tenant $tenant, string $slug): Organization
+{
+    return Organization::create([
+        'tenant_id' => $tenant->id,
+        'name' => Str::headline($slug),
+        'slug' => $slug,
+        'type' => 'buyer',
+        'is_active' => true,
+    ]);
+}
+
+function punchoutCurrency(string $code = 'USD'): Currency
+{
+    return Currency::query()->firstOrCreate(
+        ['code' => $code],
+        ['name' => $code, 'symbol' => $code === 'USD' ? '$' : $code, 'is_active' => true],
+    );
+}
+
+function punchoutPrice(Tenant $tenant, Organization $organization, Product $product, array $attributes = []): Price
+{
+    return Price::query()->create(array_merge([
+        'tenant_id' => $tenant->id,
+        'organization_id' => $organization->id,
+        'currency_id' => punchoutCurrency()->id,
+        'priceable_type' => Product::class,
+        'priceable_id' => $product->id,
+        'type' => 'fixed',
+        'base_price' => 10.00,
+        'min_quantity' => 1,
+        'priority' => 0,
+        'is_active' => true,
+    ], $attributes));
 }
