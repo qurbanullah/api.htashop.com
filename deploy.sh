@@ -46,14 +46,16 @@ warn()  { printf '\033[1;33mwarning:\033[0m %s\n' "$1" >&2; }
 die()   { printf '\033[1;31merror:\033[0m %s\n' "$1" >&2; exit 1; }
 
 # set -e aborts without a message when a command substitution or a guard fails.
-# That is indistinguishable from a hang or a Ctrl-C, so report the line. Kept
-# inline (not a function) so $LINENO is the failing command's line.
-trap '
-status=$?
-printf "\033[1;31merror:\033[0m %s failed at line %s (exit %s)\n    %s\n" \
-    "${0##*/}" "$LINENO" "$status" "$BASH_COMMAND" >&2
-exit "$status"
-' ERR
+# That is indistinguishable from a hang or a Ctrl-C, so report the line. The
+# trap captures $LINENO/$BASH_COMMAND/$? itself, before calling the function,
+# so the reported line is the failing command's line rather than the helper's.
+report_error() {
+    local line="$1" command="$2" status="$3"
+    printf "\033[1;31merror:\033[0m %s failed at line %s (exit %s)\n    %s\n" \
+        "${0##*/}" "$line" "$status" "$command" >&2
+    exit "$status"
+}
+trap 'report_error "$LINENO" "$BASH_COMMAND" "$?"' ERR
 
 usage() {
     cat <<'USAGE'
