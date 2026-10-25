@@ -32,6 +32,29 @@ it('scopes the punchout catalog to the session tenant and channel', function () 
         ->assertNotFound();
 });
 
+it('returns a punchout product detail by route key and by uuid', function () {
+    $tenant = punchoutTenant('detail-tenant');
+    $organization = punchoutOrganization($tenant, 'detail-org');
+    $product = punchoutProduct($tenant, $organization, 'Detail Product', ['punchout']);
+
+    $session = punchoutSession($tenant);
+    $code = app(IssueHandoffCodeAction::class)->handle($session);
+    $token = (string) $this->postJson('/api/v1/punchout/sessions/exchange', ['code' => $code])
+        ->json('data.session.access_token');
+
+    $routeKey = $product->slug.'-'.substr((string) $product->uuid, 0, 8);
+
+    $this->withHeader('Authorization', 'Punchout '.$token)
+        ->getJson('/api/v1/punchout/'.$tenant->uuid.'/catalog/products/'.$routeKey)
+        ->assertOk()
+        ->assertJsonPath('data.name', 'Detail Product');
+
+    $this->withHeader('Authorization', 'Punchout '.$token)
+        ->getJson('/api/v1/punchout/'.$tenant->uuid.'/catalog/products/'.$product->uuid)
+        ->assertOk()
+        ->assertJsonPath('data.name', 'Detail Product');
+});
+
 it('keeps punchout-only products out of the public storefront catalog', function () {
     $tenant = punchoutTenant('storefront-scope-tenant');
     $organization = punchoutOrganization($tenant, 'storefront-scope-org');

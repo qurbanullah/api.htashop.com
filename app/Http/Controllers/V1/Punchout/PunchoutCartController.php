@@ -35,11 +35,15 @@ class PunchoutCartController extends Controller
         );
     }
 
-    public function update(Request $request, string $uuid): JsonResponse
+    public function update(Request $request): JsonResponse
     {
         $data = $request->validate([
             'quantity' => ['required', 'integer', 'min:1', 'max:999'],
         ]);
+
+        // Route parameters are positional for scalar arguments, and the route
+        // carries {tenantIdentifier} before {uuid}; read the item explicitly.
+        $uuid = (string) $request->route('uuid');
 
         return ApiResponse::success(
             $this->punchoutCartService->updateItem($this->session($request), $uuid, (int) $data['quantity']),
@@ -47,8 +51,10 @@ class PunchoutCartController extends Controller
         );
     }
 
-    public function destroy(Request $request, string $uuid): JsonResponse
+    public function destroy(Request $request): JsonResponse
     {
+        $uuid = (string) $request->route('uuid');
+
         return ApiResponse::success(
             $this->punchoutCartService->removeItem($this->session($request), $uuid),
             'Item removed from punchout cart',

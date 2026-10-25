@@ -10,6 +10,17 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ResolvePunchoutSession
 {
+    /**
+     * Routes whose {uuid} is the session UUID. Other punchout routes also carry
+     * a {uuid} (a cart line, for example), so the parameter cannot be trusted
+     * blindly: looking a session up by a cart-item UUID yields a spurious 404.
+     */
+    private const SESSION_ROUTES = [
+        'punchout.sessions.show',
+        'punchout.sessions.heartbeat',
+        'punchout.sessions.cancel',
+    ];
+
     public function __construct(
         protected ResolvePunchoutSessionByTokenAction $resolvePunchoutSessionByTokenAction,
     ) {}
@@ -22,7 +33,9 @@ class ResolvePunchoutSession
             abort(401, 'A punchout session token is required.');
         }
 
-        $sessionUuid = $request->route('uuid');
+        $sessionUuid = $request->routeIs(...self::SESSION_ROUTES)
+            ? $request->route('uuid')
+            : null;
 
         $session = is_string($sessionUuid) && $sessionUuid !== ''
             ? $this->resolvePunchoutSessionByTokenAction->handle($sessionUuid, $token)

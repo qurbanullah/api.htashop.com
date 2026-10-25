@@ -45,6 +45,16 @@ info()  { printf '    %s\n' "$1"; }
 warn()  { printf '\033[1;33mwarning:\033[0m %s\n' "$1" >&2; }
 die()   { printf '\033[1;31merror:\033[0m %s\n' "$1" >&2; exit 1; }
 
+# set -e aborts without a message when a command substitution or a guard fails.
+# That is indistinguishable from a hang or a Ctrl-C, so report the line. Kept
+# inline (not a function) so $LINENO is the failing command's line.
+trap '
+status=$?
+printf "\033[1;31merror:\033[0m %s failed at line %s (exit %s)\n    %s\n" \
+    "${0##*/}" "$LINENO" "$status" "$BASH_COMMAND" >&2
+exit "$status"
+' ERR
+
 usage() {
     cat <<'USAGE'
 Build the API image and roll the Swarm service onto it.
@@ -137,8 +147,10 @@ else
     info "now at $(git log -1 --format='%h %s')"
 fi
 
-if [ -n "$(git status --porcelain)" ]; then
+DIRTY="$(git status --porcelain)" || DIRTY=""
+if [ -n "$DIRTY" ]; then
     warn "the checkout has uncommitted changes; the image will not match what was pushed"
+    printf '%s\n' "$DIRTY" | sed 's/^/    /' >&2
 fi
 
 # ---------------------------------------------------------------------------

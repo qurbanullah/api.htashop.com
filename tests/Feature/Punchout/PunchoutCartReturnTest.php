@@ -42,6 +42,35 @@ it('adds an item and returns a cxml cart to the setup url', function () {
     expect($session->fresh()->cart_items)->toHaveCount(1);
 });
 
+it('updates and removes a cart line by its own uuid', function () {
+    $tenant = punchoutTenant('cart-line-tenant');
+    $organization = punchoutOrganization($tenant, 'cart-line-org');
+    $product = punchoutProduct($tenant, $organization, 'Cart Line Product', ['punchout'], ['price' => 10.00]);
+    $session = punchoutSession($tenant);
+    $token = punchoutCartToken($this, $session);
+    $headers = ['Authorization' => 'Punchout '.$token];
+
+    $itemUuid = (string) $this->withHeaders($headers)
+        ->postJson('/api/v1/punchout/'.$tenant->uuid.'/cart/items', [
+            'product_id' => $product->id,
+            'quantity' => 1,
+        ])
+        ->assertCreated()
+        ->json('data.items.0.uuid');
+
+    expect($itemUuid)->not->toBe('');
+
+    $this->withHeaders($headers)
+        ->patchJson('/api/v1/punchout/'.$tenant->uuid.'/cart/items/'.$itemUuid, ['quantity' => 5])
+        ->assertOk()
+        ->assertJsonPath('data.items.0.quantity', 5);
+
+    $this->withHeaders($headers)
+        ->deleteJson('/api/v1/punchout/'.$tenant->uuid.'/cart/items/'.$itemUuid)
+        ->assertOk()
+        ->assertJsonPath('data.items', []);
+});
+
 it('rejects products outside the tenant punchout channel', function () {
     $tenant = punchoutTenant('cart-scope-tenant');
     $organization = punchoutOrganization($tenant, 'cart-scope-org');

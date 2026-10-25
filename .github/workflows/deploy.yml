@@ -47,17 +47,17 @@ jobs:
       cancel-in-progress: false
 
     env:
-      SSH_HOST: ${{ secrets.DEPLOY_HOST }}
-      SSH_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
       # A port number is not a secret — any scan reveals it, and access is still
       # gated on the key — so this is a working default rather than another
       # setting that can be missing or filed under the wrong name. DEPLOY_PORT
       # overrides it.
-      SSH_PORT: ${{ secrets.DEPLOY_PORT || vars.DEPLOY_PORT || '52341' }}
+      DEPLOY_PORT: ${{ secrets.DEPLOY_PORT || vars.DEPLOY_PORT || '52341' }}
       # Accepted as a Variable or as a Secret. Neither is sensitive, so a
       # Variable is the natural home, but filing one in the other store is an easy
       # mistake and there is no reason to fail over it.
-      SERVER_PATH: ${{ vars.DEPLOY_PATH || secrets.DEPLOY_PATH }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH || secrets.DEPLOY_PATH }}
       SMOKE_URL: ${{ vars.SMOKE_URL || secrets.SMOKE_URL }}
       # Reported by the configuration check, so an override that did not take
       # effect is visible rather than silently falling back to the default.
@@ -70,13 +70,13 @@ jobs:
       # Fail with instructions rather than a cryptic error partway through.
       - name: Check configuration
         env:
-          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         run: |
           missing=""
-          [ -n "$SSH_HOST" ]    || missing="$missing DEPLOY_HOST"
-          [ -n "$SSH_USER" ]    || missing="$missing DEPLOY_USER"
-          [ -n "$SSH_KEY" ]     || missing="$missing DEPLOY_SSH_KEY"
-          [ -n "$SERVER_PATH" ] || missing="$missing DEPLOY_PATH"
+          [ -n "$DEPLOY_HOST" ]    || missing="$missing DEPLOY_HOST"
+          [ -n "$DEPLOY_USER" ]    || missing="$missing DEPLOY_USER"
+          [ -n "$DEPLOY_SSH_KEY" ] || missing="$missing DEPLOY_SSH_KEY"
+          [ -n "$DEPLOY_PATH" ]    || missing="$missing DEPLOY_PATH"
 
           if [ -n "$missing" ]; then
             echo "::error::Not configured:$missing"
@@ -95,14 +95,14 @@ jobs:
           # Echoed because a wrong path is far easier to spot here than as a
           # failure twenty steps later. None of these are secrets.
           echo "Resolved configuration:"
-          echo "  host: $SSH_HOST"
-          echo "  user: $SSH_USER"
-          echo "  path: $SERVER_PATH"
+          echo "  host: $DEPLOY_HOST"
+          echo "  user: $DEPLOY_USER"
+          echo "  path: $DEPLOY_PATH"
 
           if [ "$DEPLOY_PORT_SET" = "yes" ]; then
-            echo "  port: $SSH_PORT  (from DEPLOY_PORT)"
+            echo "  port: $DEPLOY_PORT  (from DEPLOY_PORT)"
           else
-            echo "  port: $SSH_PORT  (built-in default; DEPLOY_PORT overrides it)"
+            echo "  port: $DEPLOY_PORT  (built-in default; DEPLOY_PORT overrides it)"
           fi
 
       # The deploy scripts are the only code that runs with the API in
@@ -115,12 +115,12 @@ jobs:
 
       - name: Set up SSH
         env:
-          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
 
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
       # A separate step so a connection problem is reported as one, with the
@@ -130,16 +130,16 @@ jobs:
       # second way for the same connection to fail, silently.
       - name: Check SSH connection
         run: |
-          if ! ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \
+          if ! ssh -i ~/.ssh/deploy_key -p "$DEPLOY_PORT" \
                  -o StrictHostKeyChecking=accept-new \
                  -o ConnectTimeout=15 \
                  -o BatchMode=yes \
-                 "$SSH_USER@$SSH_HOST" "id -un; hostname"; then
-            echo "::error::Cannot open an SSH session to $SSH_USER@$SSH_HOST on port $SSH_PORT"
+                 "$DEPLOY_USER@$DEPLOY_HOST" "id -un; hostname"; then
+            echo "::error::Cannot open an SSH session to $DEPLOY_USER@$DEPLOY_HOST on port $DEPLOY_PORT"
             echo ""
             echo "Check, in this order:"
             echo "  1. DEPLOY_HOST resolves from the public internet."
-            echo "  2. Port $SSH_PORT is the one sshd listens on, and is not firewalled."
+            echo "  2. Port $DEPLOY_PORT is the one sshd listens on, and is not firewalled."
             echo "     A hardened server often moves SSH off 22 — set DEPLOY_PORT."
             echo "  3. DEPLOY_SSH_KEY is the private half of a key listed in that"
             echo "     user's ~/.ssh/authorized_keys (the error above says which)."
@@ -152,11 +152,11 @@ jobs:
       - name: Deploy
         id: deploy
         run: |
-          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" \
+          ssh -i ~/.ssh/deploy_key -p "$DEPLOY_PORT" \
             -o StrictHostKeyChecking=accept-new \
             -o BatchMode=yes \
-            "$SSH_USER@$SSH_HOST" \
-            "cd '$SERVER_PATH' && APP_DIR='$SERVER_PATH' BRANCH='$BRANCH' SMOKE_URL='$SMOKE_URL' bash -s" \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "cd '$DEPLOY_PATH' && APP_DIR='$DEPLOY_PATH' BRANCH='$BRANCH' SMOKE_URL='$SMOKE_URL' bash -s" \
             < deploy.sh
 
       - name: Summary

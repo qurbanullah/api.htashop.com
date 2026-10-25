@@ -52,9 +52,14 @@ class PunchoutCatalogController extends Controller
         ], 'Punchout products retrieved successfully');
     }
 
-    public function show(Request $request, string $key): JsonResponse
+    public function show(Request $request): JsonResponse
     {
         $session = $this->session($request);
+
+        // Read from the route rather than declaring `string $key`: Laravel fills
+        // scalar controller parameters positionally, so a lone `$key` would
+        // receive {tenantIdentifier}, the first route parameter.
+        $key = (string) $request->route('key');
 
         $product = $this->catalogService->show($key, [
             'channel' => SalesChannel::PUNCHOUT,
