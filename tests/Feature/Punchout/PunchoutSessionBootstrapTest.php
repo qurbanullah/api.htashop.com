@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Punchout;
+
 use App\Actions\Punchout\IssueHandoffCodeAction;
 
 it('exchanges a handoff code for an access token and bootstraps the session', function () {

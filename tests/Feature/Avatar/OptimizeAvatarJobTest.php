@@ -1,16 +1,19 @@
 <?php
 
+namespace Tests\Feature\Avatar;
+
 use App\Jobs\Avatars\OptimizeAvatarJob;
 use App\Models\User;
 use App\Services\Avatars\AvatarService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Exception;
 use Illuminate\Support\Facades\Log;
+use Mockery;
 
 it('calls optimizeAvatarIfNeeded on AvatarService when user is found', function () {
     Log::spy();
-    
+
     $user = User::factory()->create();
-    
+
     $mockService = Mockery::mock(AvatarService::class);
     $mockService->shouldReceive('optimizeAvatarIfNeeded')
         ->once()
@@ -35,7 +38,7 @@ it('calls optimizeAvatarIfNeeded on AvatarService when user is found', function 
 
 it('logs a warning and exits early when user is not found', function () {
     Log::spy();
-    
+
     $mockService = Mockery::mock(AvatarService::class);
     $mockService->shouldNotReceive('optimizeAvatarIfNeeded');
 
@@ -49,9 +52,9 @@ it('logs a warning and exits early when user is not found', function () {
 
 it('releases job back to queue on exception and fails gracefully', function () {
     Log::spy();
-    
+
     $user = User::factory()->create();
-    
+
     $mockService = Mockery::mock(AvatarService::class);
     $mockService->shouldReceive('optimizeAvatarIfNeeded')
         ->once()

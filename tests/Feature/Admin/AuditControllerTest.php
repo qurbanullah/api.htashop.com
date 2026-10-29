@@ -1,8 +1,9 @@
 <?php
 
+namespace Tests\Feature\Admin;
+
 use App\Models\Audit;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 
 it('allows admin to list audits', function () {

@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Punchout;
+
 use App\Models\PunchoutSession;
 use App\Models\Tenant;
 

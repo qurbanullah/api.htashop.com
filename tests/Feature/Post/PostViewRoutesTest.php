@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Post;
+
 use App\Models\Post;
 use App\Models\Subscribe;
 use App\Models\User;
@@ -43,7 +45,7 @@ test('post.view renders a token-gated post for a subscribed recipient', function
         'subscribed_at' => now(),
     ]);
 
-    $token = hash('sha256', $post->uuid . $user->email . config('app.key'));
+    $token = hash('sha256', $post->uuid.$user->email.config('app.key'));
 
     $this->get(route('post.view', ['uuid' => $post->uuid, 'token' => $token]))
         ->assertOk()

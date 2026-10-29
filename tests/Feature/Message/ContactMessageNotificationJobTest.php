@@ -1,12 +1,13 @@
 <?php
 
+namespace Tests\Feature\Message;
+
 use App\Jobs\Contacts\SendContactMessageNotificationJob;
 use App\Mail\Messages\ContactMessageNotificationMail;
 use App\Models\ContactMessage;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
 it('sends contact notifications to admin users and the configured contact recipient', function () {

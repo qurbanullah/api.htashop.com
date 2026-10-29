@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Punchout;
+
 use App\Models\Contract;
 use App\Models\Organization;
 use App\Models\Product;

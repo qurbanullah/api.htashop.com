@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Device;
+
 use App\Models\DeviceToken;
 use App\Models\User;
 

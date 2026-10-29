@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Chat;
+
 use App\Interfaces\Ai\KnowledgeRetrieverInterface;
 use App\Models\KnowledgeEntry;
 use App\Services\Knowledge\KnowledgeEntryService;

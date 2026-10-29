@@ -17,6 +17,9 @@ class PriceStoreRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, array<int, string>>
+     */
     public function rules(): array
     {
         return [
@@ -54,7 +57,13 @@ class PriceStoreRequest extends FormRequest
                 $validator->errors()->add('organization_id', 'The selected organization does not belong to the selected tenant.');
             }
 
-            if ($priceable && $this->priceableTenantId($priceable) !== $tenantId) {
+            if (! $priceable) {
+                $validator->errors()->add('priceable_uuid', 'The selected record could not be found.');
+
+                return;
+            }
+
+            if ($this->priceableTenantId($priceable) !== $tenantId) {
                 $validator->errors()->add('priceable_uuid', 'The selected record does not belong to the selected tenant.');
             }
 

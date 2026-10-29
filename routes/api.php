@@ -69,6 +69,7 @@ use App\Http\Controllers\V1\ProductReview\ProductReviewController;
 use App\Http\Controllers\V1\Profile\ProfileController;
 use App\Http\Controllers\V1\Purchasing\SupplierOrderController;
 use App\Http\Controllers\V1\Quote\QuoteController;
+use App\Http\Controllers\V1\SalesChannel\SalesChannelController;
 use App\Http\Controllers\V1\Search\SearchController;
 use App\Http\Controllers\V1\SellerDashboard\SellerDashboardController;
 use App\Http\Controllers\V1\Support\PublicSupportTicketController;
@@ -582,6 +583,8 @@ Route::prefix('v1')->group(function () {
         Route::delete('/products/{uuid}', [ProductController::class, 'destroy']);
 
         Route::get('/features', [FeatureController::class, 'index']);
+
+        Route::get('/sales-channels', [SalesChannelController::class, 'index']);
 
         Route::get('/manufacturers', [ManufacturerController::class, 'index']);
         Route::post('/manufacturers', [ManufacturerController::class, 'store']);

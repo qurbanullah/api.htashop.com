@@ -217,7 +217,10 @@ class ProductSearchService
         $filters = data_get($params, 'filters', []);
         $sort = (string) data_get($params, 'sort', 'newest');
         $page = max(1, (int) data_get($params, 'page', 1));
-        $perPage = min(48, max(1, (int) data_get($params, 'per_page', 12)));
+        // Typesense refuses per_page above 250. Callers cap their own page size
+        // (the punchout search fetches a window so part-number matches can be
+        // ranked ahead of the relevance hits without shifting page boundaries).
+        $perPage = min(250, max(1, (int) data_get($params, 'per_page', 12)));
 
         if (! $this->isEnabled()) {
             throw new TypesenseClientError('Typesense is not enabled.');
@@ -263,17 +266,7 @@ class ProductSearchService
         $response = $this->client()
             ->collections[$this->collectionName()]
             ->getDocuments()
-            ->search([
-                'q' => $query !== '' ? $query : '*',
-                'query_by' => 'name,sku,part_number,model_number,category_names,brand_names,tags,summary,description',
-                'filter_by' => $filterBy,
-                'facet_by' => 'category_names,brand_names,feature_names',
-                'max_facet_values' => 25,
-                'sort_by' => $this->sortExpression($query, $sort),
-                'page' => $page,
-                'per_page' => $perPage,
-                'include_fields' => 'id,uuid,name,slug,route_key,price,sale_price,currency,image_url,brand_names,category_names,summary',
-            ]);
+            ->search($this->searchParameters($query, $filterBy, $sort, $page, $perPage, $params));
 
         return [
             'hits' => array_map(
@@ -483,6 +476,49 @@ class ProductSearchService
         }
 
         return $facets;
+    }
+
+    /**
+     * Build the Typesense query.
+     *
+     * `query_by` and `query_by_weights` are overridable per caller: punchout
+     * ranks SKU, part number and model number above descriptive fields, while
+     * the storefront keeps the generic order. Weights must be a comma-separated
+     * integer list with exactly one entry per `query_by` field.
+     *
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    protected function searchParameters(
+        string $query,
+        string $filterBy,
+        string $sort,
+        int $page,
+        int $perPage,
+        array $params = [],
+    ): array {
+        $search = [
+            'q' => $query !== '' ? $query : '*',
+            'query_by' => (string) data_get(
+                $params,
+                'query_by',
+                'name,sku,part_number,model_number,category_names,brand_names,tags,summary,description'
+            ),
+            'filter_by' => $filterBy,
+            'facet_by' => 'category_names,brand_names,feature_names',
+            'max_facet_values' => 25,
+            'sort_by' => $this->sortExpression($query, $sort),
+            'page' => $page,
+            'per_page' => $perPage,
+            'include_fields' => 'id,uuid,name,slug,route_key,price,sale_price,currency,image_url,brand_names,category_names,summary',
+        ];
+
+        $weights = data_get($params, 'query_by_weights');
+        if (is_string($weights) && $weights !== '') {
+            $search['query_by_weights'] = $weights;
+        }
+
+        return $search;
     }
 
     protected function sortExpression(string $query, string $sort): string

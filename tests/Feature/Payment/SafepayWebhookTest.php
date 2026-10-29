@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Payment;
+
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;

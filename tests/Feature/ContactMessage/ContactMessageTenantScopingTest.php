@@ -1,11 +1,12 @@
 <?php
 
+namespace Tests\Feature\ContactMessage;
+
 use App\Http\Middleware\ApiAuthenticate;
 use App\Models\ContactMessage;
 use App\Models\Organization;
 use App\Models\Tenant;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
@@ -24,15 +25,15 @@ function makeScopedAdmin(string $tenantName): array
 {
     $tenant = Tenant::query()->create([
         'name' => $tenantName,
-        'slug' => Str::slug($tenantName) . '-' . Str::uuid(),
-        'domain' => Str::slug($tenantName) . '.example.com',
+        'slug' => Str::slug($tenantName).'-'.Str::uuid(),
+        'domain' => Str::slug($tenantName).'.example.com',
         'is_active' => true,
     ]);
 
     $organization = Organization::query()->create([
         'tenant_id' => $tenant->id,
-        'name' => $tenantName . ' Org',
-        'slug' => Str::slug($tenantName) . '-org-' . Str::uuid(),
+        'name' => $tenantName.' Org',
+        'slug' => Str::slug($tenantName).'-org-'.Str::uuid(),
         'type' => 'vendor',
         'is_active' => true,
     ]);

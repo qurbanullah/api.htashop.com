@@ -1,10 +1,10 @@
 <?php
 
+namespace Tests\Unit\Avatar;
+
 use App\Models\Avatar;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
-
 
 it('can be created using a factory', function () {
     $avatar = Avatar::factory()->create([
@@ -89,7 +89,7 @@ it('creates avatars from uploaded files paths', function () {
     Storage::fake('idrivee2');
 
     $user = User::factory()->create();
-    
+
     $variantPaths = [
         'thumb' => 'avatars/new_thumb.jpg',
         'medium' => 'avatars/new_medium.jpg',

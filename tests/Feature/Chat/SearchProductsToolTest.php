@@ -1,11 +1,15 @@
 <?php
 
+namespace Tests\Feature\Chat;
+
 use App\Models\Conversation;
 use App\Services\Ai\ToolRegistry;
 use App\Services\Ai\Tools\SearchProductsTool;
 use App\Services\Search\ProductSearchService;
 use App\Support\Ai\ChatToolContext;
+use Mockery;
 use Mockery\MockInterface;
+use RuntimeException;
 
 function toolContext(): ChatToolContext
 {

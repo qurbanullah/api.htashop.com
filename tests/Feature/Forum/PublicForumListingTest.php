@@ -1,10 +1,11 @@
 <?php
 
+namespace Tests\Feature\Forum;
+
 use App\Models\ForumComment;
 use App\Models\ForumPost;
 use App\Models\ForumTopic;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 beforeEach(function () {
     config()->set('auth.guards.api', [

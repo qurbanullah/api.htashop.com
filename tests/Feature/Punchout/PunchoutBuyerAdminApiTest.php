@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Punchout;
+
 use App\Http\Middleware\ApiAuthenticate;
 use App\Models\Contract;
 use App\Models\PunchoutBuyer;

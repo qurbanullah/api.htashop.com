@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Dam;
+
 use App\Models\Dam;
 use App\Models\Membership;
 use App\Models\Organization;
@@ -8,7 +10,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Dam\DamService;
 use App\Services\Storage\S3UploadService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Mockery\MockInterface;
 
 it('generates a presigned upload url for authenticated clients', function () {
@@ -249,7 +251,7 @@ it('rejects raw storage verification and download url generation for a DAM key o
     ]);
 
     Dam::create([
-        'uuid' => (string) \Illuminate\Support\Str::uuid(),
+        'uuid' => (string) Str::uuid(),
         'damable_type' => Product::class,
         'damable_id' => $blockedProduct->id,
         'collection_name' => 'image',
@@ -417,7 +419,7 @@ it('rejects dam asset listing for products outside the authenticated membership 
     ]);
 
     Dam::create([
-        'uuid' => (string) \Illuminate\Support\Str::uuid(),
+        'uuid' => (string) Str::uuid(),
         'damable_type' => Product::class,
         'damable_id' => $blockedProduct->id,
         'collection_name' => 'image',
@@ -432,7 +434,7 @@ it('rejects dam asset listing for products outside the authenticated membership 
 
     $this
         ->actingAs($user, 'api')
-        ->getJson('/api/v1/dam/assets?damable_type=' . urlencode(Product::class) . '&damable_id=' . $blockedProduct->id)
+        ->getJson('/api/v1/dam/assets?damable_type='.urlencode(Product::class).'&damable_id='.$blockedProduct->id)
         ->assertForbidden();
 });
 

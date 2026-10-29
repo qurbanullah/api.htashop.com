@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Chat;
+
 use App\Models\ChatEvent;
 use App\Models\ChatMessage;
 use App\Models\KnowledgeEntry;

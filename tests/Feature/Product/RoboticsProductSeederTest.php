@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Product;
+
 use App\Enums\Sourcing;
 use App\Models\Organization;
 use App\Models\Product;

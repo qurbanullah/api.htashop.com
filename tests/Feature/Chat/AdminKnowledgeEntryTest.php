@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Chat;
+
 use App\Http\Middleware\ApiAuthenticate;
 use App\Models\KnowledgeEntry;
 use App\Models\User;

@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Coupon;
+
 use App\Enums\CouponType;
 use App\Models\Coupon;
 use App\Models\CouponRedemption;

@@ -1,8 +1,11 @@
 <?php
 
+namespace Tests\Feature\Newsletter;
+
 use App\Mail\Newsletter\NewsletterWelcomeMail;
 use App\Models\Subscribe;
 use App\Models\Tenant;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -13,7 +16,7 @@ function makeNewsletterTenant(): Tenant
 {
     return Tenant::query()->create([
         'name' => 'Newsletter Store',
-        'slug' => 'newsletter-store-' . Str::uuid(),
+        'slug' => 'newsletter-store-'.Str::uuid(),
         'domain' => 'newsletter-store.example.com',
         'is_active' => true,
     ]);
@@ -136,7 +139,7 @@ it('renders and processes the token unsubscribe flow for newsletter rows', funct
         'subscribed_at' => now(),
     ]);
 
-    $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+    $this->withoutMiddleware(VerifyCsrfToken::class);
 
     $this->get(route('unsubscribe.show', $subscription->unsubscribe_token))
         ->assertOk()

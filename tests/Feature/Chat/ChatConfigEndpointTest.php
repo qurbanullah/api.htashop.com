@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Chat;
+
 it('returns the widget configuration', function () {
     $this->getJson('/api/v1/chat/config')
         ->assertOk()

@@ -1,9 +1,12 @@
 <?php
 
+namespace Tests\Unit\Chat;
+
 use App\Services\Ai\Providers\OpenAiCompatibleChatProvider;
 use App\Services\Ai\Providers\OpenAiCompatibleEmbeddingProvider;
 use App\Support\Ai\ChatStreamChunk;
 use Illuminate\Support\Facades\Http;
+use RuntimeException;
 
 function sseFrame(array $delta, ?string $finishReason = null, array $usage = []): string
 {
@@ -13,7 +16,7 @@ function sseFrame(array $delta, ?string $finishReason = null, array $usage = [])
         $payload['usage'] = $usage;
     }
 
-    return 'data: ' . json_encode($payload);
+    return 'data: '.json_encode($payload);
 }
 
 function chatProvider(): OpenAiCompatibleChatProvider
@@ -30,9 +33,9 @@ it('streams text deltas, usage and finish from an OpenAI-compatible response', f
         sseFrame(['content' => 'Hello']),
         sseFrame(['content' => ' there']),
         sseFrame([], 'stop'),
-        'data: ' . json_encode(['choices' => [], 'usage' => ['prompt_tokens' => 10, 'completion_tokens' => 2]]),
+        'data: '.json_encode(['choices' => [], 'usage' => ['prompt_tokens' => 10, 'completion_tokens' => 2]]),
         'data: [DONE]',
-    ]) . "\n\n";
+    ])."\n\n";
 
     Http::fake(['*' => Http::response($body, 200)]);
 
@@ -63,7 +66,7 @@ it('assembles streamed tool-call fragments into a complete call', function () {
         ]]]),
         sseFrame([], 'tool_calls'),
         'data: [DONE]',
-    ]) . "\n\n";
+    ])."\n\n";
 
     Http::fake(['*' => Http::response($body, 200)]);
 

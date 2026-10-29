@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Purchasing;
+
 use App\Enums\OrderStatus;
 use App\Enums\Sourcing;
 use App\Models\Order;

@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Chat;
+
 use App\Enums\KnowledgeStatusEnum;
 use App\Enums\PostStatusEnum;
 use App\Enums\PostTypeEnum;

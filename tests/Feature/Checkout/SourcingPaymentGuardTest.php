@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Checkout;
+
 use App\Enums\Sourcing;
 use App\Models\Cart;
 use App\Models\CartItem;

@@ -38,11 +38,17 @@ class Warehouse extends Model
         });
     }
 
+    /**
+     * @return BelongsTo<Tenant, Warehouse>
+     */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
     }
 
+    /**
+     * @return HasMany<Inventory, Warehouse>
+     */
     public function inventories(): HasMany
     {
         return $this->hasMany(Inventory::class);

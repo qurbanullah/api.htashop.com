@@ -1,7 +1,8 @@
 <?php
 
+namespace Tests\Feature\Admin;
+
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
@@ -15,7 +16,7 @@ it('allows admin to reset another user password', function () {
 
     $this->actingAs($admin, 'api');
 
-    $response = $this->postJson('/api/v1/users/' . $target->id . '/reset-password', [
+    $response = $this->postJson('/api/v1/users/'.$target->id.'/reset-password', [
         'password' => 'newPass123',
         'password_confirmation' => 'newPass123',
     ]);
@@ -31,7 +32,7 @@ it('prevents non-admin from resetting another user password', function () {
 
     $this->actingAs($user, 'api');
 
-    $response = $this->postJson('/api/v1/users/' . $target->id . '/reset-password', [
+    $response = $this->postJson('/api/v1/users/'.$target->id.'/reset-password', [
         'password' => 'newPass123',
         'password_confirmation' => 'newPass123',
     ]);
@@ -50,7 +51,7 @@ it('allows admin to mark user email verified', function () {
 
     $this->actingAs($admin, 'api');
 
-    $response = $this->postJson('/api/v1/users/' . $target->id . '/verify');
+    $response = $this->postJson('/api/v1/users/'.$target->id.'/verify');
 
     $response->assertStatus(200)->assertJson(['success' => true]);
 
@@ -63,7 +64,7 @@ it('prevents non-admin from verifying user email', function () {
 
     $this->actingAs($user, 'api');
 
-    $response = $this->postJson('/api/v1/users/' . $target->id . '/verify');
+    $response = $this->postJson('/api/v1/users/'.$target->id.'/verify');
 
     $response->assertStatus(403);
 

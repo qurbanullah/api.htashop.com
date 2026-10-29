@@ -7,6 +7,10 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class ProductReadAction
 {
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return LengthAwarePaginator<int, Product>
+     */
     public function handle(array $filters = []): LengthAwarePaginator
     {
         return Product::query()
@@ -33,6 +37,8 @@ class ProductReadAction
             ])
             ->when(data_get($filters, 'tenant_id'), fn ($query, $tenantId) => $query->where('tenant_id', $tenantId))
             ->when(data_get($filters, 'organization_id'), fn ($query, $organizationId) => $query->where('organization_id', $organizationId))
+            ->when(data_get($filters, 'tenant_ids'), fn ($query, $tenantIds) => $query->whereIn('tenant_id', (array) $tenantIds))
+            ->when(data_get($filters, 'organization_ids'), fn ($query, $organizationIds) => $query->whereIn('organization_id', (array) $organizationIds))
             ->forChannel(data_get($filters, 'channel'))
             ->when(! is_null(data_get($filters, 'is_active')), fn ($query) => $query->where('is_active', (bool) data_get($filters, 'is_active')))
             ->when(data_get($filters, 'status'), fn ($query, $status) => $query->where('status', $status))

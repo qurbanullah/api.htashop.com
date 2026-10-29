@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Definition;
+
 use App\Http\Middleware\ApiAuthenticate;
 use App\Models\Definition;
 use App\Models\Membership;

@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\V1\Variant;
 
-use App\Models\Variant;
 use App\Models\Product;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Variant;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 
 class VariantUpdateRequest extends FormRequest
 {
@@ -14,6 +14,9 @@ class VariantUpdateRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, array<int, string>>
+     */
     public function rules(): array
     {
         return [
@@ -40,15 +43,17 @@ class VariantUpdateRequest extends FormRequest
     protected function withValidator(Validator $validator): void
     {
         $validator->after(function ($validator): void {
-            $variant = Variant::query()->with('product')->where('uuid', $this->route('uuid'))->first();
+            $routeUuid = $this->route()?->parameter('uuid');
 
-            if (!$variant || !$this->filled('product_id')) {
+            $variant = Variant::query()->with('product')->where('uuid', $routeUuid)->first();
+
+            if (! $variant || ! $this->filled('product_id')) {
                 return;
             }
 
             $product = Product::query()->find($this->input('product_id'));
 
-            if (!$product) {
+            if (! $product) {
                 return;
             }
 

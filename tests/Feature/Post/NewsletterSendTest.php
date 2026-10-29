@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Post;
+
 use App\Mail\Post\PostMail;
 use App\Models\Post;
 use App\Models\Subscribe;
@@ -40,7 +42,7 @@ it('sends a newsletter post to subscribed newsletter emails only', function () {
     $post = Post::query()->create([
         'type' => 'newsletter',
         'title' => 'March Newsletter',
-        'slug' => 'march-newsletter-' . Str::uuid(),
+        'slug' => 'march-newsletter-'.Str::uuid(),
         'content' => '<p>Hello subscribers!</p>',
         'status' => 'draft',
         'created_by' => $author->id,
@@ -61,9 +63,9 @@ it('sends a newsletter post to subscribed newsletter emails only', function () {
     Mail::assertQueued(PostMail::class, 2);
     Mail::assertQueued(PostMail::class, function (PostMail $mail) use ($subscribedA) {
         return $mail->hasTo('a@example.com')
-            && str_contains($mail->render(), '/unsubscribe/' . $subscribedA->unsubscribe_token);
+            && str_contains($mail->render(), '/unsubscribe/'.$subscribedA->unsubscribe_token);
     });
-    Mail::assertQueued(PostMail::class, function (PostMail $mail) use ($subscribedB) {
+    Mail::assertQueued(PostMail::class, function (PostMail $mail) {
         return $mail->hasTo('b@example.com');
     });
 });
@@ -76,7 +78,7 @@ it('throws when no newsletter subscribers exist', function () {
     $post = Post::query()->create([
         'type' => 'newsletter',
         'title' => 'Empty Newsletter',
-        'slug' => 'empty-newsletter-' . Str::uuid(),
+        'slug' => 'empty-newsletter-'.Str::uuid(),
         'content' => '<p>Nobody here yet.</p>',
         'status' => 'draft',
         'created_by' => $author->id,

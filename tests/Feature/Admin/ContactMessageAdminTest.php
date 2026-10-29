@@ -1,11 +1,12 @@
 <?php
 
+namespace Tests\Feature\Admin;
+
 use App\Http\Middleware\ApiAuthenticate;
 use App\Models\ContactMessage;
 use App\Models\Organization;
 use App\Models\Tenant;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
@@ -23,7 +24,7 @@ function makeAdminUser(): array
 {
     $tenant = Tenant::query()->create([
         'name' => 'Admin Tenant',
-        'slug' => 'admin-tenant-' . Str::uuid(),
+        'slug' => 'admin-tenant-'.Str::uuid(),
         'domain' => 'admin-tenant.example.com',
         'is_active' => true,
     ]);
@@ -31,7 +32,7 @@ function makeAdminUser(): array
     $organization = Organization::query()->create([
         'tenant_id' => $tenant->id,
         'name' => 'Admin Org',
-        'slug' => 'admin-org-' . Str::uuid(),
+        'slug' => 'admin-org-'.Str::uuid(),
         'type' => 'vendor',
         'is_active' => true,
     ]);
@@ -196,7 +197,7 @@ it('cannot see contact messages from another tenant', function () {
 
     $otherTenant = Tenant::query()->create([
         'name' => 'Other Tenant',
-        'slug' => 'other-tenant-' . Str::uuid(),
+        'slug' => 'other-tenant-'.Str::uuid(),
         'domain' => 'other-tenant.example.com',
         'is_active' => true,
     ]);

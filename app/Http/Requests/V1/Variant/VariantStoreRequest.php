@@ -3,8 +3,8 @@
 namespace App\Http\Requests\V1\Variant;
 
 use App\Models\Product;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 
 class VariantStoreRequest extends FormRequest
 {
@@ -13,6 +13,9 @@ class VariantStoreRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, array<int, string>>
+     */
     public function rules(): array
     {
         return [
@@ -41,11 +44,11 @@ class VariantStoreRequest extends FormRequest
         $validator->after(function ($validator): void {
             $product = Product::query()->find($this->input('product_id'));
 
-            if (!$product) {
+            if (! $product) {
                 return;
             }
 
-            if (!$product->is_active) {
+            if (! $product->is_active) {
                 $validator->errors()->add('product_id', 'Variants can only be created for active products.');
             }
         });

@@ -8,6 +8,7 @@ use App\Actions\Catalog\CatalogProductsReadAction;
 use App\Enums\SalesChannel;
 use App\Helpers\CacheHelper;
 use App\Models\Brand;
+use App\Models\Category;
 use App\Models\Feature;
 use App\Models\Product;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -61,21 +62,31 @@ class CatalogService
             ->orderBy('name')
             ->get(['id', 'name']);
 
+        // Only categories that actually contain products in this channel/tenant,
+        // so the punchout search dropdown never offers an empty filter.
+        $categories = Category::query()
+            ->where('is_active', true)
+            ->whereHas('products', fn ($query) => $query->forChannel($channel)->forTenant($tenantId))
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug', 'parent_id', 'level']);
+
+        // `JSON_UNQUOTE` does not exist in SQLite (used by the test suite), and
+        // MariaDB returns a JSON scalar with its quotes, so strip them instead.
+        $price = "CAST(REPLACE(JSON_EXTRACT(metadata, '$.price'), '\"', '') AS DECIMAL(12,2))";
+
         $priceRange = Product::query()
             ->where('is_active', true)
             ->where('status', 'active')
             ->forChannel($channel)
             ->forTenant($tenantId)
             ->whereNotNull('metadata')
-            ->selectRaw('
-                MIN(CAST(JSON_UNQUOTE(JSON_EXTRACT(metadata, "$.price")) AS DECIMAL(12,2))) as min_price,
-                MAX(CAST(JSON_UNQUOTE(JSON_EXTRACT(metadata, "$.price")) AS DECIMAL(12,2))) as max_price
-            ')
+            ->selectRaw("MIN({$price}) as min_price, MAX({$price}) as max_price")
             ->first();
 
         return [
             'brands' => $brands,
             'features' => $features,
+            'categories' => $categories,
             'price_range' => [
                 'min' => $priceRange?->min_price !== null ? (float) $priceRange->min_price : 0,
                 'max' => $priceRange?->max_price !== null ? (float) $priceRange->max_price : 0,

@@ -16,6 +16,9 @@ class CodeUpdateRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, array<int, string>>
+     */
     public function rules(): array
     {
         return [
@@ -34,9 +37,11 @@ class CodeUpdateRequest extends FormRequest
     protected function withValidator(Validator $validator): void
     {
         $validator->after(function ($validator): void {
-            $code = Code::query()->with('codeable')->find($this->route('id'));
+            $routeId = $this->route()?->parameter('id');
 
-            if (!$code) {
+            $code = Code::query()->with('codeable')->find($routeId);
+
+            if (! $code) {
                 return;
             }
 
@@ -52,19 +57,33 @@ class CodeUpdateRequest extends FormRequest
                 }
             }
 
+            if (($this->exists('codeable_type') || $this->exists('codeable_uuid')) && ! $codeable) {
+                $validator->errors()->add('codeable_uuid', 'The selected record could not be found.');
+
+                return;
+            }
+
             if ($codeable && $this->codeableTenantId($codeable) !== $tenantId) {
                 $validator->errors()->add('codeable_uuid', 'The selected record does not belong to the selected tenant.');
+            }
+
+            if ($codeable && $organizationId && $this->codeableOrganizationId($codeable) !== (int) $organizationId) {
+                $validator->errors()->add('organization_id', 'The selected organization must own the coded record.');
             }
         });
     }
 
     private function resolveCodeable(Code $code): Product|Variant|null
     {
-        $type = $this->input('codeable_type');
-        $uuid = $this->input('codeable_uuid');
-
-        if (!$type || !$uuid) {
+        if (! $this->exists('codeable_type') && ! $this->exists('codeable_uuid')) {
             return $code->codeable;
+        }
+
+        $type = $this->input('codeable_type', $this->typeAlias($code->codeable_type));
+        $uuid = $this->input('codeable_uuid', $code->codeable?->uuid);
+
+        if (! $type || ! $uuid) {
+            return null;
         }
 
         return match ($type) {
@@ -74,8 +93,22 @@ class CodeUpdateRequest extends FormRequest
         };
     }
 
+    private function typeAlias(string $modelClass): ?string
+    {
+        return match ($modelClass) {
+            Product::class => 'product',
+            Variant::class => 'variant',
+            default => null,
+        };
+    }
+
     private function codeableTenantId(Product|Variant $codeable): int
     {
         return $codeable instanceof Product ? $codeable->tenant_id : $codeable->product->tenant_id;
+    }
+
+    private function codeableOrganizationId(Product|Variant $codeable): int
+    {
+        return $codeable instanceof Product ? $codeable->organization_id : $codeable->product->organization_id;
     }
 }

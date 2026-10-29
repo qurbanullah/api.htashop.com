@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Unit\Chat;
+
 use App\Services\Knowledge\KnowledgeChunker;
 
 beforeEach(function () {
@@ -11,11 +13,11 @@ beforeEach(function () {
 });
 
 it('returns no chunks for empty text', function () {
-    expect((new KnowledgeChunker())->chunk('   '))->toBe([]);
+    expect((new KnowledgeChunker)->chunk('   '))->toBe([]);
 });
 
 it('keeps short text as a single chunk', function () {
-    $chunks = (new KnowledgeChunker())->chunk('A short answer about shipping.');
+    $chunks = (new KnowledgeChunker)->chunk('A short answer about shipping.');
 
     expect($chunks)->toHaveCount(1)
         ->and($chunks[0]['content'])->toBe('A short answer about shipping.')
@@ -28,7 +30,7 @@ it('splits long text into sequential overlapping chunks', function () {
         range(1, 10)
     ));
 
-    $chunks = (new KnowledgeChunker())->chunk($text);
+    $chunks = (new KnowledgeChunker)->chunk($text);
 
     expect(count($chunks))->toBeGreaterThan(1);
 
@@ -39,7 +41,7 @@ it('splits long text into sequential overlapping chunks', function () {
 });
 
 it('hard-splits a single oversized paragraph', function () {
-    $chunks = (new KnowledgeChunker())->chunk(str_repeat('word ', 400));
+    $chunks = (new KnowledgeChunker)->chunk(str_repeat('word ', 400));
 
     expect(count($chunks))->toBeGreaterThan(1);
 
@@ -51,5 +53,5 @@ it('hard-splits a single oversized paragraph', function () {
 it('drops passages below the minimum length', function () {
     config(['knowledge.chunk.min_characters' => 100]);
 
-    expect((new KnowledgeChunker())->chunk('too short'))->toBe([]);
+    expect((new KnowledgeChunker)->chunk('too short'))->toBe([]);
 });

@@ -18,6 +18,9 @@ class PriceUpdateRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, array<int, string>>
+     */
     public function rules(): array
     {
         return [
@@ -45,7 +48,9 @@ class PriceUpdateRequest extends FormRequest
     protected function withValidator(Validator $validator): void
     {
         $validator->after(function ($validator): void {
-            $price = Price::query()->with('priceable')->find($this->route('id'));
+            $routeId = $this->route()?->parameter('id');
+
+            $price = Price::query()->with('priceable')->find($routeId);
 
             if (! $price) {
                 return;
@@ -57,6 +62,12 @@ class PriceUpdateRequest extends FormRequest
             $priceable = $this->resolvePriceable($price);
             $contract = $this->filled('contract_id') ? Contract::query()->find($this->input('contract_id')) : ($price->contract_id ? Contract::query()->find($price->contract_id) : null);
             $catalog = $this->filled('catalog_id') ? Catalog::query()->find($this->input('catalog_id')) : ($price->catalog_id ? Catalog::query()->find($price->catalog_id) : null);
+
+            if (($this->exists('priceable_type') || $this->exists('priceable_uuid')) && ! $priceable) {
+                $validator->errors()->add('priceable_uuid', 'The selected record could not be found.');
+
+                return;
+            }
 
             if ($organization && $organization->tenant_id !== $tenantId) {
                 $validator->errors()->add('organization_id', 'The selected organization does not belong to the selected tenant.');
@@ -91,16 +102,29 @@ class PriceUpdateRequest extends FormRequest
 
     private function resolvePriceable(Price $price): Product|Variant|null
     {
-        $type = $this->input('priceable_type');
-        $uuid = $this->input('priceable_uuid');
+        if (! $this->exists('priceable_type') && ! $this->exists('priceable_uuid')) {
+            return $price->priceable;
+        }
+
+        $type = $this->input('priceable_type', $this->typeAlias($price->priceable_type));
+        $uuid = $this->input('priceable_uuid', $price->priceable?->uuid);
 
         if (! $type || ! $uuid) {
-            return $price->priceable;
+            return null;
         }
 
         return match ($type) {
             'product' => Product::query()->where('uuid', $uuid)->first(),
             'variant' => Variant::query()->where('uuid', $uuid)->first(),
+            default => null,
+        };
+    }
+
+    private function typeAlias(string $modelClass): ?string
+    {
+        return match ($modelClass) {
+            Product::class => 'product',
+            Variant::class => 'variant',
             default => null,
         };
     }

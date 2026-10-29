@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Category;
+
 use App\Models\Category;
 use Database\Seeders\CategorySeeder;
 

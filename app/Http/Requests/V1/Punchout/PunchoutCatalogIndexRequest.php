@@ -22,8 +22,9 @@ class PunchoutCatalogIndexRequest extends FormRequest
             'brand_ids.*' => ['integer', 'exists:brands,id'],
             'feature_ids' => ['nullable', 'array'],
             'feature_ids.*' => ['integer', 'exists:features,id'],
-            'min_price' => ['nullable', 'numeric', 'min:0'],
-            'max_price' => ['nullable', 'numeric', 'min:0'],
+            // No min_price/max_price: punchout prices are resolved per buyer from
+            // contracts and price lists *after* retrieval, so filtering on the
+            // catalog price here would contradict the price the buyer sees.
             'sort' => ['nullable', 'string', Rule::in(['newest', 'price_asc', 'price_desc', 'name', 'best_sellers', 'trending'])],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:48'],

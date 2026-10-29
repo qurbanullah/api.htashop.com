@@ -1,11 +1,12 @@
 <?php
 
+namespace Tests\Feature\Newsletter;
+
 use App\Http\Middleware\ApiAuthenticate;
 use App\Models\Organization;
 use App\Models\Subscribe;
 use App\Models\Tenant;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
@@ -37,13 +38,13 @@ it('returns global newsletter subscriber counts for super admins', function () {
 });
 
 it('scopes newsletter subscriber counts to the admin tenant', function () {
-    $tenantA = Tenant::query()->create(['name' => 'A', 'slug' => 'a-' . Str::uuid(), 'domain' => 'a.example.com', 'is_active' => true]);
-    $tenantB = Tenant::query()->create(['name' => 'B', 'slug' => 'b-' . Str::uuid(), 'domain' => 'b.example.com', 'is_active' => true]);
+    $tenantA = Tenant::query()->create(['name' => 'A', 'slug' => 'a-'.Str::uuid(), 'domain' => 'a.example.com', 'is_active' => true]);
+    $tenantB = Tenant::query()->create(['name' => 'B', 'slug' => 'b-'.Str::uuid(), 'domain' => 'b.example.com', 'is_active' => true]);
 
     $organization = Organization::query()->create([
         'tenant_id' => $tenantA->id,
         'name' => 'A Org',
-        'slug' => 'a-org-' . Str::uuid(),
+        'slug' => 'a-org-'.Str::uuid(),
         'type' => 'vendor',
         'is_active' => true,
     ]);

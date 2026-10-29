@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Punchout;
+
 use App\Actions\Punchout\IssueHandoffCodeAction;
 use App\Actions\Punchout\ValidatePunchoutReturnUrlAction;
 use App\Models\PunchoutSession;

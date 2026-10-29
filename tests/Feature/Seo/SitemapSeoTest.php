@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Seo;
+
 use App\Enums\PostTypeEnum;
 use App\Models\Post;
 use Illuminate\Foundation\Testing\RefreshDatabase;

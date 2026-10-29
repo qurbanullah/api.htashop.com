@@ -1,12 +1,13 @@
 <?php
 
+namespace Tests\Feature\Forum;
+
 use App\Http\Middleware\ApiAuthenticate;
 use App\Models\ForumComment;
 use App\Models\ForumPost;
 use App\Models\ForumReport;
 use App\Models\ForumTopic;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
@@ -67,7 +68,7 @@ it('allows admins to list and filter forum posts', function () {
 
     $this->actingAs($admin, 'api');
 
-    $response = $this->getJson('/api/v1/admin/forum/posts?status=published&topic_id=' . $targetTopic->id . '&user_id=' . $author->id . '&search=segmentation&is_pinned=1');
+    $response = $this->getJson('/api/v1/admin/forum/posts?status=published&topic_id='.$targetTopic->id.'&user_id='.$author->id.'&search=segmentation&is_pinned=1');
 
     $response->assertOk()->assertJson([
         'success' => true,
@@ -122,7 +123,7 @@ it('allows admins to list and filter forum comments', function () {
 
     $this->actingAs($admin, 'api');
 
-    $response = $this->getJson('/api/v1/admin/forum/comments?status=visible&post_id=' . $post->id . '&user_id=' . $author->id . '&search=matching');
+    $response = $this->getJson('/api/v1/admin/forum/comments?status=visible&post_id='.$post->id.'&user_id='.$author->id.'&search=matching');
 
     $response->assertOk()->assertJson([
         'success' => true,

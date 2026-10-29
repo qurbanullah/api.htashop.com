@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Unit\Services\Punchout;
+
 use App\Models\Tenant;
 use App\Services\Punchout\PunchoutProtocolService;
 

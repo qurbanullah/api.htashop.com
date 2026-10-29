@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Cart;
+
 use App\Actions\Cart\CartReadAction;
 use App\Enums\Sourcing;
 use App\Models\Cart;

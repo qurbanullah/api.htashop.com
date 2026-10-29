@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Chat;
+
 use App\Support\Ai\ChatIdentity;
 
 it('throttles the assistant per visitor', function () {

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Tests\Feature\Audit;
+
 use App\Models\Audit;
 use App\Models\AuditExport;
 use App\Models\User;

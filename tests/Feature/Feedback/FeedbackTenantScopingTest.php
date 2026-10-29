@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Feedback;
+
 use App\Http\Middleware\ApiAuthenticate;
 use App\Models\Feedback;
 use App\Models\Membership;

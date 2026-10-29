@@ -1,10 +1,17 @@
 <?php
 
-use App\Models\Catalog;
-use App\Models\Tenant;
-use App\Models\Organization;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+/**
+ * Catalog relationships, contracts, and pricing tests.
+ */
 
+namespace Tests\Unit\Catalog;
+
+use App\Models\Catalog;
+use App\Models\Currency;
+use App\Models\Organization;
+use App\Models\Product;
+use App\Models\Tenant;
+use Illuminate\Support\Str;
 
 it('can be created using a factory and automatically generates uuid', function () {
     $catalog = Catalog::factory()->create([
@@ -66,7 +73,7 @@ it('can have multiple contracts', function () {
         'type' => 'buyer',
         'is_active' => true,
     ]);
-    
+
     $contract1 = $catalog->contracts()->create([
         'tenant_id' => $catalog->tenant_id,
         'vendor_id' => $catalog->organization_id,
@@ -91,13 +98,13 @@ it('can have multiple contracts', function () {
 it('can have multiple prices', function () {
     $catalog = Catalog::factory()->create();
 
-    $currency = App\Models\Currency::create([
+    $currency = Currency::create([
         'code' => 'USD',
         'name' => 'US Dollar',
         'symbol' => '$',
     ]);
 
-    $product = App\Models\Product::create([
+    $product = Product::create([
         'tenant_id' => $catalog->tenant_id,
         'organization_id' => $catalog->organization_id,
         'name' => 'Test Product',
@@ -105,12 +112,12 @@ it('can have multiple prices', function () {
         'status' => 'active',
         'is_active' => true,
     ]);
-    
+
     $price1 = $catalog->prices()->create([
         'tenant_id' => $catalog->tenant_id,
         'organization_id' => $catalog->organization_id,
         'currency_id' => $currency->id,
-        'priceable_type' => App\Models\Product::class,
+        'priceable_type' => Product::class,
         'priceable_id' => $product->id,
         'base_price' => '99.99',
     ]);
@@ -119,7 +126,7 @@ it('can have multiple prices', function () {
         'tenant_id' => $catalog->tenant_id,
         'organization_id' => $catalog->organization_id,
         'currency_id' => $currency->id,
-        'priceable_type' => App\Models\Product::class,
+        'priceable_type' => Product::class,
         'priceable_id' => $product->id,
         'base_price' => '19.99',
     ]);

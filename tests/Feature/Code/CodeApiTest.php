@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Code;
+
 use App\Http\Middleware\ApiAuthenticate;
 use App\Models\Code;
 use App\Models\Membership;
@@ -7,6 +9,7 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Tenant;
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     config()->set('auth.guards.api', [
@@ -358,4 +361,124 @@ it('rejects deleting a code from another organization membership', function () {
         'id' => $code->id,
         'value' => 'sku-protected',
     ]);
+});
+
+it('rejects listing codes for a user without an active membership', function () {
+    $intruder = User::factory()->create();
+
+    $this->actingAs($intruder, 'api');
+
+    $this->getJson('/api/v1/codes')
+        ->assertForbidden()
+        ->assertJsonPath('success', false);
+});
+
+it('rejects listing codes for a tenant the user does not belong to', function () {
+    $otherTenant = Tenant::create([
+        'name' => 'Blocked Code Tenant',
+        'slug' => 'blocked-code-tenant',
+        'is_active' => true,
+    ]);
+
+    $this->getJson('/api/v1/codes?tenant_id='.$otherTenant->id)
+        ->assertForbidden()
+        ->assertJsonPath('success', false);
+});
+
+it('rejects creating a code in an organization the user does not belong to', function () {
+    $otherOrganization = Organization::create([
+        'tenant_id' => $this->tenant->id,
+        'name' => 'Blocked Code Vendor',
+        'slug' => 'blocked-code-vendor',
+        'type' => 'vendor',
+        'is_active' => true,
+    ]);
+
+    $siblingProduct = Product::create([
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => $otherOrganization->id,
+        'name' => 'Blocked Code Product',
+        'slug' => 'blocked-code-product',
+        'status' => 'active',
+        'is_active' => true,
+    ]);
+
+    $this->postJson('/api/v1/codes', [
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => $otherOrganization->id,
+        'codeable_type' => 'product',
+        'codeable_uuid' => $siblingProduct->uuid,
+        'type' => 'sku',
+        'value' => 'sku-blocked',
+    ])
+        ->assertForbidden()
+        ->assertJsonPath('success', false);
+
+    expect(Code::count())->toBe(0);
+});
+
+it('includes tenant-level codes without leaking them across tenants', function () {
+    $this->product->codes()->create([
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => null,
+        'type' => 'ean',
+        'value' => 'tenant-level-code',
+        'normalized' => 'TENANT-LEVEL-CODE',
+        'is_primary' => false,
+    ]);
+
+    $otherTenant = Tenant::create([
+        'name' => 'Foreign Code Tenant',
+        'slug' => 'foreign-code-tenant',
+        'is_active' => true,
+    ]);
+
+    $otherOrganization = Organization::create([
+        'tenant_id' => $otherTenant->id,
+        'name' => 'Foreign Code Vendor',
+        'slug' => 'foreign-code-vendor',
+        'type' => 'vendor',
+        'is_active' => true,
+    ]);
+
+    $foreignProduct = Product::create([
+        'tenant_id' => $otherTenant->id,
+        'organization_id' => $otherOrganization->id,
+        'name' => 'Foreign Code Product',
+        'slug' => 'foreign-code-product',
+        'status' => 'active',
+        'is_active' => true,
+    ]);
+
+    $foreignProduct->codes()->create([
+        'tenant_id' => $otherTenant->id,
+        'organization_id' => null,
+        'type' => 'ean',
+        'value' => 'foreign-level-code',
+        'normalized' => 'FOREIGN-LEVEL-CODE',
+        'is_primary' => false,
+    ]);
+
+    $this->getJson('/api/v1/codes')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.value', 'tenant-level-code');
+});
+
+it('lets an admin create a code in any organization', function () {
+    Role::findOrCreate('admin', 'api');
+
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->actingAs($admin, 'api');
+
+    $this->postJson('/api/v1/codes', [
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => $this->organization->id,
+        'codeable_type' => 'product',
+        'codeable_uuid' => $this->product->uuid,
+        'type' => 'sku',
+        'value' => 'sku-admin',
+    ])->assertStatus(201);
 });

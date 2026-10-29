@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Unit\Chat;
+
 use App\Services\Ai\TokenBudgetService;
 
 it('reports the full budget before anything is spent', function () {

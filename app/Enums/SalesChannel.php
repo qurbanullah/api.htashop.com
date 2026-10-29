@@ -29,4 +29,15 @@ final class SalesChannel
             default => ucfirst($code),
         };
     }
+
+    public static function description(string $code): string
+    {
+        return match ($code) {
+            self::STOREFRONT => 'Publish the product in the public consumer storefront catalog.',
+            self::PUNCHOUT => 'Expose the product to connected procurement systems through punchout catalogs.',
+            self::MARKETPLACE => 'List the product on third-party marketplaces.',
+            self::API => 'Make the product available to partner integrations reading the catalog over the API.',
+            default => 'Additional sales channel.',
+        };
+    }
 }

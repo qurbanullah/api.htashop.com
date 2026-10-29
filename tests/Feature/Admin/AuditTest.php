@@ -1,8 +1,9 @@
 <?php
 
+namespace Tests\Feature\Admin;
+
 use App\Models\Audit;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 
 it('records an audit when admin resets password', function () {
@@ -14,7 +15,7 @@ it('records an audit when admin resets password', function () {
 
     $this->actingAs($admin, 'api');
 
-    $response = $this->postJson('/api/v1/users/' . $target->id . '/reset-password', [
+    $response = $this->postJson('/api/v1/users/'.$target->id.'/reset-password', [
         'password' => 'adminReset1',
         'password_confirmation' => 'adminReset1',
     ]);

@@ -15,6 +15,9 @@ class CodeStoreRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, array<int, string>>
+     */
     public function rules(): array
     {
         return [
@@ -48,6 +51,16 @@ class CodeStoreRequest extends FormRequest
             if ($codeable && $this->codeableTenantId($codeable) !== $tenantId) {
                 $validator->errors()->add('codeable_uuid', 'The selected record does not belong to the selected tenant.');
             }
+
+            if (! $codeable) {
+                $validator->errors()->add('codeable_uuid', 'The selected record could not be found.');
+
+                return;
+            }
+
+            if ($organizationId && $this->codeableOrganizationId($codeable) !== (int) $organizationId) {
+                $validator->errors()->add('organization_id', 'The selected organization must own the coded record.');
+            }
         });
     }
 
@@ -63,5 +76,10 @@ class CodeStoreRequest extends FormRequest
     private function codeableTenantId(Product|Variant $codeable): int
     {
         return $codeable instanceof Product ? $codeable->tenant_id : $codeable->product->tenant_id;
+    }
+
+    private function codeableOrganizationId(Product|Variant $codeable): int
+    {
+        return $codeable instanceof Product ? $codeable->organization_id : $codeable->product->organization_id;
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Variant;
+
 use App\Http\Middleware\ApiAuthenticate;
 use App\Models\Membership;
 use App\Models\Organization;
@@ -7,6 +9,7 @@ use App\Models\Product;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Variant;
+use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     config()->set('auth.guards.api', [
@@ -270,4 +273,162 @@ it('rejects moving a variant to another organization in the same tenant', functi
         ]);
 
     expect($variant->fresh()->product_id)->toBe($this->product->id);
+});
+
+it('rejects listing variants for a user without an active membership', function () {
+    $intruder = User::factory()->create();
+
+    $this->actingAs($intruder, 'api');
+
+    $this->getJson('/api/v1/variants')
+        ->assertForbidden()
+        ->assertJsonPath('success', false);
+});
+
+it('denies access to variants belonging to another organization', function () {
+    $otherOrganization = Organization::create([
+        'tenant_id' => $this->tenant->id,
+        'name' => 'Other Variant Vendor',
+        'slug' => 'other-variant-vendor',
+        'type' => 'vendor',
+        'is_active' => true,
+    ]);
+
+    $foreignProduct = Product::create([
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => $otherOrganization->id,
+        'name' => 'Foreign Drill',
+        'slug' => 'foreign-drill-access',
+        'status' => 'active',
+        'is_active' => true,
+    ]);
+
+    $variant = Variant::create([
+        'product_id' => $foreignProduct->id,
+        'name' => 'Foreign Variant',
+        'slug' => 'foreign-variant',
+        'status' => 'draft',
+        'is_active' => true,
+    ]);
+
+    $this->getJson('/api/v1/variants/'.$variant->uuid)->assertForbidden();
+    $this->putJson('/api/v1/variants/'.$variant->uuid, ['name' => 'Hijacked'])->assertForbidden();
+    $this->deleteJson('/api/v1/variants/'.$variant->uuid)->assertForbidden();
+
+    expect($variant->fresh()->name)->toBe('Foreign Variant');
+});
+
+it('rejects creating a variant for a product in another organization', function () {
+    $otherOrganization = Organization::create([
+        'tenant_id' => $this->tenant->id,
+        'name' => 'Blocked Variant Vendor',
+        'slug' => 'blocked-variant-vendor',
+        'type' => 'vendor',
+        'is_active' => true,
+    ]);
+
+    $foreignProduct = Product::create([
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => $otherOrganization->id,
+        'name' => 'Blocked Drill',
+        'slug' => 'blocked-drill',
+        'status' => 'active',
+        'is_active' => true,
+    ]);
+
+    $this->postJson('/api/v1/variants', [
+        'product_id' => $foreignProduct->id,
+        'name' => 'Blocked Variant',
+    ])
+        ->assertForbidden()
+        ->assertJsonPath('success', false);
+
+    expect(Variant::count())->toBe(0);
+});
+
+it('lists variants from every organization the member actively belongs to', function () {
+    $secondOrganization = Organization::create([
+        'tenant_id' => $this->tenant->id,
+        'name' => 'Second Variant Vendor',
+        'slug' => 'second-variant-vendor',
+        'type' => 'vendor',
+        'is_active' => true,
+    ]);
+
+    Membership::create([
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => $secondOrganization->id,
+        'user_id' => $this->user->id,
+        'role' => 'member',
+        'is_primary' => false,
+        'is_active' => true,
+    ]);
+
+    Variant::create([
+        'product_id' => $this->product->id,
+        'name' => 'First Org Variant',
+        'slug' => 'first-org-variant',
+        'is_active' => true,
+    ]);
+
+    $secondProduct = Product::create([
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => $secondOrganization->id,
+        'name' => 'Second Org Drill',
+        'slug' => 'second-org-drill',
+        'status' => 'active',
+        'is_active' => true,
+    ]);
+
+    Variant::create([
+        'product_id' => $secondProduct->id,
+        'name' => 'Second Org Variant',
+        'slug' => 'second-org-variant',
+        'is_active' => true,
+    ]);
+
+    $this->getJson('/api/v1/variants')
+        ->assertOk()
+        ->assertJsonCount(2, 'data');
+});
+
+it('does not grant variant access through an inactive membership', function () {
+    $this->user->memberships()->update(['is_active' => false]);
+
+    $this->getJson('/api/v1/variants')->assertForbidden();
+});
+
+it('lets an admin manage variants from any organization', function () {
+    Role::findOrCreate('admin', 'api');
+
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->actingAs($admin, 'api');
+
+    $otherOrganization = Organization::create([
+        'tenant_id' => $this->tenant->id,
+        'name' => 'Admin Variant Vendor',
+        'slug' => 'admin-variant-vendor',
+        'type' => 'vendor',
+        'is_active' => true,
+    ]);
+
+    $adminProduct = Product::create([
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => $otherOrganization->id,
+        'name' => 'Admin Drill',
+        'slug' => 'admin-drill-variant',
+        'status' => 'active',
+        'is_active' => true,
+    ]);
+
+    $this->postJson('/api/v1/variants', [
+        'product_id' => $adminProduct->id,
+        'name' => 'Admin Variant',
+    ])->assertStatus(201);
+
+    $this->getJson('/api/v1/variants')
+        ->assertOk()
+        ->assertJsonCount(1, 'data');
 });

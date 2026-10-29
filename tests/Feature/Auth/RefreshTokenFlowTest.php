@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Auth;
+
 use App\Enums\RefreshTokenRevokedReasonEnum;
 use App\Models\RefreshToken;
 use App\Models\User;

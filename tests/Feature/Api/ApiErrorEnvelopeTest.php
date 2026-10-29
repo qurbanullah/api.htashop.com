@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Api;
+
 use App\Models\User;
 
 /**

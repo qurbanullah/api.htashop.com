@@ -1,8 +1,9 @@
 <?php
 
+namespace Tests\Feature\AuditLog;
+
 use App\Models\AuditLog;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 it('can be created using a factory', function () {
     $auditLog = AuditLog::factory()->create([
@@ -77,7 +78,7 @@ it('calculates diff attribute of old and new values', function () {
 
 it('returns human readable event description attribute', function () {
     $user = User::factory()->create(['name' => 'John Doe']);
-    
+
     $auditLogCreated = AuditLog::factory()->create([
         'user_id' => $user->id,
         'event' => 'created',

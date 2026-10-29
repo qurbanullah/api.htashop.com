@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Chat;
+
 use App\Models\ChatMessage;
 use App\Models\Conversation;
 use App\Support\Ai\ChatIdentity;

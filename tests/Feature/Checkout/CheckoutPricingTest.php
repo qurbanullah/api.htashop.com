@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Checkout;
+
 use App\Enums\CouponType;
 use App\Enums\OrderStatus;
 use App\Enums\Sourcing;

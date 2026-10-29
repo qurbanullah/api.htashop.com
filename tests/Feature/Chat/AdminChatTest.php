@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Chat;
+
 use App\Enums\ChatRoleEnum;
 use App\Http\Middleware\ApiAuthenticate;
 use App\Models\ChatEvent;

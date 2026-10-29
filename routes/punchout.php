@@ -63,6 +63,11 @@ Route::prefix('v1/punchout')->group(function (): void {
         Route::get('/{tenantIdentifier}/catalog/products', [PunchoutCatalogController::class, 'products'])
             ->middleware('throttle:punchout-api')
             ->name('punchout.catalog.products');
+        // Typeahead for the catalog search bar. Typesense only: no pricing-table
+        // lookup, so typing never costs a database query.
+        Route::get('/{tenantIdentifier}/catalog/suggest', [PunchoutCatalogController::class, 'suggest'])
+            ->middleware('throttle:punchout-api')
+            ->name('punchout.catalog.suggest');
         Route::get('/{tenantIdentifier}/catalog/products/{key}', [PunchoutCatalogController::class, 'show'])
             ->middleware('throttle:punchout-api')
             ->name('punchout.catalog.show');

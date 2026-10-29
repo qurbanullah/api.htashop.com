@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Value;
+
 use App\Http\Middleware\ApiAuthenticate;
 use App\Models\Definition;
 use App\Models\Measurement;

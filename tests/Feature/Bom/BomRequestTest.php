@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Bom;
+
 use App\Enums\BomRequestStatus;
 use App\Models\BomRequest;
 use App\Services\Bom\BomRequestService;

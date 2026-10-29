@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Unit\Architecture;
+
 /*
  * Punchout is a bounded context inside the Laravel monolith. These checks keep
  * its classes in the Punchout namespaces and stop storefront domains from

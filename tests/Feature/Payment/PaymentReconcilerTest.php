@@ -1,11 +1,14 @@
 <?php
 
+namespace Tests\Feature\Payment;
+
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Gateways\CodGateway;
 use App\Models\Payment;
 use App\Services\Payment\PaymentReconciler;
+use InvalidArgumentException;
 
 beforeEach(function () {
     $this->reconciler = app(PaymentReconciler::class);

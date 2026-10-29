@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Punchout;
+
 use Illuminate\Support\Facades\Log;
 
 it('records a legacy csp-report from the punchout origin', function () {

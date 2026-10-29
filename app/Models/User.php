@@ -7,10 +7,12 @@ use App\Actions\Subscription\SubscribeUserAction;
 use App\Notifications\ResetPasswordNotification;
 use App\Traits\Profile\HasProfile;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -120,16 +122,28 @@ class User extends Authenticatable implements HasMedia
         return $this->status === self::STATUS_PENDING;
     }
 
+    /**
+     * @param  Builder  $query
+     * @return Builder
+     */
     public function scopeActive($query)
     {
         return $query->where('status', self::STATUS_ACTIVE);
     }
 
+    /**
+     * @param  Builder  $query
+     * @return Builder
+     */
     public function scopeSuspended($query)
     {
         return $query->where('status', self::STATUS_SUSPENDED);
     }
 
+    /**
+     * @param  Builder  $query
+     * @return Builder
+     */
     public function scopeBanned($query)
     {
         return $query->where('status', self::STATUS_BANNED);
@@ -162,6 +176,9 @@ class User extends Authenticatable implements HasMedia
     /**
      * Get user's avatars (polymorphic one-to-many relationship)
      * Each avatar represents a different type (original, thumb, small, medium, large)
+     */
+    /**
+     * @return MorphMany<Avatar, User>
      */
     public function avatars()
     {
@@ -217,24 +234,98 @@ class User extends Authenticatable implements HasMedia
     /**
      * Get manuscripts where user is the submitting author
      */
+    /**
+     * @return HasMany<Manuscript, User>
+     */
     public function manuscripts(): HasMany
     {
         return $this->hasMany(Manuscript::class, 'submitting_author_id');
     }
 
+    /**
+     * @return HasMany<Membership, User>
+     */
     public function memberships(): HasMany
     {
         return $this->hasMany(Membership::class);
     }
 
     /**
+     * Memberships that currently grant access to a tenant/organization.
+     */
+    public function activeMemberships(): HasMany
+    {
+        return $this->memberships()->where('is_active', true);
+    }
+
+    /**
+     * The membership used to resolve a default tenant/organization. Prefer the
+     * explicit primary membership, then the oldest row for a stable result.
+     */
+    public function primaryMembership(): ?Membership
+    {
+        return $this->activeMemberships()
+            ->orderByDesc('is_primary')
+            ->orderBy('id')
+            ->first();
+    }
+
+    public function hasActiveMembershipInOrganization(int $organizationId): bool
+    {
+        return $this->activeMemberships()
+            ->where('organization_id', $organizationId)
+            ->exists();
+    }
+
+    public function hasActiveMembershipInTenant(int $tenantId): bool
+    {
+        return $this->activeMemberships()
+            ->where('tenant_id', $tenantId)
+            ->exists();
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function activeOrganizationIds(): array
+    {
+        return $this->activeMemberships()
+            ->pluck('organization_id')
+            ->filter()
+            ->map(fn ($id): int => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function activeTenantIds(): array
+    {
+        return $this->activeMemberships()
+            ->pluck('tenant_id')
+            ->filter()
+            ->map(fn ($id): int => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
      * The push destinations this user's devices registered.
+     */
+    /**
+     * @return HasMany<DeviceToken, User>
      */
     public function deviceTokens(): HasMany
     {
         return $this->hasMany(DeviceToken::class);
     }
 
+    /**
+     * @return MorphMany<Address, User>
+     */
     public function addresses(): MorphMany
     {
         return $this->morphMany(Address::class, 'addressable');
@@ -243,6 +334,9 @@ class User extends Authenticatable implements HasMedia
     /**
      * All subscriptions owned by this user — product, post,
      * announcement, etc. (unified Subscribe model).
+     */
+    /**
+     * @return MorphMany<Subscribe, User>
      */
     public function subscriptions(): MorphMany
     {
@@ -286,11 +380,17 @@ class User extends Authenticatable implements HasMedia
     /**
      * Get all email addresses for this user (polymorphic relationship)
      */
+    /**
+     * @return MorphMany<Email, User>
+     */
     public function emails()
     {
         return $this->morphMany(Email::class, 'emailable');
     }
 
+    /**
+     * @return MorphOne<Email, User>
+     */
     public function primaryEmail()
     {
         return $this->morphOne(Email::class, 'emailable')->where('is_primary', true);
@@ -351,6 +451,9 @@ class User extends Authenticatable implements HasMedia
     /**
      * Get product reviews written by this user
      */
+    /**
+     * @return HasMany<Review, User>
+     */
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class, 'user_id');
@@ -359,6 +462,9 @@ class User extends Authenticatable implements HasMedia
     /**
      * Get helpful/not-helpful votes cast by this user
      */
+    /**
+     * @return HasMany<ReviewVote, User>
+     */
     public function reviewVotes(): HasMany
     {
         return $this->hasMany(ReviewVote::class, 'user_id');
@@ -366,6 +472,9 @@ class User extends Authenticatable implements HasMedia
 
     /**
      * Get reviewer assignments for this user
+     */
+    /**
+     * @return HasMany<Reviewer, User>
      */
     public function reviewerAssignments(): HasMany
     {
@@ -383,6 +492,9 @@ class User extends Authenticatable implements HasMedia
     /**
      * Get all assignments where this user assigned something to others
      */
+    /**
+     * @return HasMany<Assignment, User>
+     */
     public function assignmentsMade(): HasMany
     {
         return $this->hasMany(Assignment::class, 'assigned_by');
@@ -390,6 +502,9 @@ class User extends Authenticatable implements HasMedia
 
     /**
      * Get all publications associated with this user
+     */
+    /**
+     * @return MorphMany<Publication, User>
      */
     public function publications()
     {
@@ -504,6 +619,10 @@ class User extends Authenticatable implements HasMedia
     /**
      * Scope for unverified emails
      */
+    /**
+     * @param  Builder  $query
+     * @return Builder
+     */
     public function scopeUnverified($query)
     {
         return $query->whereNull('email_verified_at');
@@ -511,6 +630,10 @@ class User extends Authenticatable implements HasMedia
 
     /**
      * Scope for verified emails
+     */
+    /**
+     * @param  Builder  $query
+     * @return Builder
      */
     public function scopeVerified($query)
     {
@@ -520,6 +643,10 @@ class User extends Authenticatable implements HasMedia
     /**
      * Scope for incomplete onboarding
      */
+    /**
+     * @param  Builder  $query
+     * @return Builder
+     */
     public function scopeIncompleteOnboarding($query)
     {
         return $query->where('onboarding_completed', false);
@@ -527,6 +654,10 @@ class User extends Authenticatable implements HasMedia
 
     /**
      * Scope for complete onboarding
+     */
+    /**
+     * @param  Builder  $query
+     * @return Builder
      */
     public function scopeCompleteOnboarding($query)
     {

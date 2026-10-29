@@ -2,11 +2,10 @@
 
 namespace App\Models;
 
-use App\Enums\SalesChannel as SalesChannelCode;
 use App\Enums\Sourcing;
+use App\Models\Builders\ProductBuilder;
 use App\Traits\Audit\Auditable;
 use App\Traits\Dam\Damable;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,9 +20,24 @@ class Product extends Model
 {
     use Auditable, Damable, HasFactory, SoftDeletes;
 
+    public static function query(): ProductBuilder
+    {
+        /** @var ProductBuilder $builder */
+        $builder = parent::query();
+
+        return $builder;
+    }
+
+    public function newEloquentBuilder($query): ProductBuilder
+    {
+        return new ProductBuilder($query);
+    }
+
     /**
      * Audit the commercial identity and availability fields, not the large
      * description/metadata blobs.
+     *
+     * @return array<int, string>
      */
     public function getAuditInclude(): array
     {
@@ -93,11 +107,17 @@ class Product extends Model
         });
     }
 
+    /**
+     * @return BelongsTo<Tenant, Product>
+     */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
     }
 
+    /**
+     * @return BelongsToMany<SalesChannel, Product>
+     */
     public function salesChannels(): BelongsToMany
     {
         return $this->belongsToMany(SalesChannel::class, 'product_sales_channel');
@@ -109,33 +129,22 @@ class Product extends Model
      * A product with no channel memberships is treated as storefront-only so
      * rows created before the channel rollout do not disappear from the B2C
      * catalog. Punchout always requires an explicit membership.
+     *
+     * @param  string|array<int, string>|null  $channel
      */
-    public function scopeForChannel(Builder $query, string|array|null $channel): Builder
+    public function scopeForChannel(ProductBuilder $query, string|array|null $channel): ProductBuilder
     {
-        $channels = is_array($channel) ? $channel : [$channel];
-        $channels = array_values(array_filter($channels));
-
-        if ($channels === []) {
-            return $query;
-        }
-
-        return $query->where(function (Builder $inner) use ($channels): void {
-            $inner->whereHas(
-                'salesChannels',
-                fn (Builder $relation) => $relation->whereIn('code', $channels),
-            );
-
-            if (in_array(SalesChannelCode::STOREFRONT, $channels, true)) {
-                $inner->orWhereDoesntHave('salesChannels');
-            }
-        });
+        return $query->forChannel($channel);
     }
 
-    public function scopeForTenant(Builder $query, ?int $tenantId): Builder
+    public function scopeForTenant(ProductBuilder $query, ?int $tenantId): ProductBuilder
     {
-        return $query->when($tenantId, fn (Builder $inner) => $inner->where('tenant_id', $tenantId));
+        return $query->forTenant($tenantId);
     }
 
+    /**
+     * @return BelongsTo<Organization, Product>
+     */
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
@@ -146,21 +155,33 @@ class Product extends Model
         return $this->hasMany(Variant::class)->orderByDesc('is_default')->orderBy('name');
     }
 
+    /**
+     * @return MorphMany<Assignment, Product>
+     */
     public function assignments(): MorphMany
     {
         return $this->morphMany(Assignment::class, 'assignable');
     }
 
+    /**
+     * @return MorphMany<Code, Product>
+     */
     public function codes(): MorphMany
     {
         return $this->morphMany(Code::class, 'codeable');
     }
 
+    /**
+     * @return MorphMany<Price, Product>
+     */
     public function prices(): MorphMany
     {
         return $this->morphMany(Price::class, 'priceable');
     }
 
+    /**
+     * @return MorphMany<Value, Product>
+     */
     public function values(): MorphMany
     {
         return $this->morphMany(Value::class, 'valuable');
@@ -184,26 +205,41 @@ class Product extends Model
             });
     }
 
+    /**
+     * @return MorphToMany<Category, Product>
+     */
     public function categories(): MorphToMany
     {
         return $this->morphToMany(Category::class, 'categorizable');
     }
 
+    /**
+     * @return MorphToMany<Feature, Product>
+     */
     public function features(): MorphToMany
     {
         return $this->morphToMany(Feature::class, 'featureable');
     }
 
+    /**
+     * @return MorphToMany<Tag, Product>
+     */
     public function tags(): MorphToMany
     {
         return $this->morphToMany(Tag::class, 'taggable');
     }
 
+    /**
+     * @return MorphToMany<Manufacturer, Product>
+     */
     public function manufacturers(): MorphToMany
     {
         return $this->morphToMany(Manufacturer::class, 'manufacturable');
     }
 
+    /**
+     * @return MorphToMany<Brand, Product>
+     */
     public function brands(): MorphToMany
     {
         return $this->morphToMany(Brand::class, 'brandable');
@@ -214,11 +250,17 @@ class Product extends Model
         return $this->morphMany(Revision::class, 'revisable')->orderByDesc('revision_number');
     }
 
+    /**
+     * @return MorphMany<Inventory, Product>
+     */
     public function inventories(): MorphMany
     {
         return $this->morphMany(Inventory::class, 'stockable');
     }
 
+    /**
+     * @return MorphMany<Review, Product>
+     */
     public function reviews(): MorphMany
     {
         return $this->morphMany(Review::class, 'reviewable');

@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Punchout;
+
 use App\Actions\Punchout\IssueHandoffCodeAction;
 
 it('scopes the punchout catalog to the session tenant and channel', function () {

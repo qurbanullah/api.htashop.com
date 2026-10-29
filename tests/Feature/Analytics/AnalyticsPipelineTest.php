@@ -2,14 +2,21 @@
 
 declare(strict_types=1);
 
+namespace Tests\Feature\Analytics;
+
+use App\Contracts\Analytics\AnalyticsBuffer;
 use App\Enums\OrderStatus;
+use App\Jobs\Analytics\RecordEvent;
 use App\Models\Order;
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Tenant;
+use App\Services\Analytics\AnalyticsService;
 use App\Support\Analytics\ClientContext;
+use App\Support\Analytics\EventEnvelope;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 
 uses(RefreshDatabase::class);
@@ -45,10 +52,10 @@ function analyticsProduct(Tenant $tenant): Product
 it('records a direct event into the buffer', function (): void {
     $tenant = analyticsTenant();
     $product = analyticsProduct($tenant);
-    $buffer = app(\App\Contracts\Analytics\AnalyticsBuffer::class);
+    $buffer = app(AnalyticsBuffer::class);
 
-    $recorded = app(\App\Services\Analytics\AnalyticsService::class)->record(
-        \App\Support\Analytics\EventEnvelope::fromArray([
+    $recorded = app(AnalyticsService::class)->record(
+        EventEnvelope::fromArray([
             'event_name' => 'product_view',
             'occurred_at' => now()->toIso8601String(),
             'source' => 'web',
@@ -68,9 +75,9 @@ it('records a direct event into the buffer', function (): void {
 it('executes a dispatched RecordEvent synchronously', function (): void {
     $tenant = analyticsTenant();
     $product = analyticsProduct($tenant);
-    $buffer = app(\App\Contracts\Analytics\AnalyticsBuffer::class);
+    $buffer = app(AnalyticsBuffer::class);
 
-    $job = new \App\Jobs\Analytics\RecordEvent([
+    $job = new RecordEvent([
         'event_name' => 'product_view',
         'occurred_at' => now()->toIso8601String(),
         'source' => 'web',
@@ -84,7 +91,7 @@ it('executes a dispatched RecordEvent synchronously', function (): void {
 
     expect($job->afterCommit)->toBeNull();
 
-    \App\Jobs\Analytics\RecordEvent::dispatch($job->event);
+    RecordEvent::dispatch($job->event);
 
     expect($buffer->pending())->toBe(2);
 });
@@ -93,7 +100,7 @@ it('dispatches a RecordEvent job for a consented beacon', function (): void {
     $tenant = analyticsTenant();
     $product = analyticsProduct($tenant);
 
-    \Illuminate\Support\Facades\Queue::fake();
+    Queue::fake();
 
     expect(config('queue.default'))->toBe('sync');
 
@@ -108,7 +115,7 @@ it('dispatches a RecordEvent job for a consented beacon', function (): void {
         ]],
     ])->assertStatus(202);
 
-    \Illuminate\Support\Facades\Queue::assertPushed(\App\Jobs\Analytics\RecordEvent::class);
+    Queue::assertPushed(RecordEvent::class);
 });
 
 it('accepts, dedupes and flushes a consented product view', function (): void {
@@ -135,7 +142,7 @@ it('accepts, dedupes and flushes a consented product view', function (): void {
         ->assertStatus(202)
         ->assertJsonPath('data.accepted', 2);
 
-    expect(app(\App\Contracts\Analytics\AnalyticsBuffer::class)->pending())->toBe(2);
+    expect(app(AnalyticsBuffer::class)->pending())->toBe(2);
 
     $this->artisan('analytics:flush')->assertExitCode(0);
 

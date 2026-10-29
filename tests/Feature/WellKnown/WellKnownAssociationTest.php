@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\WellKnown;
+
 /**
  * App Links / Universal Links association files.
  *

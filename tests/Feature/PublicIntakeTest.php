@@ -1,10 +1,11 @@
 <?php
 
+namespace Tests\Feature;
+
 use App\Jobs\Contacts\SendContactMessageNotificationJob;
 use App\Jobs\Tickets\SendTicketCreatedEmail;
 use App\Models\ContactMessage;
 use App\Models\Ticket;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 
 beforeEach(function () {

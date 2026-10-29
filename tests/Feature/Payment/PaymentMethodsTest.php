@@ -1,10 +1,13 @@
 <?php
 
+namespace Tests\Feature\Payment;
+
 use App\Enums\PaymentMethod;
 use App\Gateways\PaymentGatewayManager;
 use App\Gateways\SafepayGateway;
 use App\Models\Order;
 use Illuminate\Support\Facades\Http;
+use InvalidArgumentException;
 
 beforeEach(function () {
     Http::preventStrayRequests();

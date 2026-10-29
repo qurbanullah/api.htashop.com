@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Unsubscribe;
+
 use App\Models\Subscribe;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -14,7 +16,7 @@ it('returns subscription status for a valid token', function () {
         'subscribed_at' => now(),
     ]);
 
-    $this->getJson('/api/v1/unsubscribe/' . $subscription->unsubscribe_token)
+    $this->getJson('/api/v1/unsubscribe/'.$subscription->unsubscribe_token)
         ->assertOk()
         ->assertJson([
             'success' => true,
@@ -36,11 +38,11 @@ it('unsubscribes and resubscribes via the JSON API', function () {
     ]);
     $token = $subscription->unsubscribe_token;
 
-    $this->postJson('/api/v1/unsubscribe/' . $token . '/unsubscribe')
+    $this->postJson('/api/v1/unsubscribe/'.$token.'/unsubscribe')
         ->assertOk()
         ->assertJsonPath('data.is_subscribed', false);
 
-    $this->postJson('/api/v1/unsubscribe/' . $token . '/resubscribe')
+    $this->postJson('/api/v1/unsubscribe/'.$token.'/resubscribe')
         ->assertOk()
         ->assertJsonPath('data.is_subscribed', true);
 });
@@ -56,7 +58,7 @@ it('falls back to the owning user email for account-based subscriptions', functi
         'subscribed_at' => now(),
     ]);
 
-    $this->getJson('/api/v1/unsubscribe/' . $subscription->unsubscribe_token)
+    $this->getJson('/api/v1/unsubscribe/'.$subscription->unsubscribe_token)
         ->assertOk()
         ->assertJsonPath('data.email', 'owner@example.com')
         ->assertJsonPath('data.type', 'post');

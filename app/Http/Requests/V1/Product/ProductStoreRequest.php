@@ -16,6 +16,9 @@ class ProductStoreRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
@@ -57,20 +60,22 @@ class ProductStoreRequest extends FormRequest
         ];
     }
 
-    protected function passedValidation(): void
+    protected function prepareForValidation(): void
     {
-        // Auto-resolve tenant/organization from user's active membership
-        if (! $this->input('tenant_id') || ! $this->input('organization_id')) {
-            $user = $this->user();
-            $membership = $user?->memberships()->where('is_active', true)->first();
-
-            if ($membership) {
-                $this->merge([
-                    'tenant_id' => $this->input('tenant_id') ?: $membership->tenant_id,
-                    'organization_id' => $this->input('organization_id') ?: $membership->organization_id,
-                ]);
-            }
+        if ($this->input('tenant_id') && $this->input('organization_id')) {
+            return;
         }
+
+        $membership = $this->user()?->primaryMembership();
+
+        if (! $membership) {
+            return;
+        }
+
+        $this->merge([
+            'tenant_id' => $this->input('tenant_id') ?: $membership->tenant_id,
+            'organization_id' => $this->input('organization_id') ?: $membership->organization_id,
+        ]);
     }
 
     protected function withValidator(Validator $validator): void
@@ -78,11 +83,35 @@ class ProductStoreRequest extends FormRequest
         $validator->after(function ($validator): void {
             $tenantId = $this->input('tenant_id');
             $organizationId = $this->input('organization_id');
+            $user = $this->user();
 
-            if ($tenantId && $organizationId) {
-                $organization = Organization::query()->find($organizationId);
-                if ($organization && $organization->tenant_id !== (int) $tenantId) {
-                    $validator->errors()->add('organization_id', 'The selected organization does not belong to the selected tenant.');
+            if (! $tenantId || ! $organizationId) {
+                $validator->errors()->add(
+                    'organization_id',
+                    $user?->isAdmin()
+                        ? 'tenant_id and organization_id are required.'
+                        : 'No active organization is associated with your account.'
+                );
+
+                return;
+            }
+
+            $organization = Organization::query()->find($organizationId);
+
+            if ($organization && $organization->tenant_id !== (int) $tenantId) {
+                $validator->errors()->add('organization_id', 'The selected organization does not belong to the selected tenant.');
+
+                return;
+            }
+
+            if ($user && ! $user->isAdmin()) {
+                $hasMembership = $user->activeMemberships()
+                    ->where('tenant_id', (int) $tenantId)
+                    ->where('organization_id', (int) $organizationId)
+                    ->exists();
+
+                if (! $hasMembership) {
+                    $validator->errors()->add('organization_id', 'You do not have access to this organization.');
                 }
             }
         });

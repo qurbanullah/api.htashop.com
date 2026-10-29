@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Dam;
+
 use App\Http\Resources\V1\Tutorial\TutorialResource;
 use App\Models\Dam;
 use App\Models\Tutorial;
@@ -7,6 +9,8 @@ use App\Models\User;
 use App\Services\Storage\S3UploadService;
 use App\Services\Tutorial\TutorialService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Mockery;
 use Mockery\MockInterface;
 
 it('mirrors tutorial thumbnail and video file keys into dam collections on create', function () {
@@ -68,7 +72,7 @@ it('marks previous tutorial dam assets as non current when a replacement thumbna
     ]);
 
     $oldAsset = Dam::create([
-        'uuid' => (string) \Illuminate\Support\Str::uuid(),
+        'uuid' => (string) Str::uuid(),
         'damable_type' => Tutorial::class,
         'damable_id' => $tutorial->id,
         'collection_name' => 'thumbnail',
@@ -141,7 +145,7 @@ it('serializes additive tutorial dam assets while preserving legacy fields', fun
     $tutorial->setRelation('dams', collect([$thumbnailAsset, $videoAsset]));
 
     $resource = new TutorialResource($tutorial);
-    $payload = $resource->toArray(new Request());
+    $payload = $resource->toArray(new Request);
 
     expect($payload['thumbnail'])->toBe('images/tutorials/legacy-thumbnail.png');
     expect($payload['video_file'])->toBe('videos/tutorials/legacy-video.mp4');

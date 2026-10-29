@@ -17,6 +17,9 @@ class ProductUpdateRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
@@ -61,7 +64,9 @@ class ProductUpdateRequest extends FormRequest
     protected function withValidator(Validator $validator): void
     {
         $validator->after(function ($validator): void {
-            $product = Product::query()->where('uuid', $this->route('uuid'))->first();
+            $routeUuid = $this->route()?->parameter('uuid');
+
+            $product = Product::query()->where('uuid', $routeUuid)->first();
 
             if (! $product) {
                 return;
@@ -74,6 +79,32 @@ class ProductUpdateRequest extends FormRequest
 
             if ($organization && $organization->tenant_id !== $tenantId) {
                 $validator->errors()->add('organization_id', 'The selected organization does not belong to the selected tenant.');
+
+                return;
+            }
+
+            $user = $this->user();
+
+            if (! $user || $user->isAdmin()) {
+                return;
+            }
+
+            // Only validate membership when the product is being moved. Access
+            // to the product's current organization is enforced by ProductPolicy.
+            $changesTarget = $organizationId !== (int) $product->organization_id
+                || $tenantId !== (int) $product->tenant_id;
+
+            if (! $changesTarget) {
+                return;
+            }
+
+            $hasMembership = $user->activeMemberships()
+                ->where('tenant_id', $tenantId)
+                ->where('organization_id', $organizationId)
+                ->exists();
+
+            if (! $hasMembership) {
+                $validator->errors()->add('organization_id', 'You do not have access to this organization.');
             }
         });
     }

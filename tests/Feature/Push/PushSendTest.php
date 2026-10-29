@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Tests\Feature\Push;
+
 use App\Jobs\Push\SendPushNotificationJob;
 use App\Models\DeviceToken;
 use App\Models\User;

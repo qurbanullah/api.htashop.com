@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Quote;
+
 use App\Models\QuoteRequest;
 use App\Services\Quotes\QuoteService;
 

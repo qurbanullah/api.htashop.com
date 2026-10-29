@@ -1,13 +1,15 @@
 <?php
 
+namespace Tests\Feature\Admin;
+
+use App\Http\Middleware\ApiAuthenticate;
 use App\Models\Ticket;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     Role::findOrCreate('admin', 'api');
-    $this->withoutMiddleware(\App\Http\Middleware\ApiAuthenticate::class);
+    $this->withoutMiddleware(ApiAuthenticate::class);
 });
 
 it('allows admins to filter tickets by website submitters', function () {

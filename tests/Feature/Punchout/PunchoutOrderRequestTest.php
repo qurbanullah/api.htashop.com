@@ -1,8 +1,11 @@
 <?php
 
+namespace Tests\Feature\Punchout;
+
 use App\Models\Order;
 use App\Models\PunchoutInboundOrder;
 use App\Models\Tenant;
+use Illuminate\Support\Str;
 
 function punchoutOrderXml(
     string $payloadId = 'PO-1',

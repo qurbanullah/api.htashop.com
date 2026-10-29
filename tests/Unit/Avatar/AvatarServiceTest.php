@@ -1,22 +1,22 @@
 <?php
 
-use App\Services\Avatars\AvatarService;
+namespace Tests\Unit\Avatar;
+
 use App\Models\Avatar;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Storage;
+use App\Services\Avatars\AvatarService;
 use Illuminate\Support\Facades\Cache;
-
+use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
-    $this->avatarService = new AvatarService();
+    $this->avatarService = new AvatarService;
 });
 
 it('can get user avatar url with caching', function () {
     Cache::spy();
 
     $user = User::factory()->create();
-    
+
     // Stub the model's getAvatarUrl method by creating an avatar database record
     Avatar::factory()->create([
         'avatareable_type' => User::class,
@@ -113,7 +113,7 @@ it('optimizes avatar metadata by checking file size and dimensions', function ()
     $result = $this->avatarService->optimizeAvatarIfNeeded($user);
 
     expect($result)->toBeTrue();
-    
+
     $freshAvatar = $avatar->fresh();
     expect($freshAvatar->file_size)->toBeGreaterThan(0);
     expect($freshAvatar->width)->toBe(1);

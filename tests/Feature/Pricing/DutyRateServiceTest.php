@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Pricing;
+
 use App\Models\DutyRate;
 use App\Services\Pricing\DutyRateService;
 

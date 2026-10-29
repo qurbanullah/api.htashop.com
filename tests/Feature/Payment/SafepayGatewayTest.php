@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Payment;
+
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
@@ -7,6 +9,7 @@ use App\Gateways\SafepayGateway;
 use App\Services\Payment\PaymentService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 beforeEach(function () {
     Http::preventStrayRequests();

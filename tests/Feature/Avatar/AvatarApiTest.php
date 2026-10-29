@@ -1,9 +1,10 @@
 <?php
 
-use App\Models\User;
-use App\Models\Avatar;
+namespace Tests\Feature\Avatar;
+
 use App\Jobs\Avatars\OptimizeAvatarJob;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\Avatar;
+use App\Models\User;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
@@ -65,18 +66,18 @@ it('uploads user avatar successfully, creates records, and dispatches optimize j
     ];
 
     $response = $this->postJson('/api/v1/user/avatar', $payload);
-    
+
     $response->assertStatus(201)
         ->assertJsonPath('success', true)
         ->assertJsonStructure([
             'success',
             'message',
-            'data' => ['id', 'name', 'email']
+            'data' => ['id', 'name', 'email'],
         ]);
 
     // Assert records exist in database
     expect(Avatar::where('avatareable_id', $user->id)->count())->toBe(4);
-    
+
     // Assert job was dispatched using assertPushed
     Queue::assertPushed(OptimizeAvatarJob::class, function ($job) use ($user) {
         return $job->userId === $user->id && $job->avatarFilename === 'avatar-123.jpg';

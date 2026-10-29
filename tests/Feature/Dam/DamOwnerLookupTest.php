@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Dam;
+
 use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Tenant;

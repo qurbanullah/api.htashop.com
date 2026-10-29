@@ -2,6 +2,9 @@
 
 namespace App\Http\Requests\V1\Inventory;
 
+use App\Models\Inventory;
+use App\Models\Warehouse;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateInventoryRequest extends FormRequest
@@ -11,6 +14,9 @@ class UpdateInventoryRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, array<int, string>>
+     */
     public function rules(): array
     {
         return [
@@ -21,6 +27,30 @@ class UpdateInventoryRequest extends FormRequest
             'low_stock_threshold' => ['nullable', 'numeric', 'min:0'],
             'track_inventory' => ['sometimes', 'boolean'],
             'is_active' => ['sometimes', 'boolean'],
+            'metadata' => ['nullable', 'array'],
         ];
+    }
+
+    protected function withValidator(Validator $validator): void
+    {
+        $validator->after(function ($validator): void {
+            if (! $this->filled('warehouse_id')) {
+                return;
+            }
+
+            $routeUuid = $this->route()?->parameter('uuid');
+
+            $inventory = Inventory::query()->where('uuid', $routeUuid)->first();
+
+            if (! $inventory) {
+                return;
+            }
+
+            $warehouse = Warehouse::query()->find($this->input('warehouse_id'));
+
+            if ($warehouse && (int) $warehouse->tenant_id !== (int) $inventory->tenant_id) {
+                $validator->errors()->add('warehouse_id', 'The selected warehouse does not belong to the inventory tenant.');
+            }
+        });
     }
 }

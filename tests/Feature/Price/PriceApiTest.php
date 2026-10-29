@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Price;
+
 use App\Http\Middleware\ApiAuthenticate;
 use App\Models\Currency;
 use App\Models\Membership;
@@ -8,6 +10,8 @@ use App\Models\Price;
 use App\Models\Product;
 use App\Models\Tenant;
 use App\Models\User;
+use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     config()->set('auth.guards.api', [
@@ -355,4 +359,81 @@ it('rejects deleting a price from another organization membership', function () 
         'id' => $price->id,
         'base_price' => '19.990000',
     ]);
+});
+
+it('rejects creating a price in an organization the user does not belong to', function () {
+    $otherOrganization = Organization::create([
+        'tenant_id' => $this->tenant->id,
+        'name' => 'Blocked Price Vendor',
+        'slug' => 'blocked-price-vendor',
+        'type' => 'vendor',
+        'is_active' => true,
+    ]);
+
+    $siblingProduct = Product::create([
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => $otherOrganization->id,
+        'name' => 'Blocked Price Product',
+        'slug' => 'blocked-price-product',
+        'status' => 'active',
+        'is_active' => true,
+    ]);
+
+    $this->postJson('/api/v1/prices', [
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => $otherOrganization->id,
+        'currency_id' => $this->currency->id,
+        'priceable_type' => 'product',
+        'priceable_uuid' => $siblingProduct->uuid,
+        'base_price' => 10,
+    ])
+        ->assertForbidden()
+        ->assertJsonPath('success', false);
+
+    expect(Price::count())->toBe(0);
+});
+
+it('rejects listing prices for a tenant the user does not belong to', function () {
+    $otherTenant = Tenant::create([
+        'name' => 'Blocked Price Tenant',
+        'slug' => 'blocked-price-tenant',
+        'is_active' => true,
+    ]);
+
+    $this->getJson('/api/v1/prices?tenant_id='.$otherTenant->id)
+        ->assertForbidden()
+        ->assertJsonPath('success', false);
+});
+
+it('rejects creating a price for an unknown priceable record', function () {
+    $this->postJson('/api/v1/prices', [
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => $this->organization->id,
+        'currency_id' => $this->currency->id,
+        'priceable_type' => 'product',
+        'priceable_uuid' => Str::uuid()->toString(),
+        'base_price' => 10,
+    ])
+        ->assertStatus(422)
+        ->assertJsonPath('success', false);
+
+    expect(Price::count())->toBe(0);
+});
+
+it('lets an admin create a price in any organization', function () {
+    Role::findOrCreate('admin', 'api');
+
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+
+    $this->actingAs($admin, 'api');
+
+    $this->postJson('/api/v1/prices', [
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => $this->organization->id,
+        'currency_id' => $this->currency->id,
+        'priceable_type' => 'product',
+        'priceable_uuid' => $this->product->uuid,
+        'base_price' => 12.5,
+    ])->assertStatus(201);
 });

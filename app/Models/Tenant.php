@@ -4,9 +4,6 @@ namespace App\Models;
 
 use App\Traits\Audit\Auditable;
 use App\Traits\Dam\Damable;
-use App\Models\Organization;
-use App\Models\PunchoutSession;
-use App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,6 +14,9 @@ class Tenant extends Model
 {
     use Auditable, Damable, HasFactory, SoftDeletes;
 
+    /**
+     * @return array<int, string>
+     */
     public function getAuditInclude(): array
     {
         return ['name', 'slug', 'domain', 'is_active', 'settings'];
@@ -45,16 +45,25 @@ class Tenant extends Model
         });
     }
 
+    /**
+     * @return HasMany<Organization, Tenant>
+     */
     public function organizations(): HasMany
     {
         return $this->hasMany(Organization::class);
     }
 
+    /**
+     * @return HasMany<Product, Tenant>
+     */
     public function products(): HasMany
     {
         return $this->hasMany(Product::class);
     }
 
+    /**
+     * @return HasMany<PunchoutSession, Tenant>
+     */
     public function punchoutSessions(): HasMany
     {
         return $this->hasMany(PunchoutSession::class);

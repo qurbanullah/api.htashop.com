@@ -1,8 +1,9 @@
 <?php
 
+namespace Tests\Feature\Admin;
+
 use App\Models\Audit;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 
 it('records an audit when roles are assigned', function () {
@@ -15,8 +16,8 @@ it('records an audit when roles are assigned', function () {
 
     $this->actingAs($admin, 'api');
 
-    $response = $this->postJson('/api/v1/users/' . $target->id . '/roles', [
-        'roles' => ['editor']
+    $response = $this->postJson('/api/v1/users/'.$target->id.'/roles', [
+        'roles' => ['editor'],
     ]);
 
     $response->assertStatus(200)->assertJson(['message' => 'Roles assigned successfully']);
@@ -38,8 +39,8 @@ it('records an audit when a user is updated', function () {
 
     $this->actingAs($admin, 'api');
 
-    $response = $this->putJson('/api/v1/users/' . $target->id, [
-        'name' => 'New Name'
+    $response = $this->putJson('/api/v1/users/'.$target->id, [
+        'name' => 'New Name',
     ]);
 
     $response->assertStatus(200)->assertJson(['message' => 'User updated successfully']);

@@ -1,5 +1,7 @@
 <?php
 
+namespace Tests\Feature\Forum;
+
 use App\Http\Middleware\ApiAuthenticate;
 use App\Models\ForumComment;
 use App\Models\ForumLike;
@@ -7,7 +9,6 @@ use App\Models\ForumPost;
 use App\Models\ForumReport;
 use App\Models\ForumTopic;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {

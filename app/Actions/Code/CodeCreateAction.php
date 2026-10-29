@@ -5,11 +5,13 @@ namespace App\Actions\Code;
 use App\Models\Code;
 use App\Models\Product;
 use App\Models\Variant;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class CodeCreateAction
 {
+    /**
+     * @param  array<string, mixed>  $data
+     */
     public function handle(array $data): Code
     {
         return DB::transaction(function () use ($data): Code {
@@ -37,7 +39,7 @@ class CodeCreateAction
         });
     }
 
-    private function resolveCodeable(string $type, string $uuid): Model
+    private function resolveCodeable(string $type, string $uuid): Product|Variant
     {
         return match ($type) {
             'product' => Product::query()->where('uuid', $uuid)->firstOrFail(),
