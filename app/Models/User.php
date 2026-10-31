@@ -94,6 +94,7 @@ class User extends Authenticatable implements HasMedia
             'email_verification_sent_at' => 'datetime',
             'onboarding_completed_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'restored_at' => 'datetime',
             'password' => 'hashed',
             'profile_completed' => 'boolean',
             'onboarding_completed' => 'boolean',

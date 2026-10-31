@@ -4,6 +4,7 @@ namespace App\Actions\Punchout;
 
 use App\Support\Punchout\Data\PunchoutSetupData;
 use InvalidArgumentException;
+use SimpleXMLElement;
 
 class NormalizePunchoutSetupDataAction
 {
@@ -42,10 +43,18 @@ class NormalizePunchoutSetupDataAction
             buyerCookie: $this->nullableString($setupRequest?->BuyerCookie ?? null),
             payload: [
                 'from' => [
-                    'credential' => $this->nullableString($setupRequest?->From?->Credential?->Identity ?? null),
+                    // Ariba puts From/To in the cXML Header; some buyers nest them
+                    // inside PunchOutSetupRequest. Accept either.
+                    'credential' => $this->cxmlIdentity(
+                        $setupRequest?->From?->Credential?->Identity,
+                        $xml->Header?->From?->Credential?->Identity,
+                    ),
                 ],
                 'to' => [
-                    'credential' => $this->nullableString($setupRequest?->To?->Credential?->Identity ?? null),
+                    'credential' => $this->cxmlIdentity(
+                        $setupRequest?->To?->Credential?->Identity,
+                        $xml->Header?->To?->Credential?->Identity,
+                    ),
                 ],
                 'sender' => [
                     'identity' => $this->nullableString($xml->Header?->Sender?->Credential?->Identity ?? null),
@@ -75,6 +84,23 @@ class NormalizePunchoutSetupDataAction
                 'hook_url' => $returnUrl,
             ],
         );
+    }
+
+    /**
+     * First non-empty identity among the candidate nodes. Ariba sends From/To in
+     * the cXML Header, while other buyers nest them in PunchOutSetupRequest.
+     */
+    private function cxmlIdentity(?SimpleXMLElement ...$nodes): ?string
+    {
+        foreach ($nodes as $node) {
+            $identity = $this->nullableString($node);
+
+            if ($identity !== null) {
+                return $identity;
+            }
+        }
+
+        return null;
     }
 
     private function nullableString(mixed $value): ?string

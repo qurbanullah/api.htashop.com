@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\V1\User;
 
-use App\Http\Controllers\Controller;
 use App\Actions\Users\AssignRolesAction;
 use App\Actions\Users\CreateUserAction;
 use App\Actions\Users\DeleteUserAction;
 use App\Actions\Users\RestoreUserAction;
 use App\Actions\Users\UpdateUserAction;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Roles\AssignRolesRequest;
 use App\Http\Requests\V1\User\StoreUserRequest;
 use App\Http\Requests\V1\User\UpdateUserRequest;
@@ -15,8 +15,9 @@ use App\Http\Resources\V1\Role\RoleResource;
 use App\Http\Resources\V1\User\UserResource;
 use App\Jobs\Avatars\OptimizeAvatarJob;
 use App\Models\User;
-use App\Services\User\UserService;
+use App\Services\Audit\AuditService;
 use App\Services\Avatars\AvatarService;
+use App\Services\User\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -31,7 +32,7 @@ class UserController extends Controller
         protected DeleteUserAction $deleteUserAction,
         protected RestoreUserAction $restoreUserAction,
         protected AssignRolesAction $assignRolesAction,
-        protected \App\Services\Audit\AuditService $auditService
+        protected AuditService $auditService
     ) {}
 
     /**
@@ -42,15 +43,19 @@ class UserController extends Controller
         $this->authorize('viewAny', User::class);
 
         $filters = [
-            'search' => $request->search,
-            'role' => $request->role,
-            'status' => $request->status,
+            'search' => $request->query('search'),
+            'role' => $request->query('role'),
+            // Legacy soft-delete filter (active | deleted | all).
+            'status' => $request->query('status'),
+            // Modern admin filters.
+            'trashed' => $request->query('trashed'),
+            'account_status' => $request->query('account_status'),
+            'verified' => $request->query('verified'),
         ];
 
-        $users = $this->userService->getPaginatedUsers(
-            $filters,
-            $request->per_page ?? 15
-        );
+        $perPage = min(max((int) $request->query('per_page', 15), 1), 100);
+
+        $users = $this->userService->getPaginatedUsers($filters, $perPage);
 
         return response()->json([
             'data' => UserResource::collection($users->items()),
@@ -85,12 +90,16 @@ class UserController extends Controller
     {
         $user = $this->userService->getUserById($id, withTrashed: true);
 
+        if (! $user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
         $this->authorize('view', $user);
 
         // Only include sensitive relations (roles/permissions) for admin/editor/super-admin
         $authUser = request()->user();
         if ($authUser && $authUser->hasAnyRole(['super-admin', 'admin', 'editor'])) {
-            $user->loadMissing(['roles', 'permissions', 'profile', 'academicProfile']);
+            $user->loadMissing(['roles.permissions', 'permissions', 'profile', 'academicProfile']);
         } else {
             // Load only profile/public data for non-admin viewers
             $user->loadMissing(['profile']);
@@ -133,6 +142,7 @@ class UserController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Admin password reset failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+
             return response()->json(['success' => false, 'message' => 'Failed to update user password'], 500);
         }
     }
@@ -160,7 +170,7 @@ class UserController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'User email marked as verified.'
+            'message' => 'User email marked as verified.',
         ]);
     }
 
@@ -171,7 +181,7 @@ class UserController extends Controller
     {
         $user = $this->userService->getUserById($id);
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'User not found'], 404);
         }
 
@@ -196,7 +206,7 @@ class UserController extends Controller
     {
         $user = $this->userService->getUserById($id);
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'User not found'], 404);
         }
 
@@ -216,7 +226,7 @@ class UserController extends Controller
     {
         $user = $this->userService->getUserById($id, withTrashed: true);
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'User not found'], 404);
         }
 
@@ -237,7 +247,7 @@ class UserController extends Controller
     {
         $user = $this->userService->getUserById($id, withTrashed: true);
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'User not found'], 404);
         }
 
@@ -270,7 +280,7 @@ class UserController extends Controller
     public function assignRoles(AssignRolesRequest $request, User $user): JsonResponse
     {
         // Ensure roles are loaded for authorization
-        if (!$user->relationLoaded('roles')) {
+        if (! $user->relationLoaded('roles')) {
             $user->load('roles');
         }
 
@@ -309,7 +319,7 @@ class UserController extends Controller
     {
         $user = $this->userService->getUserById($id);
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'User not found'], 404);
         }
 
@@ -367,7 +377,7 @@ class UserController extends Controller
                 $mimeType,
             );
 
-            if (!$result) {
+            if (! $result) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to create avatar records',
@@ -434,7 +444,7 @@ class UserController extends Controller
             // Delete avatars and clear caches
             $result = $this->avatarService->deleteAvatar($user);
 
-            if (!$result) {
+            if (! $result) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No avatar found to delete',

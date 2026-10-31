@@ -6,8 +6,9 @@ use App\Helpers\CacheHelper;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class UserService
 {
@@ -18,44 +19,74 @@ class UserService
     {
         $query = $this->buildUserQuery($filters);
 
-        // Don't include manuscript counts here — some deployments do not have the
-        // manuscripts table. Load only essential relations.
-        return $query->with(['roles', 'profile', 'academicProfile'])
+        // Load only the relations the admin UI renders. `avatars` is eager loaded
+        // so UserResource does not trigger one query per row.
+        return $query->with(['roles', 'avatars'])
             ->latest()
             ->paginate($perPage);
     }
 
     /**
-     * Build user query with filters
+     * Build user query with filters.
+     *
+     * Supported filters:
+     *  - search: name / first_name / last_name / email (partial match)
+     *  - role: role name
+     *  - account_status: active | suspended | banned | pending
+     *  - verified: 1 = email verified, 0 = unverified
+     *  - trashed: without (default) | with | only
+     *  - status: legacy alias (active | deleted | all) kept for older clients
      */
     protected function buildUserQuery(array $filters): Builder
     {
         $query = User::query();
 
         // Search filter
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
+        if (! empty($filters['search'])) {
+            $search = trim((string) $filters['search']);
             $query->where(function ($q) use ($search) {
-                                $q->where('name', 'LIKE', "%{$search}%")
-                                    ->orWhere('email', 'LIKE', "%{$search}%")
-                                    ->orWhere('organization', 'LIKE', "%{$search}%");
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('first_name', 'LIKE', "%{$search}%")
+                    ->orWhere('last_name', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%");
             });
         }
 
         // Role filter
-        if (!empty($filters['role'])) {
+        if (! empty($filters['role'])) {
             $query->whereHas('roles', function ($q) use ($filters) {
                 $q->where('name', $filters['role']);
             });
         }
 
-        // Status filter (soft deletes)
-        $status = $filters['status'] ?? 'all';
-        if ($status === 'deleted') {
+        // Account status filter (active / suspended / banned / pending)
+        if (! empty($filters['account_status'])) {
+            $query->where('status', $filters['account_status']);
+        }
+
+        // Email verification filter
+        if (isset($filters['verified']) && $filters['verified'] !== '') {
+            if (filter_var($filters['verified'], FILTER_VALIDATE_BOOLEAN)) {
+                $query->whereNotNull('email_verified_at');
+            } else {
+                $query->whereNull('email_verified_at');
+            }
+        }
+
+        // Soft-delete scope. `trashed` wins; the legacy `status` param is
+        // translated so existing callers keep working.
+        $trashed = $filters['trashed'] ?? null;
+        if ($trashed === null || $trashed === '') {
+            $trashed = match ($filters['status'] ?? null) {
+                'deleted' => 'only',
+                'all' => 'with',
+                default => 'without',
+            };
+        }
+
+        if ($trashed === 'only') {
             $query->onlyTrashed();
-        } elseif ($status === 'active') {
-            $query->whereNull('deleted_at');
-        } else {
+        } elseif ($trashed === 'with') {
             $query->withTrashed();
         }
 
@@ -67,15 +98,15 @@ class UserService
      */
     public function getUserById(int $id, bool $withTrashed = false): ?User
     {
-        $cacheKey = "user.{$id}" . ($withTrashed ? '.with_trashed' : '');
+        $cacheKey = "user.{$id}".($withTrashed ? '.with_trashed' : '');
 
         return CacheHelper::remember([], $cacheKey, now()->addMinutes(30), function () use ($id, $withTrashed) {
             $query = User::with([
-                'roles',
+                'roles.permissions',
                 'permissions',
                 'profile',
                 'academicProfile',
-                'profile', 'academicProfile'
+                'avatars',
             ]);
 
             if ($withTrashed) {
@@ -101,15 +132,22 @@ class UserService
     public function createUser(array $data): User
     {
         $userData = [
-            'name' => $data['name'],
+            'name' => $data['name'] ?? $this->composeName($data),
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            'status' => $data['status'] ?? User::STATUS_ACTIVE,
         ];
+
+        foreach (['first_name', 'middle_name', 'last_name'] as $field) {
+            if (array_key_exists($field, $data) && $data[$field] !== null && $data[$field] !== '') {
+                $userData[$field] = $data[$field];
+            }
+        }
 
         $user = User::create($userData);
 
         // Assign roles if provided
-        if (!empty($data['roles'])) {
+        if (! empty($data['roles'])) {
             $user->syncRoles($data['roles']);
         }
 
@@ -133,12 +171,30 @@ class UserService
             $updateData['email'] = $data['email'];
         }
 
+        foreach (['first_name', 'middle_name', 'last_name'] as $field) {
+            if (array_key_exists($field, $data)) {
+                $updateData[$field] = $data[$field];
+            }
+        }
+
+        if (! empty($data['status'])) {
+            $updateData['status'] = $data['status'];
+        }
+
+        // Keep the display name in sync when the caller only sends name parts.
+        if (! isset($updateData['name']) && (isset($updateData['first_name']) || isset($updateData['last_name']))) {
+            $updateData['name'] = $this->composeName([
+                'first_name' => $updateData['first_name'] ?? $user->first_name,
+                'last_name' => $updateData['last_name'] ?? $user->last_name,
+            ]) ?: $user->name;
+        }
+
         // Update password if provided
-        if (!empty($data['password'])) {
+        if (! empty($data['password'])) {
             $updateData['password'] = Hash::make($data['password']);
         }
 
-        if (!empty($updateData)) {
+        if (! empty($updateData)) {
             $user->update($updateData);
         }
 
@@ -225,7 +281,7 @@ class UserService
     public function getAllRoles(): Collection
     {
         return CacheHelper::remember([], 'roles.all', now()->addHours(24), function () {
-            return \Spatie\Permission\Models\Role::all();
+            return Role::all();
         });
     }
 
@@ -235,10 +291,14 @@ class UserService
     public function getUserStatistics(): array
     {
         return [
-            'total_users' => User::withTrashed()->count(),
-            'active_users' => User::whereNotNull('email_verified_at')->count(),
-            'deleted_users' => User::onlyTrashed()->count(),
+            'total_users' => User::count(),
+            'active_users' => User::where('status', User::STATUS_ACTIVE)->count(),
+            'suspended_users' => User::where('status', User::STATUS_SUSPENDED)->count(),
+            'banned_users' => User::where('status', User::STATUS_BANNED)->count(),
+            'pending_users' => User::where('status', User::STATUS_PENDING)->count(),
+            'verified_users' => User::whereNotNull('email_verified_at')->count(),
             'unverified_users' => User::whereNull('email_verified_at')->count(),
+            'deleted_users' => User::onlyTrashed()->count(),
             'users_by_role' => $this->getUsersByRole(),
             'recent_registrations' => User::where('created_at', '>=', now()->subDays(30))->count(),
             'users_registered_today' => User::whereDate('created_at', today())->count(),
@@ -252,15 +312,18 @@ class UserService
      */
     protected function getUsersByRole(): array
     {
-        $users = User::with('roles')->get();
+        return Role::withCount('users')
+            ->get()
+            ->mapWithKeys(fn ($role) => [$role->name => $role->users_count])
+            ->all();
+    }
 
-        $grouped = $users->groupBy(function ($user) {
-            return $user->roles->first()?->name ?? 'no-role';
-        });
-
-        return $grouped->map(function ($group) {
-            return $group->count();
-        })->toArray();
+    /**
+     * Build a display name from the name parts when `name` was not supplied.
+     */
+    protected function composeName(array $data): string
+    {
+        return trim(sprintf('%s %s', $data['first_name'] ?? '', $data['last_name'] ?? ''));
     }
 
     /**
@@ -282,10 +345,12 @@ class UserService
      */
     public function verifyEmail(User $user): User
     {
-        if (!$user->email_verified_at) {
+        if (! $user->email_verified_at) {
             $user->email_verified_at = now();
             $user->save();
         }
+
+        $this->clearUserCache($user->id);
 
         return $user;
     }

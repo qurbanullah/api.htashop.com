@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\V1\User;
 
+use App\Models\User;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -17,10 +19,10 @@ class UpdateUserRequest extends FormRequest
 
         // Resolve to a User model when necessary
         if (is_numeric($routeUser)) {
-            $routeUser = \App\Models\User::find((int) $routeUser);
+            $routeUser = User::find((int) $routeUser);
         }
 
-        if (!$routeUser) {
+        if (! $routeUser) {
             // No user found in route — deny authorization
             return false;
         }
@@ -31,14 +33,14 @@ class UpdateUserRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         // Resolve user id whether route uses model binding or plain id param
         $routeUser = $this->route('user') ?? $this->route('id');
         $userId = null;
-        if ($routeUser instanceof \App\Models\User) {
+        if ($routeUser instanceof User) {
             $userId = $routeUser->id;
         } elseif (is_numeric($routeUser)) {
             $userId = (int) $routeUser;
@@ -46,15 +48,19 @@ class UpdateUserRequest extends FormRequest
 
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'first_name' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'middle_name' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'last_name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'email' => [
                 'sometimes',
                 'required',
                 'string',
                 'email',
                 'max:255',
-                Rule::unique('users')->ignore($userId)
+                Rule::unique('users')->ignore($userId),
             ],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            'status' => ['sometimes', 'nullable', Rule::in(['active', 'suspended', 'banned', 'pending'])],
             'roles' => ['nullable', 'array'],
             'roles.*' => ['exists:roles,name'],
         ];

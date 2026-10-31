@@ -163,6 +163,64 @@ XML;
     expect(PunchoutSession::query()->count())->toBe(0);
 });
 
+it('accepts ariba-style from and to identities in the cxml header', function () {
+    $tenant = Tenant::create([
+        'name' => 'Ariba Header Tenant',
+        'slug' => 'ariba-header-tenant',
+        'is_active' => true,
+        'settings' => [
+            'punchout' => [
+                'default_protocol' => 'cxml',
+                'supported_protocols' => ['cxml'],
+                'protocols' => [
+                    'cxml' => [
+                        'credentials' => [
+                            'sender_identity' => 'buyer-sender',
+                            'shared_secret' => 'shared-secret',
+                            'from_identity' => 'AN01234567890',
+                            'to_identity' => 'AN09876543210',
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ]);
+
+    // Ariba puts From/To in the Header, not inside PunchOutSetupRequest.
+    $payload = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<cXML>
+    <Header>
+        <From><Credential domain="NetworkID"><Identity>AN01234567890</Identity></Credential></From>
+        <To><Credential domain="NetworkID"><Identity>AN09876543210</Identity></Credential></To>
+        <Sender>
+            <Credential domain="NetworkID">
+                <Identity>buyer-sender</Identity>
+                <SharedSecret>shared-secret</SharedSecret>
+            </Credential>
+        </Sender>
+    </Header>
+    <Request>
+        <PunchOutSetupRequest operation="create">
+            <BuyerCookie>buyer-cookie-123</BuyerCookie>
+            <BrowserFormPost>
+                <URL>https://service.ariba.com/punchout/return</URL>
+            </BrowserFormPost>
+            <SupplierSetup>
+                <URL>https://supplier.example/api/v1/punchout/setup</URL>
+            </SupplierSetup>
+        </PunchOutSetupRequest>
+    </Request>
+</cXML>
+XML;
+
+    $this->call('POST', '/api/v1/punchout/'.$tenant->uuid.'/setup?protocol=cxml', [], [], [], ['CONTENT_TYPE' => 'text/xml'], $payload)
+        ->assertOk()
+        ->assertSee('PunchOutSetupResponse', false);
+
+    expect(PunchoutSession::query()->first()?->return_url)->toBe('https://service.ariba.com/punchout/return');
+});
+
 it('returns an oci setup response for a tenant', function () {
     config()->set('app.url', 'https://supplier.example');
 
