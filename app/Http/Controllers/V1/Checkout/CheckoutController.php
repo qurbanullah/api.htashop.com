@@ -16,6 +16,20 @@ class CheckoutController extends Controller
         protected CheckoutService $checkoutService,
     ) {}
 
+    /**
+     * Public availability signal for the storefront.
+     *
+     * Lets the checkout CTA render a clear notice instead of sending the
+     * customer into a flow that ends in a 503.
+     */
+    public function status(): JsonResponse
+    {
+        return ApiResponse::success([
+            'enabled' => (bool) config('checkout.enabled'),
+            'message' => (string) config('checkout.disabled_message'),
+        ], 'Checkout status retrieved successfully');
+    }
+
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([

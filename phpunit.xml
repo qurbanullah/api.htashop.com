@@ -33,6 +33,7 @@
         <env name="EMBEDDINGS_ENABLED" value="false"/>
         <env name="CHAT_ENABLED" value="true"/>
         <env name="CHAT_PREVIEW" value="false"/>
+        <env name="CHECKOUT_ENABLED" value="true"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
@@ -47,5 +48,6 @@
         -->
         <server name="TYPESENSE_ENABLED" value="false"/>
         <server name="EMBEDDINGS_ENABLED" value="false"/>
+        <server name="CHECKOUT_ENABLED" value="true"/>
     </php>
 </phpunit>

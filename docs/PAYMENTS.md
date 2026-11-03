@@ -33,9 +33,32 @@ A method is offered at checkout when **both** are true:
 Anything missing means "not offered", never "error". A gateway switched on
 before its keys exist is simply absent from the list.
 
-**Cash on Delivery cannot be disabled.** It has no credentials and no switch.
-When every hosted gateway is off or unconfigured, `GET /payments/methods`
-returns COD alone, and checkout still works.
+**Cash on Delivery cannot be disabled at the gateway level.** It has no
+credentials and no switch. When every hosted gateway is off or unconfigured,
+`GET /payments/methods` returns COD alone. To pause ordering entirely (for
+example while the live merchant accounts are being approved), use the checkout
+master switch below.
+
+## Checkout master switch
+
+`config/checkout.php` has a separate, fail-closed switch:
+
+```dotenv
+CHECKOUT_ENABLED=false
+# CHECKOUT_DISABLED_MESSAGE=Checkout is temporarily unavailable while our payment accounts are being verified.
+```
+
+While it is off:
+
+- `POST /checkout` and `POST /checkout/quote` return **503** with
+  `checkout_enabled: false` — a direct request cannot place an order.
+- `GET /checkout/status` reports the switch and message to the storefront, which
+  disables the cart's checkout button and shows the notice on `/checkout`.
+- Browsing, cart, catalog and order history keep working.
+
+Enable it with `CHECKOUT_ENABLED=true` once the production gateway credentials
+are in place, then run `php artisan optimize:clear` (or rebuild the config cache)
+and restart PHP-FPM.
 
 ## SafePay
 

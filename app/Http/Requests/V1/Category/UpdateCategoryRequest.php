@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\V1\Category;
 
+use App\Models\Category;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -22,6 +23,11 @@ class UpdateCategoryRequest extends FormRequest
     {
         $categoryId = $this->route('category');
 
+        // Implicit route-model binding hands us the model, not its key.
+        if ($categoryId instanceof Category) {
+            $categoryId = $categoryId->id;
+        }
+
         return [
             'name' => 'sometimes|required|string|max:255',
             'slug' => [
@@ -29,6 +35,12 @@ class UpdateCategoryRequest extends FormRequest
                 'string',
                 'max:255',
                 Rule::unique('categories', 'slug')->ignore($categoryId),
+            ],
+            'code' => [
+                'nullable',
+                'string',
+                'size:2',
+                Rule::unique('categories', 'code')->ignore($categoryId),
             ],
             'description' => 'nullable|string',
             'parent_id' => [
@@ -42,7 +54,7 @@ class UpdateCategoryRequest extends FormRequest
 
                     // Prevent circular references (parent is a descendant)
                     if ($value) {
-                        $parent = \App\Models\Category::find($value);
+                        $parent = Category::find($value);
                         if ($parent && $this->isDescendant($parent, $categoryId)) {
                             $fail('Cannot set a descendant category as parent.');
                         }
@@ -50,6 +62,8 @@ class UpdateCategoryRequest extends FormRequest
                 },
             ],
             'is_active' => 'boolean',
+            'is_featured' => 'boolean',
+            'featured_rank' => 'nullable|integer|min:0',
             'order' => 'nullable|integer|min:0',
             'icon' => 'nullable|string|max:255',
             'color' => 'nullable|string|max:7',
@@ -66,11 +80,12 @@ class UpdateCategoryRequest extends FormRequest
             if ($category->parent_id == $ancestorId) {
                 return true;
             }
-            $category = \App\Models\Category::find($category->parent_id);
-            if (!$category) {
+            $category = Category::find($category->parent_id);
+            if (! $category) {
                 break;
             }
         }
+
         return false;
     }
 
@@ -82,7 +97,10 @@ class UpdateCategoryRequest extends FormRequest
         return [
             'parent_id' => 'parent category',
             'is_active' => 'active status',
+            'is_featured' => 'featured status',
+            'featured_rank' => 'featured order',
             'order' => 'sort order',
+            'code' => 'category code',
         ];
     }
 }

@@ -5,16 +5,44 @@ namespace App\Http\Controllers\V1\Category;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Category\StoreCategoryRequest;
 use App\Http\Requests\V1\Category\UpdateCategoryRequest;
+use App\Http\Requests\V1\Category\UpdateFeaturedCategoriesRequest;
 use App\Http\Resources\V1\Category\CategoryResource;
 use App\Http\Responses\V1\ApiResponse;
 use App\Models\Category;
+use App\Support\Catalog\CategoryCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
     private const CACHE_TTL = 3600; // 1 hour
+
+    /**
+     * Admin listing: every category (including inactive) in one flat payload.
+     *
+     * The admin UI builds the tree client-side so it can render the whole
+     * hierarchy without the public tree endpoint's depth limit and active-only
+     * filter. Counts come free with the query and drive the row actions.
+     */
+    public function adminIndex(): JsonResponse
+    {
+        $categories = Category::query()
+            ->withCount(['children', 'products'])
+            ->orderBy('level')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
+        return ApiResponse::success([
+            'categories' => $categories,
+            'total' => $categories->count(),
+            'root_count' => $categories->whereNull('parent_id')->count(),
+            'active_count' => $categories->where('is_active', true)->count(),
+            'featured_count' => $categories->where('is_featured', true)->count(),
+        ], 'Categories retrieved successfully');
+    }
 
     /**
      * Display a listing of categories
@@ -60,7 +88,7 @@ class CategoryController extends Controller
             ? Category::with(['children', 'parent'])->find($slugOrId)
             : Category::with(['children', 'parent'])->where('slug', $slugOrId)->first();
 
-        if (!$category) {
+        if (! $category) {
             return response()->json([
                 'message' => 'Category not found',
             ], 404);
@@ -79,20 +107,20 @@ class CategoryController extends Controller
         $tree = Cache::remember('categories:tree', self::CACHE_TTL, function () {
             // Load all active categories recursively
             return Category::with(['children' => function ($query) {
-                    $query->where('is_active', true)
-                        ->with(['children' => function ($q) {
-                            $q->where('is_active', true)
-                                ->with(['children' => function ($qu) {
-                                    $qu->where('is_active', true)
-                                        ->orderBy('sort_order')
-                                        ->orderBy('name');
-                                }])
-                                ->orderBy('sort_order')
-                                ->orderBy('name');
-                        }])
-                        ->orderBy('sort_order')
-                        ->orderBy('name');
-                }])
+                $query->where('is_active', true)
+                    ->with(['children' => function ($q) {
+                        $q->where('is_active', true)
+                            ->with(['children' => function ($qu) {
+                                $qu->where('is_active', true)
+                                    ->orderBy('sort_order')
+                                    ->orderBy('name');
+                            }])
+                            ->orderBy('sort_order')
+                            ->orderBy('name');
+                    }])
+                    ->orderBy('sort_order')
+                    ->orderBy('name');
+            }])
                 ->whereNull('parent_id')
                 ->where('is_active', true)
                 ->orderBy('sort_order')
@@ -121,7 +149,7 @@ class CategoryController extends Controller
             $originalSlug = $data['slug'];
             $count = 1;
             while (Category::where('slug', $data['slug'])->exists()) {
-                $data['slug'] = $originalSlug . '-' . $count;
+                $data['slug'] = $originalSlug.'-'.$count;
                 $count++;
             }
         }
@@ -133,27 +161,20 @@ class CategoryController extends Controller
         }
 
         // Set default sort_order if not provided
-        if (!isset($data['sort_order'])) {
+        if (! isset($data['sort_order'])) {
             $data['sort_order'] = 0;
         }
 
-        // Calculate level and path
-        if (!empty($data['parent_id'])) {
-            $parent = Category::find($data['parent_id']);
-            if ($parent) {
-                $data['level'] = $parent->level + 1;
-                $data['path'] = $parent->path . '/' . $parent->id;
-            }
-        } else {
-            $data['level'] = 0;
-            $data['path'] = '';
-        }
-
         // Set default is_active if not provided
-        if (!isset($data['is_active'])) {
+        if (! isset($data['is_active'])) {
             $data['is_active'] = true;
         }
 
+        if (array_key_exists('code', $data)) {
+            $data['code'] = $data['code'] ? Str::upper($data['code']) : null;
+        }
+
+        // Level and path are derived and persisted by the model's saved hook.
         $category = Category::create($data);
 
         // Clear cache
@@ -182,35 +203,28 @@ class CategoryController extends Controller
         }
 
         // Auto-generate slug if name changed and slug not provided
-        if (isset($data['name']) && !isset($data['slug'])) {
+        if (array_key_exists('slug', $data) && blank($data['slug'])) {
+            unset($data['slug']);
+        }
+
+        if (isset($data['name']) && ! isset($data['slug'])) {
             $data['slug'] = Str::slug($data['name']);
 
             // Ensure uniqueness
             $originalSlug = $data['slug'];
             $count = 1;
             while (Category::where('slug', $data['slug'])->where('id', '!=', $category->id)->exists()) {
-                $data['slug'] = $originalSlug . '-' . $count;
+                $data['slug'] = $originalSlug.'-'.$count;
                 $count++;
             }
         }
 
-        // Update level and path if parent changed
-        if (isset($data['parent_id'])) {
-            if ($data['parent_id']) {
-                $parent = Category::find($data['parent_id']);
-                if ($parent) {
-                    $data['level'] = $parent->level + 1;
-                    $data['path'] = $parent->path . '/' . $parent->id;
-                }
-            } else {
-                $data['level'] = 0;
-                $data['path'] = '';
-            }
-
-            // Update all descendants' paths
-            $this->updateDescendantsPaths($category);
+        if (array_key_exists('code', $data)) {
+            $data['code'] = $data['code'] ? Str::upper($data['code']) : null;
         }
 
+        // Level, path and the descendants' paths are handled by the model's
+        // saved hook so a moved subtree never keeps stale paths.
         $category->update($data);
 
         // Clear cache
@@ -226,6 +240,76 @@ class CategoryController extends Controller
     }
 
     /**
+     * List root categories together with their top-navigation curation state.
+     *
+     * The storefront nav is curated manually (seasonally, around launches,
+     * etc.), so editors need the whole root list — not just the current
+     * selection — to swap categories in and out.
+     */
+    public function featured(): JsonResponse
+    {
+        return ApiResponse::success(
+            $this->featuredPayload(),
+            'Featured categories retrieved successfully'
+        );
+    }
+
+    /**
+     * Replace the featured top-navigation selection and its order.
+     */
+    public function updateFeatured(UpdateFeaturedCategoriesRequest $request): JsonResponse
+    {
+        /** @var array<int, int> $ids */
+        $ids = array_values(array_map('intval', (array) $request->validated('category_ids')));
+
+        DB::transaction(function () use ($ids): void {
+            // Everything outside the submitted list drops out of the pool.
+            Category::query()
+                ->whereNull('parent_id')
+                ->whereNotIn('id', $ids)
+                ->where(fn ($query) => $query->where('is_featured', true)->orWhere('featured_rank', '>', 0))
+                ->update([
+                    'is_featured' => false,
+                    'featured_rank' => 0,
+                ]);
+
+            foreach ($ids as $index => $id) {
+                Category::query()->whereKey($id)->update([
+                    'is_featured' => true,
+                    'featured_rank' => $index + 1,
+                ]);
+            }
+        });
+
+        $this->clearCache();
+
+        return ApiResponse::success(
+            $this->featuredPayload(),
+            'Top navigation updated successfully'
+        );
+    }
+
+    /**
+     * Shape shared by the featured endpoints so the admin client can hydrate
+     * its editor from a single response.
+     */
+    private function featuredPayload(): array
+    {
+        $categories = Category::query()
+            ->whereNull('parent_id')
+            ->orderByDesc('is_featured')
+            ->orderBy('featured_rank')
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug', 'is_active', 'is_featured', 'featured_rank']);
+
+        return [
+            'categories' => $categories,
+            'limit' => (int) config('catalog.top_nav.limit', 6),
+            'featured_count' => $categories->where('is_featured', true)->count(),
+        ];
+    }
+
+    /**
      * Remove the specified category
      */
     public function destroy(Category $category): JsonResponse
@@ -237,16 +321,15 @@ class CategoryController extends Controller
             ], 422);
         }
 
-        // Check if category is used by journals or manuscripts
-        $journalsCount = $category->journals()->count();
-        $manuscriptsCount = $category->manuscripts()->count();
+        // Check if category is used by products. The polymorphic pivot has no
+        // FK, so deleting would silently orphan those links.
+        $productsCount = $category->products()->count();
 
-        if ($journalsCount > 0 || $manuscriptsCount > 0) {
+        if ($productsCount > 0) {
             return response()->json([
-                'message' => 'Cannot delete category that is in use.',
+                'message' => 'Cannot delete a category that is still assigned to products. Reassign those products first.',
                 'details' => [
-                    'journals_count' => $journalsCount,
-                    'manuscripts_count' => $manuscriptsCount,
+                    'products_count' => $productsCount,
                 ],
             ], 422);
         }
@@ -266,27 +349,6 @@ class CategoryController extends Controller
      */
     private function clearCache(): void
     {
-        Cache::forget('categories:all');
-        Cache::forget('categories:tree');
-    }
-
-    /**
-     * Update paths for all descendants when parent changes
-     */
-    private function updateDescendantsPaths(Category $category): void
-    {
-        $category->load('children');
-
-        foreach ($category->children as $child) {
-            $child->update([
-                'level' => $category->level + 1,
-                'path' => $category->path . '/' . $category->id,
-            ]);
-
-            // Recursively update grandchildren
-            if ($child->children()->count() > 0) {
-                $this->updateDescendantsPaths($child);
-            }
-        }
+        CategoryCache::flush();
     }
 }

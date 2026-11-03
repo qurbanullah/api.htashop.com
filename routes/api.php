@@ -87,6 +87,7 @@ use App\Http\Controllers\V1\Warehouse\WarehouseController;
 use App\Http\Middleware\EnsureChatEnabled;
 use App\Http\Middleware\EnsureChatTokenBudget;
 use App\Http\Middleware\EnsureChatVisitor;
+use App\Http\Middleware\EnsureCheckoutEnabled;
 use Illuminate\Fasades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -145,6 +146,16 @@ Route::prefix('v1')->group(function () {
     // ADMIN-ONLY ROUTES - Requires super-admin or admin role
     // ====================================================================================
     Route::middleware(['auth.api', 'admin'])->prefix('admin')->group(function () {
+
+        // Storefront top navigation curation (admin-managed, manual rotation)
+        Route::get('/categories/featured', [CategoryController::class, 'featured']);
+        Route::put('/categories/featured', [CategoryController::class, 'updateFeatured']);
+
+        // Category management
+        Route::get('/categories', [CategoryController::class, 'adminIndex']);
+        Route::post('/categories', [CategoryController::class, 'store']);
+        Route::put('/categories/{category}', [CategoryController::class, 'update']);
+        Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
 
         // Admin Highlight routes
         Route::get('/highlights', [HighlightController::class, 'index']);
@@ -445,8 +456,11 @@ Route::prefix('v1')->group(function () {
     // Checkout (public — guests can order with inline addresses)
     // The quote is called as the basket and coupon change, so it is bounded per
     // IP; it resolves a coupon code and must not become a brute-force oracle.
-    Route::post('/checkout/quote', [CheckoutController::class, 'quote'])->middleware('throttle:60,1');
-    Route::post('/checkout', [CheckoutController::class, 'store']);
+    Route::get('/checkout/status', [CheckoutController::class, 'status'])->middleware('throttle:120,1');
+    Route::post('/checkout/quote', [CheckoutController::class, 'quote'])
+        ->middleware(['throttle:60,1', EnsureCheckoutEnabled::class]);
+    Route::post('/checkout', [CheckoutController::class, 'store'])
+        ->middleware(EnsureCheckoutEnabled::class);
     Route::get('/checkout/orders/{uuid}', [CheckoutController::class, 'show']);
 
     // Payments. `methods` is declared before `{uuid}` so the literal path is

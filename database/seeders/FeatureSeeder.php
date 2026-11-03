@@ -33,21 +33,21 @@ class FeatureSeeder extends Seeder
     private function features(): array
     {
         return [
-            // IT & Electronics
-            'Wireless' => ['IT'],
-            'Bluetooth' => ['IT'],
-            'USB-C' => ['IT'],
-            'HDMI' => ['IT'],
-            'Touchscreen' => ['IT'],
+            // Information Technology & Electronics
+            'Wireless' => ['EC', 'IT'],
+            'Bluetooth' => ['EC', 'IT'],
+            'USB-C' => ['EC', 'IT'],
+            'HDMI' => ['EC', 'IT'],
+            'Touchscreen' => ['EC', 'IT'],
             'Backlit Keyboard' => ['IT'],
-            'Rechargeable Battery' => ['IT'],
+            'Rechargeable Battery' => ['EC', 'IT'],
             'Noise Cancelling' => ['IT'],
 
             // Cross-category (durability / protection)
-            'IP67' => ['IT', 'MR', 'EL', 'SP'],
-            'Waterproof' => ['IT', 'MR', 'SP', 'EL'],
-            'Dustproof' => ['IT', 'MR', 'SP'],
-            'Shockproof' => ['IT', 'MR'],
+            'IP67' => ['EC', 'IT', 'MR', 'EL', 'SP'],
+            'Waterproof' => ['EC', 'IT', 'MR', 'SP', 'EL'],
+            'Dustproof' => ['EC', 'IT', 'MR', 'SP'],
+            'Shockproof' => ['EC', 'IT', 'MR'],
             'Corrosion Resistant' => ['MR', 'PL', 'CL'],
             'Rust Resistant' => ['AF', 'GL'],
             'Weather Resistant' => ['BC', 'AF', 'GL'],

@@ -11,6 +11,7 @@ use App\Models\Category;
 use App\Services\Catalog\CatalogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class CatalogController extends Controller
 {
@@ -64,14 +65,21 @@ class CatalogController extends Controller
 
     public function topNav(): JsonResponse
     {
-        $categories = Category::query()
-            ->where('is_active', true)
-            ->whereNull('parent_id')
-            ->whereRaw('JSON_EXTRACT(metadata, "$.show_top_category_nav") = true')
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->limit((int) config('catalog.top_nav.limit', 8))
-            ->get(['id', 'name', 'slug']);
+        $limit = (int) config('catalog.top_nav.limit', 6);
+
+        // The nav renders on every storefront page; a short shared cache keeps
+        // it cheap while still picking up featured-flag changes quickly.
+        $categories = Cache::remember('catalog:top-nav:'.$limit, now()->addMinutes(5), function () use ($limit) {
+            return Category::query()
+                ->where('is_active', true)
+                ->whereNull('parent_id')
+                ->where('is_featured', true)
+                ->orderBy('featured_rank')
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->limit($limit)
+                ->get(['id', 'name', 'slug']);
+        });
 
         return ApiResponse::success(
             $categories,

@@ -2,9 +2,6 @@
 
 namespace App\Models;
 
-
-use App\Models\Product;
-use App\Models\Variant;
 use App\Traits\Translation\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Category extends Model
 {
-        use HasFactory, SoftDeletes, HasTranslations;
+    use HasFactory, HasTranslations, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -27,17 +24,21 @@ class Category extends Model
         'path',
         'sort_order',
         'is_active',
+        'is_featured',
+        'featured_rank',
         'icon',
         'color',
         'image',
-        'metadata'
+        'metadata',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_featured' => 'boolean',
+        'featured_rank' => 'integer',
         'level' => 'integer',
         'sort_order' => 'integer',
-        'metadata' => 'array'
+        'metadata' => 'array',
     ];
 
     /**
@@ -197,19 +198,47 @@ class Category extends Model
     }
 
     /**
-     * Update the level and path when parent changes
+     * Recalculate this category's level/path and, optionally, its descendants'.
+     *
+     * The path format is `/1/10/26/` (matching the seeder), so tools that split
+     * on `/` can derive ancestors from a single row.
      */
-    protected static function booted()
+    public function syncHierarchy(bool $cascade = false): void
     {
-        static::saving(function ($category) {
-            if ($category->parent_id) {
-                $parent = $category->parent;
-                $category->level = $parent->level + 1;
-                $category->path = $parent->path . $category->id . '/';
-            } else {
-                $category->level = 0;
-                $category->path = '/' . $category->id . '/';
+        $parent = $this->parent_id ? static::query()->find($this->parent_id) : null;
+        $level = $parent ? $parent->level + 1 : 0;
+        $path = ($parent?->path ?? '/').$this->id.'/';
+
+        if ($this->level !== $level || $this->path !== $path) {
+            $this->forceFill([
+                'level' => $level,
+                'path' => $path,
+            ])->saveQuietly();
+        }
+
+        if (! $cascade) {
+            return;
+        }
+
+        foreach ($this->children()->get() as $child) {
+            if ($child->id === $this->id) {
+                continue;
             }
+
+            $child->syncHierarchy(true);
+        }
+    }
+
+    /**
+     * Keep level/path in sync after a save. Moving a category must also move
+     * its whole subtree, otherwise descendants keep pointing at the old branch.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (Category $category) {
+            $category->syncHierarchy(
+                $category->wasRecentlyCreated || $category->wasChanged('parent_id')
+            );
         });
     }
 }
