@@ -6,7 +6,11 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class IngestAssetRequest extends FormRequest
 {
-    public function authorize(): bool { return true; }
+    public function authorize(): bool
+    {
+        return true;
+    }
+
     public function rules(): array
     {
         return [
@@ -19,6 +23,7 @@ class IngestAssetRequest extends FormRequest
             'disk' => 'sometimes|string',
             'collection_name' => 'sometimes|string',
             'collection_keys' => 'sometimes|array',
+            'sort_order' => 'sometimes|nullable|integer|min:0',
             'metadata' => 'sometimes|array',
         ];
     }

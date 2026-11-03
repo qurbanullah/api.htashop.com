@@ -687,6 +687,8 @@ Route::prefix('v1')->group(function () {
         Route::delete('/dam/collections/{damCollection}', [DamCollectionController::class, 'destroy']);
         Route::get('/dam/owners', [DamController::class, 'owners']);
         Route::get('/dam/assets', [DamController::class, 'index']);
+        Route::put('/dam/{dam}', [DamController::class, 'update'])->whereNumber('dam');
+        Route::delete('/dam/{dam}', [DamController::class, 'destroy'])->whereNumber('dam');
         Route::post('/dam/presign', [DamController::class, 'presign']);
         Route::post('/dam/ingest', [DamController::class, 'ingest']);
         Route::post('/dam/upload/presigned-url', [DamController::class, 'generatePresignedUrl']);

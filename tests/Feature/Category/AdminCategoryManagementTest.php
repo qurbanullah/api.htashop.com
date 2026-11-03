@@ -148,6 +148,84 @@ it('updates a category and regenerates the slug when it is blank', function () {
         ->assertJsonPath('data.is_active', false);
 });
 
+it('features a root category and assigns the next available rank', function () {
+    Category::factory()->create([
+        'name' => 'Existing Featured',
+        'slug' => 'existing-featured',
+        'is_featured' => true,
+        'featured_rank' => 3,
+    ]);
+
+    $response = $this->actingAs($this->admin, 'api')
+        ->postJson('/api/v1/admin/categories', [
+            'name' => 'New Featured Root',
+            'is_featured' => true,
+        ])
+        ->assertCreated()
+        ->assertJsonPath('data.is_featured', true);
+
+    expect(Category::find($response->json('data.id'))->featured_rank)->toBe(4);
+});
+
+it('rejects featuring a child category', function () {
+    $parent = Category::factory()->create(['name' => 'Parent', 'slug' => 'featured-parent']);
+
+    $this->actingAs($this->admin, 'api')
+        ->postJson('/api/v1/admin/categories', [
+            'name' => 'Child',
+            'parent_id' => $parent->id,
+            'is_featured' => true,
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('is_featured');
+});
+
+it('clears featured flags when a featured root is moved under a parent', function () {
+    $root = Category::factory()->create([
+        'name' => 'Featured Root',
+        'slug' => 'featured-root',
+        'is_featured' => true,
+        'featured_rank' => 2,
+    ]);
+
+    $parent = Category::factory()->create(['name' => 'Parent', 'slug' => 'move-parent']);
+
+    $this->actingAs($this->admin, 'api')
+        ->putJson('/api/v1/admin/categories/'.$root->id, [
+            'parent_id' => $parent->id,
+        ])
+        ->assertOk();
+
+    $root->refresh();
+
+    expect($root->is_featured)->toBeFalse()
+        ->and($root->featured_rank)->toBe(0);
+});
+
+it('stores appearance columns and resets the rank when unfeatured', function () {
+    $category = Category::factory()->create([
+        'name' => 'Styled Root',
+        'slug' => 'styled-root',
+        'is_featured' => true,
+        'featured_rank' => 5,
+    ]);
+
+    $this->actingAs($this->admin, 'api')
+        ->putJson('/api/v1/admin/categories/'.$category->id, [
+            'icon' => 'cpu',
+            'color' => '#0057B8',
+            'image' => 'https://cdn.htashop.com/categories/electronics.png',
+            'is_featured' => false,
+        ])
+        ->assertOk()
+        ->assertJsonPath('data.icon', 'cpu')
+        ->assertJsonPath('data.color', '#0057B8')
+        ->assertJsonPath('data.image', 'https://cdn.htashop.com/categories/electronics.png')
+        ->assertJsonPath('data.is_featured', false);
+
+    expect($category->fresh()->featured_rank)->toBe(0);
+});
+
 it('deletes a leaf category', function () {
     $category = Category::factory()->create(['name' => 'Temporary', 'slug' => 'temporary']);
 

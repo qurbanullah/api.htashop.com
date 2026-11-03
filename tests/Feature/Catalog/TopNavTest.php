@@ -21,6 +21,9 @@ it('serves only featured, active root categories ordered by featured rank', func
             'is_featured' => true,
             'featured_rank' => $rank,
             'sort_order' => 100 - $rank,
+            'icon' => $rank === 1 ? 'cpu' : null,
+            'color' => $rank === 1 ? '#2563EB' : null,
+            'image' => $rank === 1 ? 'https://cdn.htashop.com/categories/electronics.png' : null,
         ]);
 
         if ($rank <= 6) {
@@ -50,7 +53,11 @@ it('serves only featured, active root categories ordered by featured rank', func
         'parent_id' => $parent->id,
     ]);
 
-    $response = $this->getJson('/api/v1/catalog/top-nav')->assertOk();
+    $response = $this->getJson('/api/v1/catalog/top-nav')
+        ->assertOk()
+        ->assertJsonPath('data.0.icon', 'cpu')
+        ->assertJsonPath('data.0.color', '#2563EB')
+        ->assertJsonPath('data.0.image', 'https://cdn.htashop.com/categories/electronics.png');
 
     $names = collect($response->json('data'))->pluck('name')->all();
 

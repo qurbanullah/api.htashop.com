@@ -174,6 +174,11 @@ class CategoryController extends Controller
             $data['code'] = $data['code'] ? Str::upper($data['code']) : null;
         }
 
+        $this->normalizeFeatured(
+            $data,
+            isset($data['parent_id']) ? (int) $data['parent_id'] : null
+        );
+
         // Level and path are derived and persisted by the model's saved hook.
         $category = Category::create($data);
 
@@ -222,6 +227,12 @@ class CategoryController extends Controller
         if (array_key_exists('code', $data)) {
             $data['code'] = $data['code'] ? Str::upper($data['code']) : null;
         }
+
+        $effectiveParentId = array_key_exists('parent_id', $data)
+            ? ($data['parent_id'] !== null ? (int) $data['parent_id'] : null)
+            : $category->parent_id;
+
+        $this->normalizeFeatured($data, $effectiveParentId);
 
         // Level, path and the descendants' paths are handled by the model's
         // saved hook so a moved subtree never keeps stale paths.
@@ -342,6 +353,36 @@ class CategoryController extends Controller
         return response()->json([
             'message' => 'Category deleted successfully',
         ]);
+    }
+
+    /**
+     * Keep the featured columns coherent with the hierarchy.
+     *
+     * Only roots are eligible for the top nav. A child that is moved under a
+     * parent is silently removed from the featured pool, an unfeatured root
+     * loses its rank, and an explicitly featured root without a rank receives
+     * the next free one.
+     */
+    private function normalizeFeatured(array &$data, ?int $parentId): void
+    {
+        if ($parentId !== null) {
+            $data['is_featured'] = false;
+            $data['featured_rank'] = 0;
+
+            return;
+        }
+
+        if (array_key_exists('is_featured', $data) && ! $data['is_featured']) {
+            $data['featured_rank'] = 0;
+
+            return;
+        }
+
+        if (($data['is_featured'] ?? false) && empty($data['featured_rank'])) {
+            $data['featured_rank'] = ((int) Category::query()
+                ->where('is_featured', true)
+                ->max('featured_rank')) + 1;
+        }
     }
 
     /**

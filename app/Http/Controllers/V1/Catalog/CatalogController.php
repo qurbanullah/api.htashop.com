@@ -78,7 +78,7 @@ class CatalogController extends Controller
                 ->orderBy('sort_order')
                 ->orderBy('name')
                 ->limit($limit)
-                ->get(['id', 'name', 'slug']);
+                ->get(['id', 'name', 'slug', 'icon', 'color', 'image']);
         });
 
         return ApiResponse::success(

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\V1\Category;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class StoreCategoryRequest extends FormRequest
 {
@@ -47,6 +48,24 @@ class StoreCategoryRequest extends FormRequest
             'featured_rank' => 'featured order',
             'order' => 'sort order',
             'code' => 'category code',
+            'icon' => 'icon',
+            'color' => 'brand colour',
+            'image' => 'image URL',
         ];
+    }
+
+    /**
+     * Only root categories can appear in the storefront top navigation.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            if ($this->boolean('is_featured') && $this->filled('parent_id')) {
+                $validator->errors()->add(
+                    'is_featured',
+                    'Only root categories can be featured in the top navigation.'
+                );
+            }
+        });
     }
 }

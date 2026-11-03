@@ -211,6 +211,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Electronics',
                 'code' => 'EC',
                 'slug' => 'electronics',
+                'icon' => 'cpu',
+                'color' => '#2563EB',
                 'description' => 'Semiconductors, passive and electromechanical components, development boards, sensors, test equipment, and PCB supplies.',
                 'sort_order' => 1,
                 'children' => [
@@ -244,6 +246,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Information Technology',
                 'code' => 'IT',
                 'slug' => 'information-technology',
+                'icon' => 'laptop',
+                'color' => '#0EA5E9',
                 'description' => 'Computers, servers, networking, software, peripherals, security, and end-user devices.',
                 'sort_order' => 2,
                 'children' => [
@@ -282,6 +286,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Office Supplies',
                 'code' => 'OS',
                 'slug' => 'office-supplies',
+                'icon' => 'paperclip',
+                'color' => '#D97706',
                 'description' => 'Paper, writing instruments, filing, office machines, and daily office consumables.',
                 'sort_order' => 3,
                 'children' => [
@@ -313,6 +319,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Furniture',
                 'code' => 'FU',
                 'slug' => 'furniture',
+                'icon' => 'armchair',
+                'color' => '#92400E',
                 'description' => 'Office, workplace, and institutional furniture.',
                 'sort_order' => 4,
                 'children' => [
@@ -341,6 +349,8 @@ class CategorySeeder extends Seeder
                 'name' => 'MRO & Industrial',
                 'code' => 'MR',
                 'slug' => 'mro-industrial',
+                'icon' => 'wrench',
+                'color' => '#475569',
                 'description' => 'Maintenance, repair, and operations: tools, fasteners, material handling, fluid power, and industrial supplies.',
                 'sort_order' => 5,
                 'children' => [
@@ -393,6 +403,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Safety & PPE',
                 'code' => 'SP',
                 'slug' => 'safety-ppe',
+                'icon' => 'hard-hat',
+                'color' => '#DC2626',
                 'description' => 'Personal protective equipment, gas detection, and workplace safety supplies.',
                 'sort_order' => 6,
                 'children' => [
@@ -426,6 +438,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Cleaning & Janitorial',
                 'code' => 'CJ',
                 'slug' => 'cleaning-janitorial',
+                'icon' => 'spray-can',
+                'color' => '#0D9488',
                 'description' => 'Janitorial chemicals, paper, floor care, and sanitary supplies.',
                 'sort_order' => 7,
                 'children' => [
@@ -453,6 +467,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Packaging & Shipping',
                 'code' => 'PS',
                 'slug' => 'packaging-shipping',
+                'icon' => 'package',
+                'color' => '#7C3AED',
                 'description' => 'Packaging materials, shipping supplies, and mailroom equipment.',
                 'sort_order' => 8,
                 'children' => [
@@ -479,6 +495,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Lab & Scientific',
                 'code' => 'LB',
                 'slug' => 'lab-scientific',
+                'icon' => 'flask-conical',
+                'color' => '#0891B2',
                 'description' => 'Laboratory equipment, instruments, consumables, furniture, and chemicals.',
                 'sort_order' => 9,
                 'children' => [
@@ -507,6 +525,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Medical & Healthcare',
                 'code' => 'MD',
                 'slug' => 'medical-healthcare',
+                'icon' => 'stethoscope',
+                'color' => '#E11D48',
                 'description' => 'Medical supplies, equipment, infection control, and healthcare products.',
                 'sort_order' => 10,
                 'children' => [
@@ -537,6 +557,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Food Service & Breakroom',
                 'code' => 'FB',
                 'slug' => 'food-beverage',
+                'icon' => 'coffee',
+                'color' => '#B45309',
                 'description' => 'Coffee, water, snacks, breakroom supplies, and foodservice essentials.',
                 'sort_order' => 11,
                 'children' => [
@@ -559,6 +581,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Electrical & Lighting',
                 'code' => 'EL',
                 'slug' => 'electrical-lighting',
+                'icon' => 'zap',
+                'color' => '#CA8A04',
                 'description' => 'Wiring, circuit protection, power distribution, lighting fixtures, and electrical test equipment.',
                 'sort_order' => 12,
                 'children' => [
@@ -600,6 +624,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Plumbing & HVAC',
                 'code' => 'PL',
                 'slug' => 'plumbing-hvac',
+                'icon' => 'droplets',
+                'color' => '#0284C7',
                 'description' => 'Plumbing fixtures, piping, water treatment, HVAC, and refrigeration equipment.',
                 'sort_order' => 13,
                 'children' => [
@@ -630,6 +656,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Building & Construction',
                 'code' => 'BC',
                 'slug' => 'building-construction',
+                'icon' => 'hammer',
+                'color' => '#78716C',
                 'description' => 'Building materials, construction supplies, insulation, sealants, and hardware.',
                 'sort_order' => 14,
                 'children' => [
@@ -658,6 +686,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Automotive & Fleet',
                 'code' => 'AF',
                 'slug' => 'automotive-fleet',
+                'icon' => 'car',
+                'color' => '#1D4ED8',
                 'description' => 'Vehicle parts, fluids, accessories, shop equipment, and fleet safety.',
                 'sort_order' => 15,
                 'children' => [
@@ -685,6 +715,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Textiles, Linens & Apparel',
                 'code' => 'TA',
                 'slug' => 'textiles-apparel',
+                'icon' => 'shirt',
+                'color' => '#DB2777',
                 'description' => 'Uniforms, workwear, promotional apparel, linens, and textiles.',
                 'sort_order' => 16,
                 'children' => [
@@ -706,6 +738,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Sports & Recreation',
                 'code' => 'SR',
                 'slug' => 'sports-recreation',
+                'icon' => 'dumbbell',
+                'color' => '#16A34A',
                 'description' => 'Sports equipment, fitness gear, outdoor recreation, and gym supplies.',
                 'sort_order' => 17,
                 'children' => [
@@ -729,6 +763,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Educational Supplies',
                 'code' => 'ED',
                 'slug' => 'educational-supplies',
+                'icon' => 'graduation-cap',
+                'color' => '#4F46E5',
                 'description' => 'Classroom supplies, furniture, STEM kits, and educational materials.',
                 'sort_order' => 18,
                 'children' => [
@@ -751,6 +787,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Chemicals & Lubricants',
                 'code' => 'CL',
                 'slug' => 'chemicals-lubricants',
+                'icon' => 'test-tube',
+                'color' => '#65A30D',
                 'description' => 'Industrial chemicals, lubricants, solvents, fuel additives, and specialty gases.',
                 'sort_order' => 19,
                 'children' => [
@@ -775,6 +813,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Printing & Promotional',
                 'code' => 'PP',
                 'slug' => 'printing-promotional',
+                'icon' => 'printer',
+                'color' => '#9333EA',
                 'description' => 'Printing services, signage, promotional products, and custom merchandise.',
                 'sort_order' => 20,
                 'children' => [
@@ -807,6 +847,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Gardening & Landscaping',
                 'code' => 'GL',
                 'slug' => 'gardening-landscaping',
+                'icon' => 'sprout',
+                'color' => '#15803D',
                 'description' => 'Garden tools, outdoor power equipment, plants, and landscaping supplies.',
                 'sort_order' => 21,
                 'children' => [
@@ -834,6 +876,8 @@ class CategorySeeder extends Seeder
                 'name' => 'Robotics & Automation',
                 'code' => 'RB',
                 'slug' => 'robotics-automation',
+                'icon' => 'bot',
+                'color' => '#EA580C',
                 'description' => 'Robotics components, cobots, drones, machine vision, and industrial automation.',
                 'sort_order' => 22,
                 'children' => [

@@ -46,6 +46,20 @@ fi
 # shellcheck source=/dev/null
 source /usr/local/bin/load-secrets
 
+# Compose deployments keep DB_PASSWORD in the app's .env rather than exporting
+# it from a second root .env. The readiness check below is a shell step that runs
+# before PHP loads .env, so hydrate the value here when neither the process
+# environment nor a DB_PASSWORD_FILE supplied it. Swarm deployments already
+# exported DB_PASSWORD from the secret above, so this is a no-op there.
+if [ -z "${DB_PASSWORD:-}" ] && [ -r /var/www/html/.env ]; then
+    DB_PASSWORD="$(sed -n 's/^DB_PASSWORD=//p' /var/www/html/.env | head -n1)"
+    DB_PASSWORD="${DB_PASSWORD%\"}"
+    DB_PASSWORD="${DB_PASSWORD#\"}"
+    DB_PASSWORD="${DB_PASSWORD%\'}"
+    DB_PASSWORD="${DB_PASSWORD#\'}"
+    export DB_PASSWORD
+fi
+
 # Fast-path for one-off debug commands: if SKIP_STARTUP is set, exec the
 # provided command immediately instead of performing DB waits/migrations.
 # Useful for `docker run --rm -e SKIP_STARTUP=1 ... punchout-api sh -c 'cat /var/www/html/.env'`

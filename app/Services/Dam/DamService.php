@@ -3,8 +3,8 @@
 namespace App\Services\Dam;
 
 use App\Actions\Dam\CreateDamAction;
-use App\Actions\Dam\ReadDamOwnersAction;
 use App\Actions\Dam\ReadDamAssetsAction;
+use App\Actions\Dam\ReadDamOwnersAction;
 use App\Actions\Dam\SyncDamAssetCollectionsAction;
 use App\Models\Dam;
 use App\Models\DamCollection;
@@ -31,8 +31,7 @@ class DamService
         protected ReadDamOwnersAction $readDamOwnersAction,
         protected ReadDamAssetsAction $readDamAssetsAction,
         protected SyncDamAssetCollectionsAction $syncDamAssetCollectionsAction,
-    ) {
-    }
+    ) {}
 
     public function readOwners(array $filters = []): Collection
     {
@@ -275,6 +274,57 @@ class DamService
     }
 
     /**
+     * Move an existing asset between collections or change its gallery position.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function updateAsset(Dam $dam, array $data): Dam
+    {
+        $this->assertCanManageAsset($dam);
+
+        return DB::transaction(function () use ($dam, $data): Dam {
+            if (array_key_exists('collection_name', $data)) {
+                $dam->collection_name = $data['collection_name'];
+            }
+
+            if (array_key_exists('sort_order', $data)) {
+                $dam->sort_order = $data['sort_order'];
+            }
+
+            $dam->save();
+
+            if (array_key_exists('collection_name', $data) || array_key_exists('collection_keys', $data)) {
+                $collections = $this->resolveCollectionsForAsset(
+                    $dam->collection_name,
+                    data_get($data, 'collection_keys', []),
+                );
+
+                $this->syncDamAssetCollectionsAction->handle($dam, $collections);
+            }
+
+            return $dam->load('collections');
+        });
+    }
+
+    public function deleteAsset(Dam $dam): void
+    {
+        $this->assertCanManageAsset($dam);
+
+        $dam->delete();
+    }
+
+    protected function assertCanManageAsset(Dam $dam): void
+    {
+        $user = $this->resolveAuthenticatedUser();
+        $damableType = $dam->damable_type;
+        $damableId = $dam->damable_id;
+
+        if (is_string($damableType) && $damableId !== null && $this->isScopedDamOwnerType($damableType)) {
+            $this->assertCanAccessOwner($damableType, (int) $damableId, $user);
+        }
+    }
+
+    /**
      * @param  array<int, string>  $requestedKeys
      * @return Collection<int, DamCollection>
      */
@@ -314,7 +364,7 @@ class DamService
         if ($missingKeys->isNotEmpty()) {
             throw ValidationException::withMessages([
                 'collection_keys' => [
-                    'Unknown DAM collections: ' . $missingKeys->implode(', '),
+                    'Unknown DAM collections: '.$missingKeys->implode(', '),
                 ],
             ]);
         }

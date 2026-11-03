@@ -3,29 +3,38 @@
 namespace App\Http\Controllers\V1\Dam;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\V1\Dam\AbortMultipartUploadRequest;
+use App\Http\Requests\V1\Dam\CompleteMultipartUploadRequest;
+use App\Http\Requests\V1\Dam\GenerateAccessUrlRequest;
+use App\Http\Requests\V1\Dam\GenerateMultipartUploadUrlsRequest;
+use App\Http\Requests\V1\Dam\GeneratePresignedUrlRequest;
+use App\Http\Requests\V1\Dam\IngestAssetRequest;
+use App\Http\Requests\V1\Dam\InitiateMultipartUploadRequest;
+use App\Http\Requests\V1\Dam\PresignRequest;
+use App\Http\Requests\V1\Dam\ReadDamAssetsRequest;
+use App\Http\Requests\V1\Dam\ReadDamOwnersRequest;
+use App\Http\Requests\V1\Dam\UpdateAssetRequest;
+use App\Http\Requests\V1\Dam\VerifyUploadRequest;
 use App\Http\Resources\V1\Dam\DamAssetResource;
 use App\Http\Responses\V1\ApiResponse;
+use App\Models\Dam;
 use App\Services\Dam\DamService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class DamController extends Controller
 {
-    public function __construct(protected DamService $service)
-    {
-    }
+    public function __construct(protected DamService $service) {}
 
     protected function validationError($validator): JsonResponse
     {
         return ApiResponse::error('Validation failed', $validator->errors(), 422);
     }
 
-    public function owners(\App\Http\Requests\V1\Dam\ReadDamOwnersRequest $request): JsonResponse
+    public function owners(ReadDamOwnersRequest $request): JsonResponse
     {
-
 
         return ApiResponse::success(
             $this->service->readOwners($request->only(['type', 'query', 'limit'])),
@@ -33,9 +42,8 @@ class DamController extends Controller
         );
     }
 
-    public function index(\App\Http\Requests\V1\Dam\ReadDamAssetsRequest $request): JsonResponse
+    public function index(ReadDamAssetsRequest $request): JsonResponse
     {
-
 
         return ApiResponse::success(
             DamAssetResource::collection($this->service->readAssets($request->only([
@@ -48,9 +56,8 @@ class DamController extends Controller
         );
     }
 
-    public function generatePresignedUrl(\App\Http\Requests\V1\Dam\GeneratePresignedUrlRequest $request): JsonResponse
+    public function generatePresignedUrl(GeneratePresignedUrlRequest $request): JsonResponse
     {
-
 
         try {
             return ApiResponse::success(
@@ -72,9 +79,8 @@ class DamController extends Controller
         }
     }
 
-    public function presign(\App\Http\Requests\V1\Dam\PresignRequest $request): JsonResponse
+    public function presign(PresignRequest $request): JsonResponse
     {
-
 
         try {
             $upload = $this->service->generatePresignedUploadUrl(
@@ -98,9 +104,8 @@ class DamController extends Controller
         }
     }
 
-    public function initiateMultipartUpload(\App\Http\Requests\V1\Dam\InitiateMultipartUploadRequest $request): JsonResponse
+    public function initiateMultipartUpload(InitiateMultipartUploadRequest $request): JsonResponse
     {
-
 
         try {
             return ApiResponse::success(
@@ -122,9 +127,8 @@ class DamController extends Controller
         }
     }
 
-    public function getMultipartUploadUrls(\App\Http\Requests\V1\Dam\GenerateMultipartUploadUrlsRequest $request): JsonResponse
+    public function getMultipartUploadUrls(GenerateMultipartUploadUrlsRequest $request): JsonResponse
     {
-
 
         try {
             return ApiResponse::success(
@@ -145,9 +149,8 @@ class DamController extends Controller
         }
     }
 
-    public function completeMultipartUpload(\App\Http\Requests\V1\Dam\CompleteMultipartUploadRequest $request): JsonResponse
+    public function completeMultipartUpload(CompleteMultipartUploadRequest $request): JsonResponse
     {
-
 
         try {
             return ApiResponse::success(
@@ -167,9 +170,8 @@ class DamController extends Controller
         }
     }
 
-    public function abortMultipartUpload(\App\Http\Requests\V1\Dam\AbortMultipartUploadRequest $request): JsonResponse
+    public function abortMultipartUpload(AbortMultipartUploadRequest $request): JsonResponse
     {
-
 
         try {
             $this->service->abortMultipartUpload(
@@ -187,9 +189,8 @@ class DamController extends Controller
         }
     }
 
-    public function verifyUpload(\App\Http\Requests\V1\Dam\VerifyUploadRequest $request): JsonResponse
+    public function verifyUpload(VerifyUploadRequest $request): JsonResponse
     {
-
 
         try {
             $result = $this->service->verifyUpload($request->string('key')->toString());
@@ -215,9 +216,8 @@ class DamController extends Controller
         }
     }
 
-    public function generateAccessUrl(\App\Http\Requests\V1\Dam\GenerateAccessUrlRequest $request): JsonResponse
+    public function generateAccessUrl(GenerateAccessUrlRequest $request): JsonResponse
     {
-
 
         try {
             $result = $this->service->generateAuthenticatedAccessUrl(
@@ -242,9 +242,53 @@ class DamController extends Controller
         }
     }
 
-    public function ingest(\App\Http\Requests\V1\Dam\IngestAssetRequest $request): JsonResponse
+    public function update(UpdateAssetRequest $request, Dam $dam): JsonResponse
     {
+        try {
+            $updated = $this->service->updateAsset($dam, $request->only([
+                'collection_name',
+                'collection_keys',
+                'sort_order',
+            ]));
 
+            return ApiResponse::success(
+                new DamAssetResource($updated),
+                'DAM asset updated successfully'
+            );
+        } catch (AuthorizationException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
+        } catch (ValidationException $e) {
+            return ApiResponse::error('Validation failed', $e->errors(), 422);
+        } catch (\Throwable $e) {
+            Log::error('Failed to update DAM asset', [
+                'error' => $e->getMessage(),
+                'asset' => $dam->getKey(),
+            ]);
+
+            return ApiResponse::error('Failed to update asset', ['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function destroy(Dam $dam): JsonResponse
+    {
+        try {
+            $this->service->deleteAsset($dam);
+
+            return ApiResponse::success(null, 'DAM asset deleted successfully');
+        } catch (AuthorizationException $e) {
+            return ApiResponse::error($e->getMessage(), null, 403);
+        } catch (\Throwable $e) {
+            Log::error('Failed to delete DAM asset', [
+                'error' => $e->getMessage(),
+                'asset' => $dam->getKey(),
+            ]);
+
+            return ApiResponse::error('Failed to delete asset', ['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function ingest(IngestAssetRequest $request): JsonResponse
+    {
 
         try {
             $data = $request->only([

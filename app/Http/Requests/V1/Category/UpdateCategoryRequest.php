@@ -5,6 +5,7 @@ namespace App\Http\Requests\V1\Category;
 use App\Models\Category;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class UpdateCategoryRequest extends FormRequest
 {
@@ -101,6 +102,36 @@ class UpdateCategoryRequest extends FormRequest
             'featured_rank' => 'featured order',
             'order' => 'sort order',
             'code' => 'category code',
+            'icon' => 'icon',
+            'color' => 'brand colour',
+            'image' => 'image URL',
         ];
+    }
+
+    /**
+     * Only root categories can appear in the storefront top navigation.
+     * The effective parent is the submitted one, or the current parent when
+     * the update does not move the category.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            if (! $this->boolean('is_featured')) {
+                return;
+            }
+
+            $category = $this->route('category');
+
+            $effectiveParentId = $this->exists('parent_id')
+                ? ($this->filled('parent_id') ? $this->input('parent_id') : null)
+                : ($category instanceof Category ? $category->parent_id : null);
+
+            if ($effectiveParentId !== null) {
+                $validator->errors()->add(
+                    'is_featured',
+                    'Only root categories can be featured in the top navigation.'
+                );
+            }
+        });
     }
 }
