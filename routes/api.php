@@ -72,6 +72,7 @@ use App\Http\Controllers\V1\Quote\QuoteController;
 use App\Http\Controllers\V1\SalesChannel\SalesChannelController;
 use App\Http\Controllers\V1\Search\SearchController;
 use App\Http\Controllers\V1\SellerDashboard\SellerDashboardController;
+use App\Http\Controllers\V1\Specification\SpecificationController;
 use App\Http\Controllers\V1\Support\PublicSupportTicketController;
 use App\Http\Controllers\V1\Tag\TagController;
 use App\Http\Controllers\V1\Ticket\TicketController;
@@ -597,6 +598,7 @@ Route::prefix('v1')->group(function () {
         Route::delete('/products/{uuid}', [ProductController::class, 'destroy']);
 
         Route::get('/features', [FeatureController::class, 'index']);
+        Route::get('/specifications', [SpecificationController::class, 'index']);
 
         Route::get('/sales-channels', [SalesChannelController::class, 'index']);
 

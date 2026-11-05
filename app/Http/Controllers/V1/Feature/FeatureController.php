@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\V1\Feature;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\V1\Feature\Popular\PopularRequest;
+use App\Http\Requests\V1\Feature\Search\SearchRequest;
+use App\Http\Responses\V1\ApiResponse;
 use App\Models\Category;
 use App\Models\Feature;
 use App\Services\Feature\FeatureService;
-use App\Http\Responses\V1\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class FeatureController extends Controller
 {
@@ -18,21 +19,39 @@ class FeatureController extends Controller
     ) {}
 
     /**
-     * List features, optionally filtered by category.
+     * List every active feature.
+     *
+     * Features are a shared vocabulary, so all of them are always returned. When
+     * `category_id` is supplied, each row also carries `matches_category` so the
+     * client can surface the ones recommended for that category first.
+     *
      * GET /api/v1/features?category_id=1
      */
     public function index(Request $request): JsonResponse
     {
         $categoryId = $request->integer('category_id');
 
-        $features = Feature::query()
-            ->when($categoryId, function ($query) use ($categoryId) {
-                $topLevelId = $this->resolveTopLevelCategoryId($categoryId);
-                $query->whereHas('categories', fn ($q) => $q->where('categories.id', $topLevelId));
-            })
-            ->where('is_active', true)
+        $query = Feature::query()
+            ->select(['id', 'name', 'slug'])
+            ->where('is_active', true);
+
+        if ($categoryId) {
+            $topLevelId = $this->resolveTopLevelCategoryId($categoryId);
+
+            $query->withExists([
+                'categories as matches_category' => fn ($categoryQuery) => $categoryQuery->where('categories.id', $topLevelId),
+            ]);
+        }
+
+        $features = $query
             ->orderBy('name')
-            ->get(['id', 'name', 'slug']);
+            ->get()
+            ->map(fn (Feature $feature): array => [
+                'id' => $feature->id,
+                'name' => $feature->name,
+                'slug' => $feature->slug,
+                'matches_category' => (bool) ($feature->matches_category ?? false),
+            ]);
 
         return ApiResponse::success($features, 'Features retrieved successfully');
     }
@@ -56,9 +75,8 @@ class FeatureController extends Controller
      * Get popular features
      * GET /api/v1/features/popular
      */
-    public function popular(\App\Http\Requests\V1\Feature\Popular\PopularRequest $request): JsonResponse
+    public function popular(PopularRequest $request): JsonResponse
     {
-        
 
         $type = $request->get('type', 'product');
         $limit = $request->get('limit', 20);
@@ -67,7 +85,7 @@ class FeatureController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $features
+            'data' => $features,
         ]);
     }
 
@@ -75,9 +93,8 @@ class FeatureController extends Controller
      * Search features
      * GET /api/v1/features/search?q=keyword
      */
-    public function search(\App\Http\Requests\V1\Feature\Search\SearchRequest $request): JsonResponse
+    public function search(SearchRequest $request): JsonResponse
     {
-        
 
         $query = $request->get('q');
         $type = $request->get('type', 'product');
@@ -87,7 +104,7 @@ class FeatureController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $features
+            'data' => $features,
         ]);
     }
 
@@ -99,16 +116,16 @@ class FeatureController extends Controller
     {
         $feature = $this->featureService->findBySlug($slug, $type);
 
-        if (!$feature) {
+        if (! $feature) {
             return response()->json([
                 'success' => false,
-                'message' => 'Feature not found'
+                'message' => 'Feature not found',
             ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'data' => $feature->load('products')
+            'data' => $feature->load('products'),
         ]);
     }
 
@@ -120,10 +137,10 @@ class FeatureController extends Controller
     {
         $feature = $this->featureService->findBySlug($slug, $type);
 
-        if (!$feature) {
+        if (! $feature) {
             return response()->json([
                 'success' => false,
-                'message' => 'Feature not found'
+                'message' => 'Feature not found',
             ], 404);
         }
 
@@ -137,8 +154,8 @@ class FeatureController extends Controller
             'success' => true,
             'data' => [
                 'feature' => $feature,
-                'items' => $items
-            ]
+                'items' => $items,
+            ],
         ]);
     }
 
@@ -148,7 +165,6 @@ class FeatureController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        
 
         try {
             $feature = $this->featureService->createFeature($validator->validated());
@@ -156,12 +172,12 @@ class FeatureController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Feature created successfully',
-                'data' => $feature
+                'data' => $feature,
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create feature: ' . $e->getMessage()
+                'message' => 'Failed to create feature: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -179,7 +195,7 @@ class FeatureController extends Controller
             if ($feature->usage_count > 0) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Cannot delete feature that is currently in use'
+                    'message' => 'Cannot delete feature that is currently in use',
                 ], 400);
             }
 
@@ -187,12 +203,12 @@ class FeatureController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Feature deleted successfully'
+                'message' => 'Feature deleted successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete feature: ' . $e->getMessage()
+                'message' => 'Failed to delete feature: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -203,7 +219,6 @@ class FeatureController extends Controller
      */
     public function cleanup(Request $request): JsonResponse
     {
-        
 
         try {
             $type = $request->get('type', 'product');
@@ -211,12 +226,12 @@ class FeatureController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Deleted {$deleted} unused features"
+                'message' => "Deleted {$deleted} unused features",
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to cleanup features: ' . $e->getMessage()
+                'message' => 'Failed to cleanup features: '.$e->getMessage(),
             ], 500);
         }
     }
