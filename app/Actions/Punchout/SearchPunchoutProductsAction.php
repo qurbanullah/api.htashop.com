@@ -29,9 +29,9 @@ use Throwable;
 class SearchPunchoutProductsAction
 {
     /** One weight per field, in the same order. */
-    private const QUERY_BY = 'name,sku,part_number,model_number,category_names,brand_names,tags,summary,description';
+    private const QUERY_BY = 'name,sku,part_number,gtin,model_number,category_names,brand_names,tags,summary,description';
 
-    private const QUERY_BY_WEIGHTS = '4,5,6,4,1,1,1,2,1';
+    private const QUERY_BY_WEIGHTS = '4,5,6,5,4,1,1,1,2,1';
 
     /** Typesense refuses per_page above 250. */
     private const MAX_WINDOW = 250;

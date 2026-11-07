@@ -48,7 +48,7 @@ it('uses typesense for a typed punchout query and keeps its relevance order', fu
             ->with(Mockery::on(fn (array $params): bool => $params['query'] === 'dril'
                 && $params['filters']['channel'] === 'punchout'
                 && $params['filters']['tenant_id'] === $tenant->id
-                && $params['query_by_weights'] === '4,5,6,4,1,1,1,2,1'))
+                && $params['query_by_weights'] === '4,5,6,5,4,1,1,1,2,1'))
             ->andReturn([
                 // Deliberately not the database order: the index decides ranking.
                 'hits' => [

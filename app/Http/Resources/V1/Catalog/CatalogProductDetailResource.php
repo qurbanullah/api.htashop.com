@@ -34,6 +34,8 @@ class CatalogProductDetailResource extends JsonResource
             'gallery' => $this->resolveGallery(),
             'gallery_original' => $this->resolveOriginalGallery(),
             'gallery_sizes' => $this->resolveGallerySizes(),
+            'videos' => $this->whenLoaded('videos', fn () => $this->resolveVideos()),
+            'packaging' => $this->whenLoaded('shipping', fn () => $this->resolvePackaging()),
             'categories' => $this->whenLoaded('categories'),
             'brands' => $this->whenLoaded('brands'),
             'features' => $this->whenLoaded('features'),
@@ -154,6 +156,84 @@ class CatalogProductDetailResource extends JsonResource
         }
 
         return $ladder;
+    }
+
+    /**
+     * Product videos, ordered by the DAM sort order.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function resolveVideos(): array
+    {
+        return $this->videos
+            ->map(fn (Dam $dam) => [
+                'id' => $dam->id,
+                'url' => $this->cdnUrl((string) $dam->object_key),
+                'poster_url' => $this->videoPosterUrl($dam),
+                'mime_type' => $dam->mime_type,
+                'file_name' => $dam->file_name,
+                'size' => $dam->size,
+                'sort_order' => $dam->sort_order,
+            ])
+            ->values()
+            ->all();
+    }
+
+    private function videoPosterUrl(Dam $dam): ?string
+    {
+        $medium = data_get($dam->metadata, 'poster_variants.medium');
+        $key = is_string($medium) && $medium !== ''
+            ? $medium
+            : data_get($dam->metadata, 'poster_key');
+
+        return is_string($key) && $key !== '' ? $this->cdnUrl($key) : null;
+    }
+
+    private function cdnUrl(string $key): string
+    {
+        return 'https://cdn.htashop.com/'.ltrim($key, '/');
+    }
+
+    /**
+     * Public packaging / shipping facts for the product detail page.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function resolvePackaging(): ?array
+    {
+        $shipping = $this->shipping;
+
+        if (! $shipping) {
+            return null;
+        }
+
+        $number = fn (mixed $value): ?float => $value === null ? null : (float) $value;
+
+        return [
+            'net_weight' => $number($shipping->net_weight),
+            'gross_weight' => $number($shipping->gross_weight),
+            'weight_unit' => $shipping->weightUnit?->symbol,
+            'gross_weight_kg' => $number($shipping->gross_weight_kg),
+            'length' => $number($shipping->length),
+            'width' => $number($shipping->width),
+            'height' => $number($shipping->height),
+            'dimension_unit' => $shipping->dimensionUnit?->symbol,
+            'length_cm' => $number($shipping->length_cm),
+            'width_cm' => $number($shipping->width_cm),
+            'height_cm' => $number($shipping->height_cm),
+            'packaging_type' => $shipping->packagingType
+                ? ['code' => $shipping->packagingType->code, 'name' => $shipping->packagingType->name]
+                : null,
+            'units_per_case' => (int) $shipping->units_per_case,
+            'ships_alone' => (bool) $shipping->ships_alone,
+            'is_fragile' => (bool) $shipping->is_fragile,
+            'is_stackable' => (bool) $shipping->is_stackable,
+            'is_hazmat' => (bool) $shipping->is_hazmat,
+            'handling_notes' => $shipping->handling_notes,
+            'contents' => $shipping->contents ?? [],
+            'is_rateable' => $shipping->isRateable(),
+            'volumetric_weight_kg' => $shipping->volumetricWeightKg(),
+        ];
     }
 
     private function resolveVariants(): array

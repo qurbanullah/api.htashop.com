@@ -49,6 +49,8 @@ class Order extends Model
         'checkout_token',
         'subtotal',
         'shipping_fee',
+        'shipping_method',
+        'shipping_rate_uuid',
         'tax',
         'discount',
         'total_amount',
@@ -82,7 +84,7 @@ class Order extends Model
             }
 
             if (empty($order->order_number)) {
-                $order->order_number = 'ORD-' . now()->format('ymd') . '-' . strtoupper(Str::random(5));
+                $order->order_number = 'ORD-'.now()->format('ymd').'-'.strtoupper(Str::random(5));
             }
         });
     }
@@ -115,6 +117,11 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function shipments(): HasMany
+    {
+        return $this->hasMany(Shipment::class)->orderBy('created_at');
     }
 
     public function payments(): HasMany

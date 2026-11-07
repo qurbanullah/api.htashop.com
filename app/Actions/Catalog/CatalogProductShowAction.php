@@ -24,6 +24,10 @@ class CatalogProductShowAction
                     ->whereIn('collection_name', ['featured', 'gallery'])
                     ->orderByRaw('CASE WHEN sort_order IS NULL THEN 1 ELSE 0 END')
                     ->orderBy('sort_order'),
+                'videos',
+                'shipping.weightUnit',
+                'shipping.dimensionUnit',
+                'shipping.packagingType',
                 'variants' => fn ($query) => $query
                     ->orderByDesc('is_default')
                     ->with(['dams' => fn ($damQuery) => $damQuery->where('collection_name', 'featured')]),

@@ -44,9 +44,14 @@ class CheckoutController extends Controller
             'shipping_address.address_line_1' => ['sometimes', 'string', 'max:255'],
             'shipping_address.address_line_2' => ['sometimes', 'string', 'max:255'],
             'shipping_address.city' => ['sometimes', 'string', 'max:100'],
+            'shipping_address.city_id' => ['sometimes', 'integer', 'exists:cities,id'],
             'shipping_address.state' => ['sometimes', 'string', 'max:100'],
+            'shipping_address.state_code' => ['sometimes', 'string', 'max:20'],
             'shipping_address.postal_code' => ['sometimes', 'string', 'max:20'],
             'shipping_address.country_id' => ['sometimes', 'integer', 'exists:countries,id'],
+            // Which returned delivery option the customer picked. The price is
+            // re-derived server-side; an unknown or stale id is a 422.
+            'shipping_rate_uuid' => ['nullable', 'string', 'max:64'],
             'billing_address' => ['nullable'],
             'billing_address.contact_name' => ['sometimes', 'string', 'max:255'],
             'billing_address.phone' => ['sometimes', 'string', 'max:50'],
@@ -122,6 +127,14 @@ class CheckoutController extends Controller
     {
         $data = $request->validate([
             'coupon_code' => ['nullable', 'string', 'max:50'],
+            'shipping_rate_uuid' => ['nullable', 'string', 'max:64'],
+            'shipping_address' => ['nullable'],
+            'shipping_address.city' => ['sometimes', 'string', 'max:100'],
+            'shipping_address.city_id' => ['sometimes', 'integer', 'exists:cities,id'],
+            'shipping_address.state' => ['sometimes', 'string', 'max:100'],
+            'shipping_address.state_code' => ['sometimes', 'string', 'max:20'],
+            'shipping_address.postal_code' => ['sometimes', 'string', 'max:20'],
+            'shipping_address.country_id' => ['sometimes', 'integer', 'exists:countries,id'],
         ]);
 
         try {

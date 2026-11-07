@@ -93,8 +93,12 @@ class CheckoutService
         $tenant = Tenant::query()->find($tenantId);
         $organization = $user?->memberships()->where('is_active', true)->first()?->organization;
 
+        // Resolve the destination once: the same snapshot prices delivery and is
+        // stored on the order, so a later address-book edit cannot rewrite it.
+        $shippingAddress = $this->resolveAddress($data, 'shipping_address', 'shipping', $user);
+
         // Money is decided here, never by the request: delivery, tax and any
-        // coupon come from `config/shipping.php` and the coupon table. A
+        // coupon come from the shipping configuration and the coupon table. A
         // `shipping_fee` or `discount` in the payload is ignored.
         $totals = $this->checkoutPricing->forCart(
             $cart,
@@ -102,9 +106,12 @@ class CheckoutService
             $user,
             $tenantId,
             $organization?->id,
+            $shippingAddress,
+            data_get($data, 'shipping_rate_uuid'),
+            true,
         );
 
-        $order = DB::transaction(function () use ($cart, $user, $tenantId, $tenant, $organization, $data, $token, $totals) {
+        $order = DB::transaction(function () use ($cart, $user, $tenantId, $tenant, $organization, $data, $token, $totals, $shippingAddress) {
             // Re-checked inside the transaction: stock can move between the quote
             // and the commit.
             $this->cartPricing->assertPurchasable($cart);
@@ -121,9 +128,11 @@ class CheckoutService
                 'customer_phone' => data_get($data, 'customer_phone'),
                 'status' => OrderStatus::PENDING,
                 'source' => 'manual',
-                'shipping_address' => $this->resolveAddress($data, 'shipping_address', 'shipping', $user),
+                'shipping_method' => $totals->shippingMethod,
+                'shipping_rate_uuid' => $totals->shippingRateUuid,
+                'shipping_address' => $shippingAddress,
                 'billing_address' => $this->resolveAddress($data, 'billing_address', 'billing', $user)
-                    ?? $this->resolveAddress($data, 'shipping_address', 'shipping', $user),
+                    ?? $shippingAddress,
                 'notes' => data_get($data, 'notes'),
                 'placed_at' => now(),
                 'currency' => $totals->currency,
@@ -282,7 +291,19 @@ class CheckoutService
         $tenantId = $this->resolveTenantId($cart, $user);
         $organization = $user?->memberships()->where('is_active', true)->first()?->organization;
 
-        return $this->checkoutPricing->forCart($cart, $couponCode, $user, $tenantId, $organization?->id);
+        $shippingAddress = $this->resolveAddress($request->all(), 'shipping_address', 'shipping', $user);
+
+        // The quote endpoint re-selects silently when the chosen option has since
+        // disappeared: it is a price preview, not a commitment.
+        return $this->checkoutPricing->forCart(
+            $cart,
+            $couponCode,
+            $user,
+            $tenantId,
+            $organization?->id,
+            $shippingAddress,
+            $request->input('shipping_rate_uuid'),
+        );
     }
 
     private function result(Order $order, ?string $redirectUrl = null, ?string $paymentError = null): array

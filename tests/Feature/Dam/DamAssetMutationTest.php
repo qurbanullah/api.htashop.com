@@ -108,3 +108,16 @@ it('returns not found for an unknown asset', function () {
 
     $this->deleteJson('/api/v1/dam/999999')->assertNotFound();
 });
+
+it('merges metadata updates without dropping existing keys', function () {
+    $this->asset->update(['metadata' => ['variants' => ['medium' => 'images/medium.jpg']]]);
+
+    $this->putJson("/api/v1/dam/{$this->asset->id}", [
+        'metadata' => ['poster_key' => 'videos/posters/poster.jpg'],
+    ])->assertOk();
+
+    $metadata = $this->asset->fresh()->metadata;
+
+    expect($metadata['variants']['medium'])->toBe('images/medium.jpg');
+    expect($metadata['poster_key'])->toBe('videos/posters/poster.jpg');
+});

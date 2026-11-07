@@ -5,6 +5,8 @@ namespace App\Http\Requests\V1\Product;
 use App\Enums\SalesChannel;
 use App\Enums\Sourcing;
 use App\Models\Organization;
+use App\Rules\Gtin;
+use App\Support\Html\RichText;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -32,6 +34,7 @@ class ProductStoreRequest extends FormRequest
             'unspsc' => ['nullable', 'string', 'max:20'],
             'ntn' => ['nullable', 'string', 'max:50'],
             'barcode' => ['nullable', 'string', 'max:100'],
+            'gtin' => ['nullable', 'string', new Gtin],
             'model_number' => ['nullable', 'string', 'max:100'],
             'sourcing' => ['nullable', 'string', Rule::in(Sourcing::ALL)],
             'lead_time_days' => ['nullable', 'integer', 'min:0', 'max:365'],
@@ -62,6 +65,10 @@ class ProductStoreRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        if ($this->exists('description')) {
+            $this->merge(['description' => RichText::sanitize($this->input('description'))]);
+        }
+
         if ($this->input('tenant_id') && $this->input('organization_id')) {
             return;
         }

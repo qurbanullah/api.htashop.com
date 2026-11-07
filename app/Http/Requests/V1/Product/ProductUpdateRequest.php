@@ -6,6 +6,8 @@ use App\Enums\SalesChannel;
 use App\Enums\Sourcing;
 use App\Models\Organization;
 use App\Models\Product;
+use App\Rules\Gtin;
+use App\Support\Html\RichText;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -33,6 +35,7 @@ class ProductUpdateRequest extends FormRequest
             'unspsc' => ['nullable', 'string', 'max:20'],
             'ntn' => ['nullable', 'string', 'max:50'],
             'barcode' => ['nullable', 'string', 'max:100'],
+            'gtin' => ['nullable', 'string', new Gtin],
             'model_number' => ['nullable', 'string', 'max:100'],
             'sourcing' => ['nullable', 'string', Rule::in(Sourcing::ALL)],
             'lead_time_days' => ['nullable', 'integer', 'min:0', 'max:365'],
@@ -59,6 +62,13 @@ class ProductUpdateRequest extends FormRequest
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['integer', 'exists:tags,id'],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->exists('description')) {
+            $this->merge(['description' => RichText::sanitize($this->input('description'))]);
+        }
     }
 
     protected function withValidator(Validator $validator): void

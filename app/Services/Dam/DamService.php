@@ -291,6 +291,12 @@ class DamService
                 $dam->sort_order = $data['sort_order'];
             }
 
+            if (is_array(data_get($data, 'metadata'))) {
+                // Merge so callers can set a single key (e.g. a video poster)
+                // without wiping the existing variants/metadata.
+                $dam->metadata = array_merge($dam->metadata ?? [], $data['metadata']);
+            }
+
             $dam->save();
 
             if (array_key_exists('collection_name', $data) || array_key_exists('collection_keys', $data)) {

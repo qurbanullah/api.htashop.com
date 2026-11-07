@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-
-use App\Models\DamCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -12,7 +10,14 @@ use Illuminate\Support\Facades\Storage;
 
 class Dam extends Model
 {
-        use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes;
+
+    /** Collection names used by the product media pipeline. */
+    public const COLLECTION_FEATURED = 'featured';
+
+    public const COLLECTION_GALLERY = 'gallery';
+
+    public const COLLECTION_VIDEO = 'video';
 
     protected $table = 'dams';
 
@@ -22,7 +27,7 @@ class Dam extends Model
         'file_name', 'disk', 'bucket', 'object_key',
         'mime_type', 'size', 'storage_class', 'checksum_sha256', 'etag',
         'custom_properties', 'metadata', 'origin_url', 'uploaded_by',
-        'derived_from_id', 'version', 'is_current'
+        'derived_from_id', 'version', 'is_current',
     ];
 
     protected $casts = [

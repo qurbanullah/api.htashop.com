@@ -6,15 +6,20 @@ use App\Models\Cart;
 use App\Models\User;
 use App\Services\Coupon\CouponService;
 use App\Services\Pricing\DutyRateService;
+use App\Services\Shipping\ShippingQuoteService;
 use App\Support\Checkout\CheckoutTotals;
+use App\Support\Shipping\ParcelSummary;
+use App\Support\Shipping\ShippingQuote;
+use Illuminate\Support\Str;
 
 /**
  * Everything that turns a basket into a total: item prices, delivery, tax and
  * any coupon.
  *
- * Delivery and tax are decided here from `config/shipping.php`; the client
- * never sends them. A request that includes `shipping_fee` or `discount` is
- * ignored, which is what stops a crafted checkout from discounting itself.
+ * Delivery and tax are decided here from the shipping configuration (zones and
+ * rates, with the legacy flat rate as fallback) and the client never sends them.
+ * A request that includes `shipping_fee` or `discount` is ignored, which is what
+ * stops a crafted checkout from discounting itself.
  */
 class CheckoutPricing
 {
@@ -22,6 +27,7 @@ class CheckoutPricing
         protected CartPricing $cartPricing,
         protected CouponService $coupons,
         protected DutyRateService $dutyRates,
+        protected ShippingQuoteService $shippingQuotes,
     ) {}
 
     /**
@@ -30,6 +36,9 @@ class CheckoutPricing
      *                                   request (checkout) or report it (quote).
      * @param  int|null  $tenantId  Scope the coupon is resolved in; a code that
      *                              only exists for another tenant resolves as "not found".
+     * @param  array<string, mixed>|null  $shippingAddress  Resolved destination snapshot
+     * @param  bool  $strictShippingSelection  Fail instead of silently re-pricing
+     *                                         when the chosen option vanished
      */
     public function forCart(
         Cart $cart,
@@ -37,11 +46,23 @@ class CheckoutPricing
         ?User $user = null,
         ?int $tenantId = null,
         ?int $organizationId = null,
+        ?array $shippingAddress = null,
+        ?string $shippingRateUuid = null,
+        bool $strictShippingSelection = false,
     ): CheckoutTotals {
         $subtotal = $this->cartPricing->subtotal($cart);
         $currency = $this->currencyFor($cart);
 
-        $shipping = $this->shippingFor($subtotal, $currency);
+        $quote = $this->shippingFor(
+            $cart,
+            $subtotal,
+            $currency,
+            $shippingAddress,
+            $shippingRateUuid,
+            $tenantId,
+            $strictShippingSelection,
+        );
+        $shippingFee = $quote->fee();
         $duty = $this->dutyForCart($cart);
 
         $coupon = filled($couponCode)
@@ -57,40 +78,62 @@ class CheckoutPricing
 
         return new CheckoutTotals(
             subtotal: $subtotal,
-            shippingFee: $shipping['fee'],
+            shippingFee: $shippingFee,
             tax: $tax,
             discount: $discount,
-            total: round(max(0.0, $taxable + $shipping['fee'] + $tax), 2),
+            total: round(max(0.0, $taxable + $shippingFee + $tax), 2),
             currency: $currency,
-            freeShipping: $shipping['fee'] <= 0,
-            freeShippingThreshold: $shipping['threshold'],
+            freeShipping: $shippingFee <= 0,
+            freeShippingThreshold: $quote->freeShippingThreshold,
             couponCode: $coupon?->code,
             couponLabel: $coupon?->label,
             dutyEstimate: $duty,
+            shippingMethod: $quote->selected?->name,
+            shippingRateUuid: $this->persistedRateUuid($quote),
+            shippingOptions: array_map(
+                fn ($option) => $option->toArray(),
+                $quote->options,
+            ),
+            shippingSource: $quote->source,
         );
     }
 
     /**
-     * @return array{fee: float, threshold: ?float}
+     * Only real `shipping_rates` rows are persisted; the legacy fallback and
+     * carrier-quoted options use synthetic ids (`config:*`, `leopards:*`).
      */
-    private function shippingFor(float $subtotal, string $currency): array
+    private function persistedRateUuid(ShippingQuote $quote): ?string
     {
-        if (! config('shipping.enabled', true) || $subtotal <= 0) {
-            return ['fee' => 0.0, 'threshold' => null];
+        $id = $quote->selected?->id;
+
+        return $id !== null && Str::isUuid($id) ? $id : null;
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $shippingAddress
+     */
+    private function shippingFor(
+        Cart $cart,
+        float $subtotal,
+        string $currency,
+        ?array $shippingAddress,
+        ?string $shippingRateUuid,
+        ?int $tenantId,
+        bool $strict,
+    ): ShippingQuote {
+        if ($subtotal <= 0) {
+            return ShippingQuote::none(ParcelSummary::empty());
         }
 
-        $rate = config("shipping.rates.{$currency}") ?? config('shipping.default', []);
-
-        $threshold = $this->nullableFloat(data_get($rate, 'free_over'));
-
-        if ($threshold !== null && $subtotal >= $threshold) {
-            return ['fee' => 0.0, 'threshold' => $threshold];
-        }
-
-        return [
-            'fee' => round(max(0.0, (float) data_get($rate, 'flat_rate', 0)), 2),
-            'threshold' => $threshold,
-        ];
+        return $this->shippingQuotes->forCart(
+            $cart,
+            $shippingAddress,
+            $currency,
+            $subtotal,
+            $shippingRateUuid,
+            $tenantId,
+            $strict,
+        );
     }
 
     private function taxFor(float $taxable): float
@@ -137,15 +180,5 @@ class CheckoutPricing
         }
 
         return round($duty, 2);
-    }
-
-    /** Config values arrive as strings from env; `0` and `''` mean "no threshold". */
-    private function nullableFloat(mixed $value): ?float
-    {
-        if ($value === null || $value === '' || (float) $value <= 0) {
-            return null;
-        }
-
-        return (float) $value;
     }
 }

@@ -189,7 +189,7 @@ class ProductSearchService
                 ->getDocuments()
                 ->search([
                     'q' => $query,
-                    'query_by' => 'name,sku,part_number,model_number,category_names,brand_names,feature_names,tags,summary',
+                    'query_by' => 'name,sku,part_number,gtin,model_number,category_names,brand_names,feature_names,tags,summary',
                     'prefix' => true,
                     'filter_by' => $filterBy,
                     'sort_by' => '_text_match:desc',
@@ -299,6 +299,7 @@ class ProductSearchService
                 $q->where('name', 'like', "%{$query}%")
                     ->orWhere('sku', 'like', "%{$query}%")
                     ->orWhere('part_number', 'like', "%{$query}%")
+                    ->orWhere('gtin', 'like', "%{$query}%")
                     ->orWhere('model_number', 'like', "%{$query}%");
             })
             ->when($categoryId, fn ($q) => $q->whereHas('categories', fn ($c) => $c->whereKey($categoryId)))
@@ -328,9 +329,11 @@ class ProductSearchService
             'slug' => (string) $product->slug,
             'route_key' => $product->slug.'-'.substr((string) $product->uuid, 0, 8),
             'summary' => (string) $product->summary,
-            'description' => (string) $product->description,
+            // Index readable text, never the editor markup.
+            'description' => trim(strip_tags((string) $product->description)),
             'sku' => (string) $product->sku,
             'part_number' => (string) $product->part_number,
+            'gtin' => (string) $product->gtin,
             'model_number' => (string) $product->model_number,
             'category_names' => $product->categories->pluck('name')->filter()->values()->all(),
             'category_ids' => $product->categories->pluck('id')->map(fn ($id) => (int) $id)->values()->all(),
@@ -502,7 +505,7 @@ class ProductSearchService
             'query_by' => (string) data_get(
                 $params,
                 'query_by',
-                'name,sku,part_number,model_number,category_names,brand_names,tags,summary,description'
+                'name,sku,part_number,gtin,model_number,category_names,brand_names,tags,summary,description'
             ),
             'filter_by' => $filterBy,
             'facet_by' => 'category_names,brand_names,feature_names',
@@ -587,6 +590,7 @@ class ProductSearchService
                 ['name' => 'description', 'type' => 'string', 'optional' => true],
                 ['name' => 'sku', 'type' => 'string', 'optional' => true],
                 ['name' => 'part_number', 'type' => 'string', 'optional' => true],
+                ['name' => 'gtin', 'type' => 'string', 'optional' => true],
                 ['name' => 'model_number', 'type' => 'string', 'optional' => true],
                 ['name' => 'route_key', 'type' => 'string'],
                 ['name' => 'category_names', 'type' => 'string[]', 'facet' => true],

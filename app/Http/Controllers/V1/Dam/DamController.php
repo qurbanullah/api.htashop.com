@@ -248,6 +248,7 @@ class DamController extends Controller
             $updated = $this->service->updateAsset($dam, $request->only([
                 'collection_name',
                 'collection_keys',
+                'metadata',
                 'sort_order',
             ]));
 

@@ -65,6 +65,7 @@ use App\Http\Controllers\V1\Post\PostApiController;
 use App\Http\Controllers\V1\Price\PriceController;
 use App\Http\Controllers\V1\Product\ProductController;
 use App\Http\Controllers\V1\Product\ProductRevisionController;
+use App\Http\Controllers\V1\Product\ProductShippingController;
 use App\Http\Controllers\V1\ProductReview\ProductReviewController;
 use App\Http\Controllers\V1\Profile\ProfileController;
 use App\Http\Controllers\V1\Purchasing\SupplierOrderController;
@@ -72,6 +73,11 @@ use App\Http\Controllers\V1\Quote\QuoteController;
 use App\Http\Controllers\V1\SalesChannel\SalesChannelController;
 use App\Http\Controllers\V1\Search\SearchController;
 use App\Http\Controllers\V1\SellerDashboard\SellerDashboardController;
+use App\Http\Controllers\V1\Shipment\ShipmentController;
+use App\Http\Controllers\V1\Shipping\PackagingTemplateController;
+use App\Http\Controllers\V1\Shipping\ShippingCarrierController;
+use App\Http\Controllers\V1\Shipping\ShippingRateController;
+use App\Http\Controllers\V1\Shipping\ShippingZoneController;
 use App\Http\Controllers\V1\Specification\SpecificationController;
 use App\Http\Controllers\V1\Support\PublicSupportTicketController;
 use App\Http\Controllers\V1\Tag\TagController;
@@ -545,6 +551,19 @@ Route::prefix('v1')->group(function () {
         Route::get('/orders/{uuid}/documents', [OrderDocumentController::class, 'index']);
         Route::post('/orders/{uuid}/documents', [OrderDocumentController::class, 'store']);
 
+        // Fulfilment: one order may be dispatched in several shipments, each
+        // packed into one or more parcels.
+        Route::get('/orders/{uuid}/shipments', [ShipmentController::class, 'index']);
+        Route::post('/orders/{uuid}/shipments', [ShipmentController::class, 'store']);
+        Route::get('/shipments/{uuid}', [ShipmentController::class, 'show']);
+        Route::put('/shipments/{uuid}', [ShipmentController::class, 'update']);
+        Route::patch('/shipments/{uuid}/status', [ShipmentController::class, 'updateStatus']);
+        Route::get('/shipments/{uuid}/packing-plan', [ShipmentController::class, 'packingPlan']);
+        Route::post('/shipments/{uuid}/apply-plan', [ShipmentController::class, 'applyPlan']);
+        Route::post('/shipments/{uuid}/book', [ShipmentController::class, 'book']);
+        Route::post('/shipments/{uuid}/cancel-booking', [ShipmentController::class, 'cancelBooking']);
+        Route::delete('/shipments/{uuid}', [ShipmentController::class, 'destroy']);
+
         // ====================================================================================
         // COMMUNITY FORUM - Authenticated user routes
         // ====================================================================================
@@ -596,6 +615,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/products/{uuid}', [ProductController::class, 'show']);
         Route::put('/products/{uuid}', [ProductController::class, 'update']);
         Route::delete('/products/{uuid}', [ProductController::class, 'destroy']);
+        Route::get('/products/{uuid}/shipping', [ProductShippingController::class, 'show']);
+        Route::put('/products/{uuid}/shipping', [ProductShippingController::class, 'update']);
 
         Route::get('/features', [FeatureController::class, 'index']);
         Route::get('/specifications', [SpecificationController::class, 'index']);
@@ -638,6 +659,30 @@ Route::prefix('v1')->group(function () {
         Route::get('/warehouses/{uuid}', [WarehouseController::class, 'show']);
         Route::put('/warehouses/{uuid}', [WarehouseController::class, 'update']);
         Route::delete('/warehouses/{uuid}', [WarehouseController::class, 'destroy']);
+
+        // Shipping configuration: reusable boxes, geographic zones and rates.
+        // Reads are open to every authenticated user; writes are limited by
+        // the model policies to the owning tenant (or an admin for global rows).
+        Route::get('/packaging-templates', [PackagingTemplateController::class, 'index']);
+        Route::post('/packaging-templates', [PackagingTemplateController::class, 'store']);
+        Route::get('/packaging-templates/{uuid}', [PackagingTemplateController::class, 'show']);
+        Route::put('/packaging-templates/{uuid}', [PackagingTemplateController::class, 'update']);
+        Route::delete('/packaging-templates/{uuid}', [PackagingTemplateController::class, 'destroy']);
+
+        Route::get('/shipping-zones', [ShippingZoneController::class, 'index']);
+        Route::post('/shipping-zones', [ShippingZoneController::class, 'store']);
+        Route::get('/shipping-zones/{uuid}', [ShippingZoneController::class, 'show']);
+        Route::put('/shipping-zones/{uuid}', [ShippingZoneController::class, 'update']);
+        Route::delete('/shipping-zones/{uuid}', [ShippingZoneController::class, 'destroy']);
+
+        Route::get('/shipping-rates', [ShippingRateController::class, 'index']);
+        Route::post('/shipping-rates', [ShippingRateController::class, 'store']);
+        Route::get('/shipping-rates/{uuid}', [ShippingRateController::class, 'show']);
+        Route::put('/shipping-rates/{uuid}', [ShippingRateController::class, 'update']);
+        Route::delete('/shipping-rates/{uuid}', [ShippingRateController::class, 'destroy']);
+
+        // Carriers configured on this installation, for the management picker.
+        Route::get('/shipping-carriers', [ShippingCarrierController::class, 'index']);
         Route::get('/inventories', [InventoryController::class, 'index']);
         Route::post('/inventories', [InventoryController::class, 'store']);
         Route::get('/inventories/{uuid}', [InventoryController::class, 'show']);

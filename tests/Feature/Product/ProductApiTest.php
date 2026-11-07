@@ -9,6 +9,7 @@ use App\Models\Organization;
 use App\Models\Product;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Search\ProductSearchService;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
@@ -90,6 +91,127 @@ it('creates and shows a product', function () {
                 'slug' => 'test-drill',
             ],
         ]);
+});
+
+it('sanitises rich text descriptions before saving', function () {
+    $response = $this->postJson('/api/v1/products', [
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => $this->organization->id,
+        'name' => 'Rich Product',
+        'description' => '<h2>Overview</h2><p>Strong <strong>build</strong>, <span style="color: #ff0000">red</span> text and a <mark style="background-color: #fef08a">highlight</mark>.</p><script>alert(1)</script><img src="https://cdn.example.com/a.jpg" onerror="alert(2)"><a href="javascript:alert(3)">bad</a><iframe src="https://evil.example"></iframe>',
+    ]);
+
+    $response->assertStatus(201);
+
+    $description = (string) $response->json('data.description');
+
+    expect($description)
+        ->toContain('<h2>')
+        ->toContain('<strong>')
+        ->toContain('color')
+        ->toContain('<mark')
+        ->toContain('background-color')
+        ->toContain('https://cdn.example.com/a.jpg')
+        ->not->toContain('<script')
+        ->not->toContain('onerror')
+        ->not->toContain('<iframe')
+        ->not->toContain('javascript:');
+
+    $uuid = $response->json('data.uuid');
+
+    $this->putJson('/api/v1/products/'.$uuid, [
+        'description' => '<p>Updated <em>copy</em></p><svg onload="alert(4)"></svg>',
+    ])->assertOk();
+
+    $updated = (string) Product::query()->where('uuid', $uuid)->value('description');
+
+    expect($updated)
+        ->toContain('<em>')
+        ->not->toContain('<svg')
+        ->not->toContain('onload');
+});
+
+it('generates an opaque htasin-style sku and suggests a part number', function () {
+    $response = $this->postJson('/api/v1/products', [
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => $this->organization->id,
+        'name' => 'Opaque SKU Product',
+    ])->assertStatus(201);
+
+    $data = $response->json('data');
+
+    // 10 characters: the H prefix plus 9 unambiguous alphanumerics.
+    expect((string) $data['sku'])->toMatch('/^H[A-HJ-NP-Z2-9]{9}$/')
+        ->and(strlen((string) $data['sku']))->toBe(10)
+        ->and((string) $data['part_number'])->toMatch('/^PN-[A-HJ-NP-Z2-9]{8}$/')
+        // The seller SKU mirrors the platform id until the seller replaces it.
+        ->and($data['seller_sku'])->toBe($data['sku']);
+
+    // A SKU is immutable: renaming or re-categorising must not change it.
+    $this->putJson('/api/v1/products/'.$data['uuid'], [
+        'name' => 'Renamed Product',
+    ])->assertOk();
+
+    expect(Product::query()->where('uuid', $data['uuid'])->value('sku'))->toBe($data['sku']);
+});
+
+it('keeps a seller-provided part number instead of the suggestion', function () {
+    $response = $this->postJson('/api/v1/products', [
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => $this->organization->id,
+        'name' => 'Parted Product',
+        'part_number' => 'MPN-42-ABC',
+    ])->assertStatus(201);
+
+    expect($response->json('data.part_number'))->toBe('MPN-42-ABC');
+});
+
+it('accepts a valid gtin and rejects a mistyped one', function () {
+    $valid = $this->postJson('/api/v1/products', [
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => $this->organization->id,
+        'name' => 'GTIN Product',
+        'gtin' => '4006381333931',
+    ])->assertStatus(201)->json('data');
+
+    expect($valid['gtin'])->toBe('4006381333931')
+        ->and($valid['gtin_type'])->toBe('GTIN-13');
+
+    // Same number with the check digit broken.
+    $this->postJson('/api/v1/products', [
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => $this->organization->id,
+        'name' => 'Bad GTIN Product',
+        'gtin' => '4006381333932',
+    ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['gtin']);
+
+    // Unsupported length.
+    $this->postJson('/api/v1/products', [
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => $this->organization->id,
+        'name' => 'Short GTIN Product',
+        'gtin' => '12345',
+    ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['gtin']);
+});
+
+it('indexes the gtin in the search document', function () {
+    $product = Product::create([
+        'tenant_id' => $this->tenant->id,
+        'organization_id' => $this->organization->id,
+        'name' => 'Indexed GTIN Product',
+        'slug' => 'indexed-gtin-product',
+        'status' => 'active',
+        'is_active' => true,
+        'gtin' => '4006381333931',
+    ]);
+
+    $document = app(ProductSearchService::class)->buildDocument($product);
+
+    expect($document['gtin'])->toBe('4006381333931');
 });
 
 it('syncs sales channels when creating and updating a product', function () {

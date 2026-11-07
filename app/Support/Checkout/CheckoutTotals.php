@@ -26,6 +26,11 @@ final class CheckoutTotals
         public readonly ?string $couponCode = null,
         public readonly ?string $couponLabel = null,
         public readonly float $dutyEstimate = 0.0,
+        public readonly ?string $shippingMethod = null,
+        public readonly ?string $shippingRateUuid = null,
+        /** @var array<int, array<string, mixed>> */
+        public readonly array $shippingOptions = [],
+        public readonly string $shippingSource = 'config',
     ) {}
 
     /**
@@ -71,6 +76,10 @@ final class CheckoutTotals
             'coupon_label' => $this->couponLabel,
             'duty_estimate' => $this->dutyEstimate,
             'landed_cost' => $this->landedCost(),
+            'shipping_method' => $this->shippingMethod,
+            'shipping_rate_uuid' => $this->shippingRateUuid,
+            'shipping_options' => $this->shippingOptions,
+            'shipping_source' => $this->shippingSource,
         ];
     }
 }

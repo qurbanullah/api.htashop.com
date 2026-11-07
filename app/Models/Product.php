@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -69,6 +70,7 @@ class Product extends Model
         'unspsc',
         'ntn',
         'barcode',
+        'gtin',
         'model_number',
         'sourcing',
         'lead_time_days',
@@ -153,6 +155,28 @@ class Product extends Model
     public function variants(): HasMany
     {
         return $this->hasMany(Variant::class)->orderByDesc('is_default')->orderBy('name');
+    }
+
+    /**
+     * Video assets attached through the DAM, kept separate from the image
+     * `dams` relation so gallery/poster resolution never picks one up.
+     *
+     * @return MorphMany<Dam, Product>
+     */
+    public function videos(): MorphMany
+    {
+        return $this->morphMany(Dam::class, 'damable')
+            ->where('collection_name', Dam::COLLECTION_VIDEO)
+            ->orderBy('sort_order')
+            ->orderBy('id');
+    }
+
+    /**
+     * @return HasOne<ProductShipping, Product>
+     */
+    public function shipping(): HasOne
+    {
+        return $this->hasOne(ProductShipping::class);
     }
 
     /**

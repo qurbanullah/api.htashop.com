@@ -37,6 +37,7 @@ class ProductUpdateAction
                 'unspsc' => array_key_exists('unspsc', $data) ? data_get($data, 'unspsc') : $product->unspsc,
                 'ntn' => array_key_exists('ntn', $data) ? data_get($data, 'ntn') : $product->ntn,
                 'barcode' => array_key_exists('barcode', $data) ? data_get($data, 'barcode') : $product->barcode,
+                'gtin' => array_key_exists('gtin', $data) ? data_get($data, 'gtin') : $product->gtin,
                 'model_number' => array_key_exists('model_number', $data) ? data_get($data, 'model_number') : $product->model_number,
                 'sourcing' => array_key_exists('sourcing', $data) ? (data_get($data, 'sourcing') ?: Sourcing::IN_STOCK) : $product->sourcing,
                 'lead_time_days' => array_key_exists('lead_time_days', $data) ? data_get($data, 'lead_time_days') : $product->lead_time_days,

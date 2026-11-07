@@ -20,6 +20,7 @@ class UpdateAssetRequest extends FormRequest
             'collection_name' => 'sometimes|string|max:100',
             'collection_keys' => 'sometimes|array',
             'collection_keys.*' => 'string|max:100',
+            'metadata' => 'sometimes|array',
             'sort_order' => 'sometimes|nullable|integer|min:0',
         ];
     }

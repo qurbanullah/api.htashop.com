@@ -15,6 +15,10 @@ class UnitResource extends JsonResource
             'name' => $this->name,
             'code' => $this->code,
             'symbol' => $this->symbol,
+            // Conversion factors let the UI preview normalised values
+            // (e.g. billable weight) without a round trip.
+            'factor' => (float) $this->factor,
+            'offset' => (float) $this->offset,
             'measurement' => $this->whenLoaded('measurement', fn () => [
                 'id' => $this->measurement->id,
                 'name' => $this->measurement->name,

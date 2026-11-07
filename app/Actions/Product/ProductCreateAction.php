@@ -6,7 +6,6 @@ use App\Actions\Sku\SkuGeneratorAction;
 use App\Enums\Sourcing;
 use App\Models\Category;
 use App\Models\Feature;
-use App\Models\Organization;
 use App\Models\Product;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
@@ -40,21 +39,24 @@ class ProductCreateAction
 
     private function createProduct(array $data): Product
     {
-        $organization = Organization::query()->find(data_get($data, 'organization_id'));
         $category = $this->resolveTopLevelCategory(data_get($data, 'category_ids', []));
+        $partNumber = data_get($data, 'part_number');
+        $sellerSku = data_get($data, 'seller_sku');
+        $sku = $this->skuGenerator->product();
 
         $product = Product::create([
             'tenant_id' => data_get($data, 'tenant_id'),
             'organization_id' => data_get($data, 'organization_id'),
             'name' => data_get($data, 'name'),
             'slug' => $this->resolveSlug(data_get($data, 'slug'), data_get($data, 'name'), data_get($data, 'tenant_id')),
-            'sku' => $this->skuGenerator->product(
-                $organization ?? new Organization,
-                $category,
-                (int) data_get($data, 'tenant_id'),
-            ),
-            'seller_sku' => data_get($data, 'seller_sku'),
-            'part_number' => data_get($data, 'part_number'),
+            'sku' => $sku,
+            // The seller's own code defaults to the platform identifier until
+            // they replace it with their warehouse code.
+            'seller_sku' => filled($sellerSku) ? $sellerSku : $sku,
+            'part_number' => filled($partNumber)
+                ? $partNumber
+                : $this->skuGenerator->partNumberSuggestion(),
+            'gtin' => data_get($data, 'gtin'),
             'hs_code' => data_get($data, 'hs_code'),
             'unspsc' => data_get($data, 'unspsc'),
             'ntn' => data_get($data, 'ntn'),
@@ -99,11 +101,22 @@ class ProductCreateAction
         ]);
     }
 
+    /**
+     * SKUs are prefixed with the root category's code, never a descendant's.
+     *
+     * A product may sit in several branches; a descendant selection is reduced
+     * to its root, so the prefix always describes the top-level catalogue
+     * family (e.g. `Electronics` → `EL`). When several roots are selected the
+     * shallowest row wins, with sort order and id breaking the tie so the same
+     * selection always produces the same prefix.
+     */
     private function resolveTopLevelCategory(array $categoryIds): ?Category
     {
         $category = Category::query()
             ->whereIn('id', $categoryIds)
             ->orderBy('level')
+            ->orderBy('sort_order')
+            ->orderBy('id')
             ->first();
 
         while ($category && $category->parent_id) {
