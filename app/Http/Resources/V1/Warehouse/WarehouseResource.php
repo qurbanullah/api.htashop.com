@@ -11,21 +11,28 @@ class WarehouseResource extends JsonResource
     {
         $address = $this->relationLoaded('address') ? $this->address : null;
 
+        // The address row is what the editors write, so it wins; the flat columns
+        // are a mirrored legacy view (kept in sync on every save) and are only a
+        // fallback for rows created before address editing existed.
+        $flat = fn (string $column, ?string $fromAddress): ?string => filled($fromAddress)
+            ? $fromAddress
+            : $this->{$column};
+
         return [
             'id' => $this->id,
             'uuid' => $this->uuid,
             'name' => $this->name,
             'code' => $this->code,
             'slug' => $this->slug,
-            'contact_name' => $this->contact_name,
-            'email' => $this->email,
-            'phone' => $this->phone,
-            'address_line_1' => $this->address_line_1,
-            'address_line_2' => $this->address_line_2,
-            'city' => $this->city,
-            'state' => $this->state,
-            'postal_code' => $this->postal_code,
-            'country' => $this->country,
+            'contact_name' => $flat('contact_name', $address?->contact_name),
+            'email' => $flat('email', $address?->email),
+            'phone' => $flat('phone', $address?->phone),
+            'address_line_1' => $flat('address_line_1', $address?->address_line_1),
+            'address_line_2' => $flat('address_line_2', $address?->address_line_2),
+            'city' => $flat('city', $address?->city),
+            'state' => $flat('state', $address?->state),
+            'postal_code' => $flat('postal_code', $address?->postal_code),
+            'country' => $flat('country', $address?->country?->name),
             'is_active' => $this->is_active,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
@@ -45,6 +52,7 @@ class WarehouseResource extends JsonResource
                 'state_code' => $address->state_code,
                 'postal_code' => $address->postal_code,
                 'country_id' => $address->country_id,
+                'country' => $address->country?->name,
             ] : null,
         ];
     }

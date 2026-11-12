@@ -8,6 +8,11 @@ class WarehouseSearchByUuidAction
 {
     public function handle(string $uuid): Warehouse
     {
-        return Warehouse::where('uuid', $uuid)->firstOrFail();
+        // The contact/address details live on the polymorphic address row, and the
+        // resource flattens them onto the warehouse fields.
+        return Warehouse::query()
+            ->with('address.country')
+            ->where('uuid', $uuid)
+            ->firstOrFail();
     }
 }

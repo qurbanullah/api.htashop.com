@@ -32,16 +32,26 @@ class WarehouseCreateAction
         ];
 
         $address = [];
+
+        // Contact and address details live on the `address` row. These keys also
+        // exist as flat columns on `warehouses`, so they are kept in `$data` and
+        // written to both — reports and raw SQL still see the values, and there is
+        // no second, silently stale copy.
+        $mirrored = [
+            'contact_name', 'email', 'phone',
+            'address_line_1', 'address_line_2', 'city', 'state', 'postal_code',
+        ];
+
         foreach ($keys as $key) {
-            if (array_key_exists($key, $data)) {
-                $address[$key] = $data[$key];
+            if (! array_key_exists($key, $data)) {
+                continue;
+            }
+
+            $address[$key] = $data[$key];
+
+            if (! in_array($key, $mirrored, true)) {
                 unset($data[$key]);
             }
-        }
-
-        // Legacy flat country name column stays on the warehouse record itself.
-        if (array_key_exists('country', $data)) {
-            unset($data['country']);
         }
 
         return $address;

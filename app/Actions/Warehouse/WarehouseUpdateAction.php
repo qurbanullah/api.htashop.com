@@ -35,15 +35,23 @@ class WarehouseUpdateAction
         ];
 
         $address = [];
+
+        // Mirrored onto the flat warehouse columns as well; see the create action.
+        $mirrored = [
+            'contact_name', 'email', 'phone',
+            'address_line_1', 'address_line_2', 'city', 'state', 'postal_code',
+        ];
+
         foreach ($keys as $key) {
-            if (array_key_exists($key, $data)) {
-                $address[$key] = $data[$key];
+            if (! array_key_exists($key, $data)) {
+                continue;
+            }
+
+            $address[$key] = $data[$key];
+
+            if (! in_array($key, $mirrored, true)) {
                 unset($data[$key]);
             }
-        }
-
-        if (array_key_exists('country', $data)) {
-            unset($data['country']);
         }
 
         return $address;
