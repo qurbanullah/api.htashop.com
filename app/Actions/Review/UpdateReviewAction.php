@@ -10,10 +10,6 @@ class UpdateReviewAction
     /**
      * Update an existing review
      *
-     * @param Review $review
-     * @param User $user
-     * @param array $data
-     * @return Review
      * @throws \Exception
      */
     public function execute(Review $review, User $user, array $data): Review

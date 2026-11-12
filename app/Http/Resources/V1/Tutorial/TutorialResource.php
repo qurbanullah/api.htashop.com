@@ -17,7 +17,7 @@ class TutorialResource extends JsonResource
         // Generate frontend URL
         $frontendBase = config('app.frontend_url', 'https://htashop.com');
         $slug = $this->slug ?? $this->uuid;
-        $frontendUrl = rtrim($frontendBase, '/') . '/tutorials/' . $slug;
+        $frontendUrl = rtrim($frontendBase, '/').'/tutorials/'.$slug;
 
         $assets = $this->whenLoaded('dams', function () {
             $mapAsset = function (string $collection) {

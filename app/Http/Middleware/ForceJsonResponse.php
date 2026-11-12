@@ -13,7 +13,7 @@ class ForceJsonResponse
      *
      * Force JSON response for all API requests, even for errors.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {

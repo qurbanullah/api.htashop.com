@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Package;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class PackageSeeder extends Seeder
@@ -16,6 +15,7 @@ class PackageSeeder extends Seeder
         // Check if packages already exist
         if (Package::count() > 0) {
             $this->command->info('Package records already exist, skipping package seeding.');
+
             return;
         }
 
@@ -105,13 +105,13 @@ class PackageSeeder extends Seeder
 
         $activeCount = Package::where('is_active', true)->count();
         $totalCount = Package::count();
-        
-        $this->command->info("🎉 Successfully created {$totalCount} package records ({$activeCount} active, " . ($totalCount - $activeCount) . " inactive)");
+
+        $this->command->info("🎉 Successfully created {$totalCount} package records ({$activeCount} active, ".($totalCount - $activeCount).' inactive)');
 
         // Display package hierarchy
-        $this->command->info("");
-        $this->command->info("📦 Package Hierarchy:");
-        $this->command->info("─────────────────────");
+        $this->command->info('');
+        $this->command->info('📦 Package Hierarchy:');
+        $this->command->info('─────────────────────');
         Package::orderBy('sorting')->get()->each(function ($package) {
             $this->command->info("  {$package->sorting}. {$package->name} - {$package->summary}");
         });

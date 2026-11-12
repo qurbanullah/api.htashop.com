@@ -6,9 +6,10 @@ use App\Models\ContactMessage;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Mail\Mailables\Address;
 use Illuminate\Queue\SerializesModels;
 
 class ContactMessageNotificationMail extends Mailable
@@ -29,12 +30,12 @@ class ContactMessageNotificationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'New Contact Message: ' . $this->contactMessage->subject,
+            subject: 'New Contact Message: '.$this->contactMessage->subject,
             replyTo: [
                 new Address(
                     $this->contactMessage->email,
                     $this->contactMessage->name
-                )
+                ),
             ]
         );
     }
@@ -56,7 +57,7 @@ class ContactMessageNotificationMail extends Mailable
     /**
      * Get the attachments for the message.
      *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {

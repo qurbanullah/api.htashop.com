@@ -38,8 +38,6 @@ class TicketStatusStatsAction
 {
     /**
      * Get ticket statistics by status
-     *
-     * @return array
      */
     public function handle(): array
     {

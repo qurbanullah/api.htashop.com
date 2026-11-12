@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Services\Post\PostService;
+use Illuminate\Console\Command;
 
 class SendScheduledPosts extends Command
 {
@@ -31,6 +31,7 @@ class SendScheduledPosts extends Command
 
         if ($scheduledPost->isEmpty()) {
             $this->info('No post scheduled for sending.');
+
             return;
         }
 
@@ -42,7 +43,7 @@ class SendScheduledPosts extends Command
 
                 $result = $postService->sendPost($post);
 
-                $this->info("✓ Post sent successfully!");
+                $this->info('✓ Post sent successfully!');
                 $this->line("  - Sent to: {$result['sent_count']} recipients");
                 $this->line("  - Failed: {$result['failed_count']} recipients");
 

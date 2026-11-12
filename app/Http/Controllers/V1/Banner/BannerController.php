@@ -18,8 +18,7 @@ class BannerController extends Controller
 {
     public function __construct(
         protected BannerService $bannerService,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -41,7 +40,7 @@ class BannerController extends Controller
     {
         $banners = Banner::query()
             ->when($request->filled('placement'), fn ($q) => $q->where('placement', $request->string('placement')))
-            ->when($request->filled('search'), fn ($q) => $q->where('title', 'like', '%' . $request->string('search') . '%'))
+            ->when($request->filled('search'), fn ($q) => $q->where('title', 'like', '%'.$request->string('search').'%'))
             ->withTrashed()
             ->orderBy('placement')
             ->orderBy('sort_order')

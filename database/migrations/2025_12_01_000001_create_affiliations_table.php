@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('affiliations')) {
+        if (! Schema::hasTable('affiliations')) {
             Schema::create('affiliations', function (Blueprint $table) {
                 $table->id();
                 $table->morphs('affiliatable'); // affiliatable_type, affiliatable_id

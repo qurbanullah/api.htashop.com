@@ -2,15 +2,15 @@
 
 namespace App\Services\Tutorial;
 
-use App\Helpers\CacheHelper;
-use App\Services\Dam\DamService;
-use App\Models\Tutorial;
 use App\Actions\Tutorial\CreateTutorialAction;
-use App\Actions\Tutorial\UpdateTutorialAction;
 use App\Actions\Tutorial\DeleteTutorialAction;
-use Illuminate\Support\Facades\Auth;
+use App\Actions\Tutorial\UpdateTutorialAction;
+use App\Helpers\CacheHelper;
+use App\Models\Tutorial;
+use App\Services\Dam\DamService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Service class for Tutorial business logic.
@@ -23,8 +23,11 @@ use Carbon\Carbon;
 class TutorialService
 {
     protected $createAction;
+
     protected $updateAction;
+
     protected $deleteAction;
+
     protected $damService;
 
     public function __construct(
@@ -44,7 +47,7 @@ class TutorialService
      */
     public function getAllTutorials(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $cacheKey = 'tutorials_' . md5(serialize($filters)) . '_page_' . request('page', 1) . '_per_page_' . $perPage;
+        $cacheKey = 'tutorials_'.md5(serialize($filters)).'_page_'.request('page', 1).'_per_page_'.$perPage;
 
         return CacheHelper::remember([], $cacheKey, 300, function () use ($filters, $perPage) {
             $query = Tutorial::with($this->tutorialRelations())->latest();
@@ -59,8 +62,8 @@ class TutorialService
 
             if (isset($filters['search'])) {
                 $query->where(function ($q) use ($filters) {
-                    $q->where('title', 'like', '%' . $filters['search'] . '%')
-                      ->orWhere('excerpt', 'like', '%' . $filters['search'] . '%');
+                    $q->where('title', 'like', '%'.$filters['search'].'%')
+                        ->orWhere('excerpt', 'like', '%'.$filters['search'].'%');
                 });
             }
 
@@ -85,7 +88,7 @@ class TutorialService
      */
     public function getPublicTutorials(int $perPage = 12): LengthAwarePaginator
     {
-        $cacheKey = 'public_tutorials_page_' . request('page', 1) . '_per_page_' . $perPage;
+        $cacheKey = 'public_tutorials_page_'.request('page', 1).'_per_page_'.$perPage;
 
         return CacheHelper::remember([], $cacheKey, 600, function () use ($perPage) {
             return Tutorial::published()
@@ -100,7 +103,7 @@ class TutorialService
      */
     public function getTutorialByUuid(string $uuid): ?Tutorial
     {
-        $cacheKey = 'tutorial_uuid_' . $uuid;
+        $cacheKey = 'tutorial_uuid_'.$uuid;
 
         return CacheHelper::remember([], $cacheKey, 3600, function () use ($uuid) {
             return Tutorial::where('uuid', $uuid)
@@ -114,7 +117,7 @@ class TutorialService
      */
     public function getTutorialBySlug(string $slug): ?Tutorial
     {
-        $cacheKey = 'tutorial_slug_' . $slug;
+        $cacheKey = 'tutorial_slug_'.$slug;
 
         return CacheHelper::remember([], $cacheKey, 3600, function () use ($slug) {
             return Tutorial::where('slug', $slug)
@@ -129,7 +132,7 @@ class TutorialService
      */
     public function createTutorial(array $data, ?int $createdBy = null): Tutorial
     {
-        if (!isset($data['created_by'])) {
+        if (! isset($data['created_by'])) {
             $data['created_by'] = $createdBy ?? Auth::id();
         }
 
@@ -160,6 +163,7 @@ class TutorialService
         $tutorial->dams()->delete();
         $result = $this->deleteAction->execute($tutorial);
         $this->clearTutorialCache($tutorial);
+
         return $result;
     }
 
@@ -203,9 +207,9 @@ class TutorialService
     /**
      * Get popular tutorials
      */
-    public function getPopularTutorials(int $limit = 10): \Illuminate\Database\Eloquent\Collection
+    public function getPopularTutorials(int $limit = 10): Collection
     {
-        $cacheKey = 'popular_tutorials_' . $limit;
+        $cacheKey = 'popular_tutorials_'.$limit;
 
         return CacheHelper::remember([], $cacheKey, 1800, function () use ($limit) {
             return Tutorial::published()
@@ -228,8 +232,8 @@ class TutorialService
 
         // Clear specific tutorial caches
         if ($tutorial) {
-            CacheHelper::forget([], 'tutorial_uuid_' . $tutorial->uuid);
-            CacheHelper::forget([], 'tutorial_slug_' . $tutorial->slug);
+            CacheHelper::forget([], 'tutorial_uuid_'.$tutorial->uuid);
+            CacheHelper::forget([], 'tutorial_slug_'.$tutorial->slug);
         }
 
         // Clear stats cache

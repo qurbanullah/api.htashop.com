@@ -10,14 +10,12 @@ use App\Models\Version;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ChangelogController extends Controller
 {
     /**
      * Display a paginated list of all active changelogs (Public endpoint).
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
@@ -45,8 +43,8 @@ class ChangelogController extends Controller
             if ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
-                      ->orWhere('content', 'like', "%{$search}%")
-                      ->orWhere('version_number', 'like', "%{$search}%");
+                        ->orWhere('content', 'like', "%{$search}%")
+                        ->orWhere('version_number', 'like', "%{$search}%");
                 });
             }
 
@@ -64,7 +62,7 @@ class ChangelogController extends Controller
                     'id' => $changelog->id,
                     'title' => $changelog->title,
                     'excerpt' => $changelog->content
-                        ? \Illuminate\Support\Str::limit(strip_tags($changelog->content), 150)
+                        ? Str::limit(strip_tags($changelog->content), 150)
                         : null,
                     'content' => $changelog->content,
                     'file_path' => $changelog->file_path,
@@ -116,8 +114,7 @@ class ChangelogController extends Controller
     /**
      * Display the specified changelog (Public endpoint).
      *
-     * @param int $id Changelog ID
-     * @return JsonResponse
+     * @param  int  $id  Changelog ID
      */
     public function show(int $id): JsonResponse
     {
@@ -127,7 +124,7 @@ class ChangelogController extends Controller
                 ->where('is_active', true)
                 ->first();
 
-            if (!$changelog) {
+            if (! $changelog) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Changelog not found',

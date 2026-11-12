@@ -18,8 +18,7 @@ class SyncProductToSearchJob implements ShouldQueue
     public function __construct(
         public int $productId,
         public string $action = 'upsert', // 'upsert' | 'delete'
-    ) {
-    }
+    ) {}
 
     public function handle(ProductSearchService $searchService): void
     {

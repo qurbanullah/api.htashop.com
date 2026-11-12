@@ -2,13 +2,7 @@
 
 namespace App\Models;
 
-
-use App\Models\Catalog;
-use App\Models\Currency;
-use App\Models\Organization;
-use App\Models\Price;
 use App\Enums\ContractTypeEnum;
-use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,7 +12,7 @@ use Illuminate\Support\Str;
 
 class Contract extends Model
 {
-        use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'uuid',

@@ -2,6 +2,8 @@
 
 namespace Tests\Unit\Measurement;
 
+use App\Services\Measurement\MeasurementService;
+
 test('the Measurement service classes exist', function () {
-    expect(class_exists(\App\Services\Measurement\MeasurementService::class))->toBeTrue();
+    expect(class_exists(MeasurementService::class))->toBeTrue();
 });

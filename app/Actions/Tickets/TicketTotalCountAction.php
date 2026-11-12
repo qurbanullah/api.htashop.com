@@ -38,8 +38,6 @@ class TicketTotalCountAction
 {
     /**
      * Get total ticket count
-     *
-     * @return int
      */
     public function handle(): int
     {

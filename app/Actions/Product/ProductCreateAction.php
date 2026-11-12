@@ -70,6 +70,7 @@ class ProductCreateAction
             'status' => data_get($data, 'status', 'draft'),
             'summary' => data_get($data, 'summary'),
             'description' => data_get($data, 'description'),
+            'cost_price' => data_get($data, 'cost_price'),
             'is_active' => data_get($data, 'is_active', true),
             'metadata' => data_get($data, 'metadata'),
         ]);

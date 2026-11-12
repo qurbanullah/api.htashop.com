@@ -68,6 +68,7 @@ class PublicationService
     public function updatePublication(Publication $publication, array $data): Publication
     {
         $publication->update($data);
+
         return $publication->fresh(['publishable', 'verifiedBy']);
     }
 
@@ -86,6 +87,7 @@ class PublicationService
     {
         $publication = Publication::withTrashed()->findOrFail($id);
         $publication->restore();
+
         return $publication->fresh(['publishable', 'verifiedBy']);
     }
 
@@ -95,6 +97,7 @@ class PublicationService
     public function forceDeletePublication(int $id): bool
     {
         $publication = Publication::withTrashed()->findOrFail($id);
+
         return $publication->forceDelete();
     }
 
@@ -104,6 +107,7 @@ class PublicationService
     public function verifyPublication(Publication $publication, int $verifiedBy): Publication
     {
         $publication->markAsVerified($verifiedBy);
+
         return $publication->fresh(['publishable', 'verifiedBy']);
     }
 
@@ -113,6 +117,7 @@ class PublicationService
     public function unverifyPublication(Publication $publication): Publication
     {
         $publication->markAsUnverified();
+
         return $publication->fresh(['publishable', 'verifiedBy']);
     }
 
@@ -122,6 +127,7 @@ class PublicationService
     public function toggleFeatured(Publication $publication): Publication
     {
         $publication->toggleFeatured();
+
         return $publication->fresh(['publishable', 'verifiedBy']);
     }
 
@@ -131,6 +137,7 @@ class PublicationService
     public function togglePublic(Publication $publication): Publication
     {
         $publication->togglePublic();
+
         return $publication->fresh(['publishable', 'verifiedBy']);
     }
 
@@ -351,17 +358,17 @@ class PublicationService
     protected function applyFilters(Builder $query, array $filters): void
     {
         // Search
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->search($filters['search']);
         }
 
         // Type filter
-        if (!empty($filters['type'])) {
+        if (! empty($filters['type'])) {
             $query->ofType($filters['type']);
         }
 
         // Access type filter
-        if (!empty($filters['access_type'])) {
+        if (! empty($filters['access_type'])) {
             $query->byAccessType($filters['access_type']);
         }
 
@@ -395,22 +402,22 @@ class PublicationService
         }
 
         // Year filter
-        if (!empty($filters['year'])) {
+        if (! empty($filters['year'])) {
             $query->byYear($filters['year']);
         }
 
         // Year range filter
-        if (!empty($filters['start_year']) && !empty($filters['end_year'])) {
+        if (! empty($filters['start_year']) && ! empty($filters['end_year'])) {
             $query->byYearRange($filters['start_year'], $filters['end_year']);
         }
 
         // Publishable type filter
-        if (!empty($filters['publishable_type'])) {
+        if (! empty($filters['publishable_type'])) {
             $query->where('publishable_type', $filters['publishable_type']);
         }
 
         // Publishable ID filter
-        if (!empty($filters['publishable_id'])) {
+        if (! empty($filters['publishable_id'])) {
             $query->where('publishable_id', $filters['publishable_id']);
         }
 
@@ -420,12 +427,12 @@ class PublicationService
         }
 
         // Include trashed
-        if (!empty($filters['include_trashed'])) {
+        if (! empty($filters['include_trashed'])) {
             $query->withTrashed();
         }
 
         // Only trashed
-        if (!empty($filters['only_trashed'])) {
+        if (! empty($filters['only_trashed'])) {
             $query->onlyTrashed();
         }
     }

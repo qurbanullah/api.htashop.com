@@ -9,6 +9,7 @@ class InventoryUpdateAction
     public function handle(Inventory $inventory, array $data): Inventory
     {
         $inventory->update($data);
+
         return $inventory->fresh();
     }
 }

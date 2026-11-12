@@ -2,11 +2,11 @@
 
 namespace App\Notifications;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use App\Models\User;
 
 class EmailVerificationNotification extends Notification implements ShouldQueue
 {
@@ -39,8 +39,8 @@ class EmailVerificationNotification extends Notification implements ShouldQueue
         $appName = config('app.name', 'HTAShop');
 
         return (new MailMessage)
-            ->subject('Verify Your Email Address - ' . $appName)
-            ->greeting('Hello ' . $this->user->name . ',')
+            ->subject('Verify Your Email Address - '.$appName)
+            ->greeting('Hello '.$this->user->name.',')
             ->line('Please verify your email address by clicking the button below.')
             ->action('Verify Email Address', $verificationUrl)
             ->line('This link will expire in 24 hours.')
@@ -70,6 +70,7 @@ class EmailVerificationNotification extends Notification implements ShouldQueue
     {
         $frontendUrl = config('app.manage_frontend_url', 'https://manage.htashop.com');
         $token = urlencode($this->verificationToken);
-        return "{$frontendUrl}/verify-email?token={$token}&email=" . urlencode($this->user->email);
+
+        return "{$frontendUrl}/verify-email?token={$token}&email=".urlencode($this->user->email);
     }
 }

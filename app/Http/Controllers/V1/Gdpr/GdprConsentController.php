@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Gdpr\StoreGdprConsentRequest;
 use App\Http\Resources\V1\Gdpr\GdprConsentResource;
 use App\Http\Responses\V1\ApiResponse;
+use App\Models\GdprConsent;
 use App\Services\Gdpr\GdprConsentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -60,7 +61,7 @@ class GdprConsentController extends Controller
             $this->authenticatedUserId($request)
         );
 
-        if (!$consent) {
+        if (! $consent) {
             return ApiResponse::success(null, 'No consent recorded yet', 200);
         }
 
@@ -79,7 +80,7 @@ class GdprConsentController extends Controller
     {
         $perPage = min((int) $request->input('per_page', 20), 100);
 
-        $consents = \App\Models\GdprConsent::query()
+        $consents = GdprConsent::query()
             ->where('user_id', $request->user()->id)
             ->orderBy('accepted_at', 'desc')
             ->paginate($perPage);

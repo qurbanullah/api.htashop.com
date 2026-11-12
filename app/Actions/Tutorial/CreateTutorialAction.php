@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Actions\Tutorial;
 
-use App\Models\Tutorial;
-use App\Models\Tag;
 use App\Models\Category;
+use App\Models\Tag;
+use App\Models\Tutorial;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -36,7 +36,7 @@ class CreateTutorialAction
             // Auto-set published_at if status is published and published_at not provided
             $status = data_get($data, 'status', 'draft');
             $publishedAt = data_get($data, 'published_at');
-            if ($status === 'published' && !$publishedAt) {
+            if ($status === 'published' && ! $publishedAt) {
                 $publishedAt = now();
             }
 
@@ -74,7 +74,7 @@ class CreateTutorialAction
                 $tutorial->categories()->sync($categoryIds);
 
                 // Auto-set primary category if not specified but categories are provided
-                if (empty($data['primary_category_id']) && !empty($categoryIds)) {
+                if (empty($data['primary_category_id']) && ! empty($categoryIds)) {
                     $tutorial->primary_category_id = $categoryIds[0];
                     $tutorial->save();
                 }
@@ -94,7 +94,7 @@ class CreateTutorialAction
         $count = 1;
 
         while (Tutorial::where('slug', $slug)->exists()) {
-            $slug = $originalSlug . '-' . $count;
+            $slug = $originalSlug.'-'.$count;
             $count++;
         }
 

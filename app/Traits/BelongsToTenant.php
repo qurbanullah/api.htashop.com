@@ -10,8 +10,6 @@ trait BelongsToTenant
 {
     /**
      * Boot the BelongsToTenant trait for a model.
-     *
-     * @return void
      */
     protected static function bootBelongsToTenant(): void
     {
@@ -23,15 +21,15 @@ trait BelongsToTenant
                 $user = Auth::user();
 
                 // Example check to bypass for super-admins if necessary
-                if (! $user->hasRole('super-admin') && !empty($user->tenant_id)) {
-                    $builder->where($builder->getModel()->getTable() . '.tenant_id', $user->tenant_id);
+                if (! $user->hasRole('super-admin') && ! empty($user->tenant_id)) {
+                    $builder->where($builder->getModel()->getTable().'.tenant_id', $user->tenant_id);
                 }
             }
         });
 
         static::creating(function (Model $model) {
             // Automatically assign tenant_id on creation if missing
-            if (empty($model->tenant_id) && Auth::check() && !empty(Auth::user()->tenant_id)) {
+            if (empty($model->tenant_id) && Auth::check() && ! empty(Auth::user()->tenant_id)) {
                 $model->tenant_id = Auth::user()->tenant_id;
             }
         });

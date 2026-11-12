@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace App\Actions\Tickets;
 
 use App\Models\Ticket;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -43,7 +44,8 @@ class TicketLockAction
      *
      * @param  int  $id  model id
      * @param  bool  $isLocked  whether to lock or unlock the ticket
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @throws AuthorizationException
      */
     public function handle(int $id, bool $isLocked = true): Ticket
     {

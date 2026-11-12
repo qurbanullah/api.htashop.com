@@ -21,7 +21,7 @@ enum EulaStatus: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::DRAFT => 'Draft',
             self::ACTIVE => 'Active',
             self::INACTIVE => 'Inactive',
@@ -33,7 +33,7 @@ enum EulaStatus: string
      */
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::DRAFT => 'gray',
             self::ACTIVE => 'green',
             self::INACTIVE => 'red',

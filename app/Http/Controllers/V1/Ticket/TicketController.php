@@ -12,11 +12,12 @@ use App\Http\Resources\V1\Ticket\TicketResource;
 use App\Jobs\Tickets\SendTicketReopenedEmail;
 use App\Models\Ticket;
 use App\Models\User;
-use App\Services\Tickets\TicketService;
 use App\Services\Assignment\AssignmentService;
+use App\Services\Tickets\TicketService;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
 class TicketController extends Controller
@@ -27,7 +28,7 @@ class TicketController extends Controller
     ) {
         // Exclude 'show' and 'update' from automatic authorization due to custom parameters
         $this->authorizeResource(Ticket::class, 'ticket', [
-            'except' => ['show', 'update']
+            'except' => ['show', 'update'],
         ]);
     }
 
@@ -76,8 +77,6 @@ class TicketController extends Controller
         try {
             $validated = $request->validated();
 
-
-
             // (no debug logging here)
 
             // Extract relationship IDs
@@ -93,16 +92,16 @@ class TicketController extends Controller
             $ticket = $this->ticketService->create($validated);
 
             // Sync polymorphic relationships
-            if (!empty($softwareIds)) {
+            if (! empty($softwareIds)) {
                 $ticket->softwares()->sync($softwareIds);
             }
-            if (!empty($versionIds)) {
+            if (! empty($versionIds)) {
                 $ticket->versions()->sync($versionIds);
             }
-            if (!empty($ltypeIds)) {
+            if (! empty($ltypeIds)) {
                 $ticket->ltypes()->sync($ltypeIds);
             }
-            if (!empty($packageIds)) {
+            if (! empty($packageIds)) {
                 $ticket->packages()->sync($packageIds);
             }
 
@@ -133,7 +132,7 @@ class TicketController extends Controller
         try {
             $ticket = $this->ticketService->searchByUuid($uuid);
 
-            if (!$ticket) {
+            if (! $ticket) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Ticket not found',
@@ -156,7 +155,7 @@ class TicketController extends Controller
                 'success' => true,
                 'data' => new TicketResource($ticket),
             ]);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'This action is unauthorized.',
@@ -200,14 +199,14 @@ class TicketController extends Controller
             // Additional debug: log which keys were validated
             Log::debug('TicketController::update validated keys', [
                 'ticket_id' => $id,
-                'keys' => array_keys($validated)
+                'keys' => array_keys($validated),
             ]);
 
             // Log client-side flag if present
             if (array_key_exists('client_contains_img', $validated)) {
                 Log::debug('TicketController::update client_contains_img', [
                     'ticket_id' => $id,
-                    'client_contains_img' => (bool) $validated['client_contains_img']
+                    'client_contains_img' => (bool) $validated['client_contains_img'],
                 ]);
             }
 
@@ -247,12 +246,12 @@ class TicketController extends Controller
                     'packages',
                 ])),
             ]);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'This action is unauthorized.',
             ], 403);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Ticket not found',
@@ -284,12 +283,12 @@ class TicketController extends Controller
                 'success' => true,
                 'message' => 'Ticket deleted successfully',
             ]);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Ticket not found',
             ], 404);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to delete this ticket',
@@ -394,12 +393,12 @@ class TicketController extends Controller
             $ticket = null;
             if ($uuid !== 'new') {
                 $ticket = $this->ticketService->searchByUuid($uuid);
-                if (!$ticket) {
+                if (! $ticket) {
                     return response()->json(['success' => false, 'message' => 'Ticket not found'], 404);
                 }
             }
 
-            if (!$request->hasFile('file')) {
+            if (! $request->hasFile('file')) {
                 return response()->json(['success' => false, 'message' => 'No file uploaded'], 422);
             }
 
@@ -411,7 +410,7 @@ class TicketController extends Controller
             }
 
             $path = $file->store('tickets', 'public');
-            $url = request()->getSchemeAndHttpHost() . '/storage/' . ltrim($path, '/');
+            $url = request()->getSchemeAndHttpHost().'/storage/'.ltrim($path, '/');
 
             return response()->json([
                 'success' => true,
@@ -437,7 +436,7 @@ class TicketController extends Controller
         try {
             $ticket = $this->ticketService->searchByUuid($uuid);
 
-            if (!$ticket) {
+            if (! $ticket) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Ticket not found',
@@ -453,7 +452,7 @@ class TicketController extends Controller
                 'message' => 'Ticket resolved successfully',
                 'data' => new TicketResource($ticket->fresh()),
             ]);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to resolve this ticket',
@@ -477,7 +476,7 @@ class TicketController extends Controller
         try {
             $ticket = $this->ticketService->searchByUuid($uuid);
 
-            if (!$ticket) {
+            if (! $ticket) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Ticket not found',
@@ -493,7 +492,7 @@ class TicketController extends Controller
                 'message' => 'Ticket closed successfully',
                 'data' => new TicketResource($ticket->fresh()),
             ]);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to close this ticket',
@@ -517,7 +516,7 @@ class TicketController extends Controller
         try {
             $ticket = $this->ticketService->searchByUuid($uuid);
 
-            if (!$ticket) {
+            if (! $ticket) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Ticket not found',
@@ -541,7 +540,7 @@ class TicketController extends Controller
                 'message' => 'Ticket reopened successfully',
                 'data' => new TicketResource($ticket->fresh()),
             ]);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to reopen this ticket',
@@ -565,7 +564,7 @@ class TicketController extends Controller
         try {
             $ticket = $this->ticketService->searchByUuid($uuid);
 
-            if (!$ticket) {
+            if (! $ticket) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Ticket not found',
@@ -574,7 +573,7 @@ class TicketController extends Controller
 
             $this->authorize('update', $ticket);
 
-            $newLockState = !$ticket->is_locked;
+            $newLockState = ! $ticket->is_locked;
             $ticket = $this->ticketService->lock($ticket->id, $newLockState);
 
             return response()->json([
@@ -582,7 +581,7 @@ class TicketController extends Controller
                 'message' => $newLockState ? 'Ticket locked successfully' : 'Ticket unlocked successfully',
                 'data' => new TicketResource($ticket->fresh()),
             ]);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to lock/unlock this ticket',
@@ -606,7 +605,7 @@ class TicketController extends Controller
         try {
             $ticket = $this->ticketService->searchByUuid($uuid);
 
-            if (!$ticket) {
+            if (! $ticket) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Ticket not found',
@@ -622,7 +621,7 @@ class TicketController extends Controller
                 'message' => 'Ticket archived successfully',
                 'data' => new TicketResource($ticket->fresh()),
             ]);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to archive this ticket',
@@ -679,7 +678,7 @@ class TicketController extends Controller
         try {
             $ticket = $this->ticketService->searchByUuid($uuid);
 
-            if (!$ticket) {
+            if (! $ticket) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Ticket not found',
@@ -708,7 +707,7 @@ class TicketController extends Controller
                     'ticket' => new TicketResource($ticket->fresh()),
                 ],
             ]);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to assign this ticket',
@@ -732,7 +731,7 @@ class TicketController extends Controller
         try {
             $ticket = $this->ticketService->searchByUuid($uuid);
 
-            if (!$ticket) {
+            if (! $ticket) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Ticket not found',
@@ -748,7 +747,7 @@ class TicketController extends Controller
                 'message' => 'Ticket unassigned successfully',
                 'data' => new TicketResource($ticket->fresh()),
             ]);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to unassign this ticket',

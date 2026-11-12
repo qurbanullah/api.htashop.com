@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class MessageController extends Controller
 {
@@ -30,7 +29,7 @@ class MessageController extends Controller
                 'messageable_id' => $ticket->id,
             ];
 
-            $message = (new MessageCreateAction())->handle($payload);
+            $message = (new MessageCreateAction)->handle($payload);
 
             return response()->json([
                 'success' => true,
@@ -58,7 +57,7 @@ class MessageController extends Controller
                 $ticket = Ticket::where('uuid', $uuid)->firstOrFail();
             }
 
-            if (!$request->hasFile('file')) {
+            if (! $request->hasFile('file')) {
                 return response()->json(['success' => false, 'message' => 'No file uploaded'], 422);
             }
 
@@ -71,7 +70,7 @@ class MessageController extends Controller
 
             $path = $file->store('messages', 'public');
             // Build public URL using the request's host (ensures correct port/environment)
-            $url = request()->getSchemeAndHttpHost() . '/storage/' . ltrim($path, '/');
+            $url = request()->getSchemeAndHttpHost().'/storage/'.ltrim($path, '/');
 
             return response()->json([
                 'success' => true,

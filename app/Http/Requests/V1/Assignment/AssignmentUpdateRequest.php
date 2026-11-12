@@ -34,7 +34,7 @@ class AssignmentUpdateRequest extends FormRequest
         $validator->after(function ($validator): void {
             $assignment = $this->currentAssignment();
 
-            if (!$assignment) {
+            if (! $assignment) {
                 return;
             }
 
@@ -68,7 +68,7 @@ class AssignmentUpdateRequest extends FormRequest
 
     private function resolveAssignable(?string $type, ?string $uuid): Product|Variant|null
     {
-        if (!$type || !$uuid) {
+        if (! $type || ! $uuid) {
             return null;
         }
 

@@ -14,11 +14,11 @@ class LoadUserRoles
      * Ensures the authenticated user has their roles relationship loaded.
      * This is necessary for authorization policies that depend on roles.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->user() && !$request->user()->relationLoaded('roles')) {
+        if ($request->user() && ! $request->user()->relationLoaded('roles')) {
             $request->user()->load('roles');
         }
 

@@ -29,6 +29,7 @@ class AttachFeaturesAction
                     $featureModel = Feature::find($featureId);
                     if ($featureModel) {
                         $featureModel->pivot_value = $value;
+
                         return $featureModel;
                     }
                 }
@@ -39,6 +40,7 @@ class AttachFeaturesAction
                         ['name' => $featureName, 'usage_count' => 0]
                     );
                     $featureModel->pivot_value = $value;
+
                     return $featureModel;
                 }
 
@@ -61,7 +63,7 @@ class AttachFeaturesAction
         $syncData = [];
         foreach ($featureModels as $featureModel) {
             $syncData[$featureModel->id] = [
-                'value' => $featureModel->pivot_value ?? null
+                'value' => $featureModel->pivot_value ?? null,
             ];
         }
 
@@ -69,7 +71,7 @@ class AttachFeaturesAction
 
         // Increment usage count
         $featureModels->each(function ($feature) {
-            if (!isset($feature->already_counted)) {
+            if (! isset($feature->already_counted)) {
                 $feature->incrementUsage();
             }
         });

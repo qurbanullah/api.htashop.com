@@ -16,8 +16,7 @@ class ProductRevisionController extends Controller
     public function __construct(
         protected ProductService $productService,
         protected RevisionService $revisionService,
-    ) {
-    }
+    ) {}
 
     public function index(string $uuid, Request $request): JsonResponse
     {

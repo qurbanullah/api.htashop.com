@@ -2,9 +2,10 @@
 
 namespace App\Actions\Manuscript;
 
+use App\Enums\DecisionType;
+use App\Enums\ManuscriptStatus;
 use App\Models\Manuscript;
 use App\Models\User;
-use App\Enums\ManuscriptStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -16,14 +17,14 @@ class UpdateManuscriptStatus
             $oldStatus = $manuscript->status;
 
             // Validate status transition
-            if (!$oldStatus->canTransitionTo($newStatus)) {
+            if (! $oldStatus->canTransitionTo($newStatus)) {
                 throw new \Exception("Cannot transition from {$oldStatus->label()} to {$newStatus->label()}");
             }
 
             // Update manuscript status
             $manuscript->update([
                 'status' => $newStatus,
-                'submission_date' => $newStatus === ManuscriptStatus::SUBMITTED ? now() : $manuscript->submission_date
+                'submission_date' => $newStatus === ManuscriptStatus::SUBMITTED ? now() : $manuscript->submission_date,
             ]);
 
             // Create decision record
@@ -37,7 +38,7 @@ class UpdateManuscriptStatus
                 'recommendation' => $data['recommendation'] ?? null,
                 'is_final' => $this->isFinalDecision($newStatus),
                 'completed_at' => now(),
-                'metadata' => $data['metadata'] ?? []
+                'metadata' => $data['metadata'] ?? [],
             ]);
 
             // Handle specific status changes
@@ -47,24 +48,24 @@ class UpdateManuscriptStatus
                 'manuscript_id' => $manuscript->id,
                 'old_status' => $oldStatus->value,
                 'new_status' => $newStatus->value,
-                'updated_by' => $user->id
+                'updated_by' => $user->id,
             ]);
 
             return $manuscript->fresh();
         });
     }
 
-    private function getDecisionType(ManuscriptStatus $status): \App\Enums\DecisionType
+    private function getDecisionType(ManuscriptStatus $status): DecisionType
     {
         return match ($status) {
-            ManuscriptStatus::UNDER_REVIEW => \App\Enums\DecisionType::EDITORIAL,
-            ManuscriptStatus::REVISION_REQUESTED => \App\Enums\DecisionType::REVISION_REQUEST,
-            ManuscriptStatus::ACCEPTED => \App\Enums\DecisionType::FINAL_ACCEPTANCE,
-            ManuscriptStatus::REJECTED => \App\Enums\DecisionType::REJECTION,
-            ManuscriptStatus::IN_COPYEDIT => \App\Enums\DecisionType::COPYEDIT,
-            ManuscriptStatus::IN_PRODUCTION => \App\Enums\DecisionType::PRODUCTION,
-            ManuscriptStatus::PUBLISHED => \App\Enums\DecisionType::PUBLICATION,
-            default => \App\Enums\DecisionType::EDITORIAL
+            ManuscriptStatus::UNDER_REVIEW => DecisionType::EDITORIAL,
+            ManuscriptStatus::REVISION_REQUESTED => DecisionType::REVISION_REQUEST,
+            ManuscriptStatus::ACCEPTED => DecisionType::FINAL_ACCEPTANCE,
+            ManuscriptStatus::REJECTED => DecisionType::REJECTION,
+            ManuscriptStatus::IN_COPYEDIT => DecisionType::COPYEDIT,
+            ManuscriptStatus::IN_PRODUCTION => DecisionType::PRODUCTION,
+            ManuscriptStatus::PUBLISHED => DecisionType::PUBLICATION,
+            default => DecisionType::EDITORIAL
         };
     }
 
@@ -74,7 +75,7 @@ class UpdateManuscriptStatus
             ManuscriptStatus::ACCEPTED,
             ManuscriptStatus::REJECTED,
             ManuscriptStatus::PUBLISHED,
-            ManuscriptStatus::WITHDRAWN
+            ManuscriptStatus::WITHDRAWN,
         ]);
     }
 
@@ -83,7 +84,7 @@ class UpdateManuscriptStatus
         switch ($status) {
             case ManuscriptStatus::UNDER_REVIEW:
                 // Create reviewer assignments if provided
-                if (!empty($data['reviewer_ids'])) {
+                if (! empty($data['reviewer_ids'])) {
                     $this->assignReviewers($manuscript, $data['reviewer_ids'], $user);
                 }
                 break;
@@ -93,7 +94,7 @@ class UpdateManuscriptStatus
                 $manuscript->update([
                     'published_at' => $data['published_at'] ?? now(),
                     'issue_id' => $data['issue_id'] ?? null,
-                    'doi' => $data['doi'] ?? null
+                    'doi' => $data['doi'] ?? null,
                 ]);
                 break;
 
@@ -102,7 +103,7 @@ class UpdateManuscriptStatus
                 // Archive the manuscript
                 $manuscript->update([
                     'archived_at' => now(),
-                    'archive_reason' => $data['archive_reason'] ?? $status->label()
+                    'archive_reason' => $data['archive_reason'] ?? $status->label(),
                 ]);
                 break;
         }

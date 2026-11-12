@@ -49,7 +49,7 @@ class CreateJournal
                 'languages' => $data['languages'] ?? ['en'],
                 'manuscript_types' => $data['manuscript_types'] ?? ['research_article'],
                 'settings' => $data['settings'] ?? [],
-                'metadata' => $data['metadata'] ?? []
+                'metadata' => $data['metadata'] ?? [],
             ]);
 
             // Add creator to editorial board as editor-in-chief
@@ -60,7 +60,7 @@ class CreateJournal
             ]);
 
             // Attach categories if provided
-            if (!empty($data['category_ids']) || !empty($data['category_id'])) {
+            if (! empty($data['category_ids']) || ! empty($data['category_id'])) {
                 $categoryIds = $data['category_ids'] ?? [$data['category_id']];
                 $journal->categories()->attach($categoryIds);
             }

@@ -4,7 +4,6 @@ namespace App\Actions\Features;
 
 use App\Models\Feature;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
 
 class DetachFeaturesAction
 {

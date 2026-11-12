@@ -34,6 +34,7 @@ class SyncSpecificationsAction
                     if ($specModel) {
                         $specModel->pivot_value = $value;
                         $specModel->pivot_munit_id = $munitId; // Store munit_id
+
                         return $specModel;
                     }
                 }
@@ -49,6 +50,7 @@ class SyncSpecificationsAction
                     );
                     $specModel->pivot_value = $value;
                     $specModel->pivot_munit_id = $munitId; // Store munit_id
+
                     return $specModel;
                 }
 
@@ -67,7 +69,7 @@ class SyncSpecificationsAction
         $syncData = [];
         foreach ($specificationModels as $specModel) {
             $pivotData = [
-                'value' => $specModel->pivot_value ?? ''
+                'value' => $specModel->pivot_value ?? '',
             ];
 
             // Add munit_id if provided

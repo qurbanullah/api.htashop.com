@@ -2,6 +2,8 @@
 
 namespace App\Http\Resources\V1\Eula;
 
+use App\Models\Software;
+use App\Models\Version;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,7 +20,7 @@ class EulaResource extends JsonResource
             'version' => $this->version,
             'software_id' => $this->software_id,
             'version_id' => $this->version_id,
-            'software' => $this->when($this->relationLoaded('software') && $this->software instanceof \App\Models\Software, function () {
+            'software' => $this->when($this->relationLoaded('software') && $this->software instanceof Software, function () {
                 return [
                     'id' => $this->software->id,
                     'name' => $this->software->name,
@@ -26,7 +28,7 @@ class EulaResource extends JsonResource
             }),
             'software_version' => $this->when($this->relationLoaded('version'), function () {
                 $version = $this->getRelationValue('version');
-                if ($version instanceof \App\Models\Version) {
+                if ($version instanceof Version) {
                     return [
                         'id' => $version->id,
                         'version_number' => $version->version_number,

@@ -12,10 +12,6 @@ class FeedbackAddCommentAction
 {
     /**
      * Create a comment for a feedback
-     *
-     * @param Feedback $feedback
-     * @param array $data
-     * @return Comment
      */
     public function handle(Feedback $feedback, array $data): Comment
     {

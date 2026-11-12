@@ -2,16 +2,17 @@
 
 namespace App\Services\Specification;
 
-use App\Helpers\CacheHelper;
 use App\Actions\Specifications\AttachSpecificationsAction;
 use App\Actions\Specifications\CreateSpecificationAction;
 use App\Actions\Specifications\DetachSpecificationsAction;
-use App\Actions\Specifications\GetSpecificationsAction;
 use App\Actions\Specifications\GetPopularSpecificationsAction;
+use App\Actions\Specifications\GetSpecificationsAction;
 use App\Actions\Specifications\SyncSpecificationsAction;
+use App\Helpers\CacheHelper;
 use App\Models\Specification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+
 class SpecificationService
 {
     public function __construct(
@@ -31,6 +32,7 @@ class SpecificationService
         $result = $this->attachSpecificationsAction->execute($specifiable, $specifications, $type);
         $this->clearSpecifiableCache($specifiable);
         CacheHelper::clearTags(['popular_specifications', "popular_specifications:{$type}"]);
+
         return $result;
     }
 
@@ -51,6 +53,7 @@ class SpecificationService
         $result = $this->syncSpecificationsAction->execute($specifiable, $specifications, $type);
         $this->clearSpecifiableCache($specifiable);
         CacheHelper::clearTags(['popular_specifications', "popular_specifications:{$type}"]);
+
         return $result;
     }
 
@@ -59,7 +62,7 @@ class SpecificationService
      */
     public function getSpecifications(Model $specifiable): Collection
     {
-        $cacheKey = $this->getCachePrefix($specifiable) . ':specifications';
+        $cacheKey = $this->getCachePrefix($specifiable).':specifications';
         $prefix = $this->getCachePrefix($specifiable);
 
         return CacheHelper::remember([$prefix], $cacheKey, now()->addMinutes(60), function () use ($specifiable) {
@@ -93,7 +96,7 @@ class SpecificationService
     {
         $cacheKey = "popular_specifications:{$type}:{$limit}";
 
-        return CacheHelper::remember(['popular_specifications', "popular_specifications:{$type}"], 
+        return CacheHelper::remember(['popular_specifications', "popular_specifications:{$type}"],
             $cacheKey,
             now()->addHours(6),
             function () use ($type, $limit) {
@@ -122,7 +125,7 @@ class SpecificationService
     {
         $cacheKey = "specification:slug:{$type}:{$slug}";
 
-        return CacheHelper::remember(['specifications'], 
+        return CacheHelper::remember(['specifications'],
             $cacheKey,
             now()->addHours(12),
             function () use ($slug, $type) {
@@ -142,7 +145,7 @@ class SpecificationService
             ->with('munit')
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('description', 'like', "%{$query}%");
+                    ->orWhere('description', 'like', "%{$query}%");
             })
             ->limit($limit)
             ->get();
@@ -176,6 +179,6 @@ class SpecificationService
      */
     protected function getCachePrefix(Model $specifiable): string
     {
-        return 'specifications:' . class_basename($specifiable) . ':' . $specifiable->id;
+        return 'specifications:'.class_basename($specifiable).':'.$specifiable->id;
     }
 }

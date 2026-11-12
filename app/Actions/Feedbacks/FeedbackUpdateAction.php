@@ -45,7 +45,7 @@ class FeedbackUpdateAction
     public function handle(int $feedbackId, array $data): bool
     {
         $feedback = Feedback::find($feedbackId);
-        if (!$feedback) {
+        if (! $feedback) {
             return false;
         }
 

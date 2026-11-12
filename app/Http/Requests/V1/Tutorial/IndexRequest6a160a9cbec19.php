@@ -16,7 +16,7 @@ class IndexRequest6a160a9cbec19 extends FormRequest
         return [
 
             'limit' => 'nullable|integer|min:1|max:100',
-        
+
         ];
     }
 }

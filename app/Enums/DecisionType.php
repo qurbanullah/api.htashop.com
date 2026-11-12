@@ -16,7 +16,7 @@ enum DecisionType: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::EDITORIAL => 'Editorial Decision',
             self::REVIEW => 'Review Decision',
             self::COPYEDIT => 'Copy Edit Decision',
@@ -31,7 +31,7 @@ enum DecisionType: string
 
     public function description(): string
     {
-        return match($this) {
+        return match ($this) {
             self::EDITORIAL => 'Decision made by editor regarding manuscript progression',
             self::REVIEW => 'Decision made by peer reviewer',
             self::COPYEDIT => 'Decision regarding copy editing requirements',

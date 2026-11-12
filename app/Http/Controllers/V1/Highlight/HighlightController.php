@@ -14,8 +14,7 @@ class HighlightController extends Controller
 {
     public function __construct(
         protected HighlightService $highlightService,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): JsonResponse
     {

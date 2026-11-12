@@ -14,9 +14,7 @@ use Illuminate\Http\Request;
 
 class UnitController extends Controller
 {
-    public function __construct(protected UnitService $unitService)
-    {
-    }
+    public function __construct(protected UnitService $unitService) {}
 
     public function index(Request $request): JsonResponse
     {

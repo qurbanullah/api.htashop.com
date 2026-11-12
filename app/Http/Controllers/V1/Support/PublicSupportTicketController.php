@@ -15,8 +15,7 @@ class PublicSupportTicketController extends Controller
 {
     public function __construct(
         protected TicketService $ticketService
-    ) {
-    }
+    ) {}
 
     public function store(StorePublicSupportTicketRequest $request): JsonResponse
     {

@@ -21,7 +21,7 @@ trait HasProfile
     public function academicProfile(): MorphOne
     {
         return $this->morphOne(Profile::class, 'profilable')
-                    ->where('profile_type', Profile::TYPE_ACADEMIC);
+            ->where('profile_type', Profile::TYPE_ACADEMIC);
     }
 
     /**

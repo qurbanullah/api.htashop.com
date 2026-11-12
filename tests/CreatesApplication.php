@@ -3,6 +3,7 @@
 namespace Tests;
 
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Foundation\Application;
 use RuntimeException;
 
 trait CreatesApplication
@@ -10,11 +11,11 @@ trait CreatesApplication
     /**
      * Creates the application.
      *
-     * @return \Illuminate\Foundation\Application
+     * @return Application
      */
     public function createApplication()
     {
-        if (!extension_loaded('pdo_sqlite') || !extension_loaded('sqlite3')) {
+        if (! extension_loaded('pdo_sqlite') || ! extension_loaded('sqlite3')) {
             throw new RuntimeException('SQLite extensions are required for tests. Refusing to run test suite without pdo_sqlite and sqlite3.');
         }
 
@@ -48,7 +49,7 @@ trait CreatesApplication
         $_SERVER['SESSION_DRIVER'] = 'array';
 
         // Load the application
-        $app = require __DIR__ . '/../bootstrap/app.php';
+        $app = require __DIR__.'/../bootstrap/app.php';
 
         $app->make(Kernel::class)->bootstrap();
 

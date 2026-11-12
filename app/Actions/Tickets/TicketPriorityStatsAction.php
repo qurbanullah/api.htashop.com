@@ -38,8 +38,6 @@ class TicketPriorityStatsAction
 {
     /**
      * Get ticket statistics by priority
-     *
-     * @return array
      */
     public function handle(): array
     {

@@ -18,15 +18,14 @@ class WarehouseService
         protected WarehouseSearchByUuidAction $searchByUuidAction,
         protected WarehouseUpdateAction $updateAction,
         protected WarehouseDeleteAction $deleteAction,
-    ) {
-    }
+    ) {}
 
     public function read(array $filters = []): LengthAwarePaginator
     {
         $user = auth()->user();
 
         // Non-admin users are scoped to their active membership tenant
-        if (!$user?->hasRole(['super-admin', 'admin'])) {
+        if (! $user?->hasRole(['super-admin', 'admin'])) {
             $membership = $user?->memberships()->where('is_active', true)->first();
             $filters['tenant_id'] = $membership?->tenant_id;
         }

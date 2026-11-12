@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 
 class UserSeeder_Simple extends Seeder
 {
@@ -39,9 +38,9 @@ class UserSeeder_Simple extends Seeder
                 [
                     'name' => $editorData['name'],
                     'email' => $editorData['email'],
-                'email_verified_at' => now(),
-                'password' => Hash::make('password'),
-            ]);
+                    'email_verified_at' => now(),
+                    'password' => Hash::make('password'),
+                ]);
             $editor->assignRole($editorData['role']);
         }
 
@@ -60,9 +59,9 @@ class UserSeeder_Simple extends Seeder
                 [
                     'name' => $reviewerData['name'],
                     'email' => $reviewerData['email'],
-                'email_verified_at' => now(),
-                'password' => Hash::make('password'),
-            ]);
+                    'email_verified_at' => now(),
+                    'password' => Hash::make('password'),
+                ]);
             $reviewer->assignRole('reviewer');
         }
 
@@ -82,9 +81,9 @@ class UserSeeder_Simple extends Seeder
                 [
                     'name' => $authorData['name'],
                     'email' => $authorData['email'],
-                'email_verified_at' => now(),
-                'password' => Hash::make('password'),
-            ]);
+                    'email_verified_at' => now(),
+                    'password' => Hash::make('password'),
+                ]);
             $author->assignRole('author');
         }
 

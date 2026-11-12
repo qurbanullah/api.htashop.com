@@ -36,7 +36,7 @@ enum ApprovalStatus: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING_INITIAL_REVIEW => 'Pending Initial Review',
             self::EDITOR_SCREENING => 'Editor Screening',
             self::DESK_REJECTED => 'Desk Rejected',
@@ -61,7 +61,7 @@ enum ApprovalStatus: string
      */
     public function toManuscriptStatus(): ManuscriptStatus
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING_INITIAL_REVIEW,
             self::EDITOR_SCREENING => ManuscriptStatus::SUBMITTED,
 
@@ -125,7 +125,7 @@ enum ApprovalStatus: string
      */
     public function canTransitionTo(self $status): bool
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING_INITIAL_REVIEW => in_array($status, [
                 self::EDITOR_SCREENING,
                 self::DESK_REJECTED,

@@ -25,7 +25,7 @@ class PostResource extends JsonResource
             'featured_image_url' => $this->featured_image ? (
                 str_starts_with((string) $this->featured_image, 'http')
                     ? (string) $this->featured_image
-                    : config('app.cdn_url', 'https://cdn.htashop.com') . '/' . ltrim((string) $this->featured_image, '/')
+                    : config('app.cdn_url', 'https://cdn.htashop.com').'/'.ltrim((string) $this->featured_image, '/')
             ) : null,
             'images' => $this->images ?? [],
             'type' => $this->type?->value,
@@ -90,7 +90,7 @@ class PostResource extends JsonResource
     {
         // If tags relationship is loaded and is a collection
         if ($this->relationLoaded('tags') && is_object($this->tags) && method_exists($this->tags, 'map')) {
-            return $this->tags->map(fn($tag) => $tag->name)->toArray();
+            return $this->tags->map(fn ($tag) => $tag->name)->toArray();
         }
 
         // Otherwise return empty array
@@ -104,7 +104,7 @@ class PostResource extends JsonResource
     {
         // If categories relationship is loaded and is a collection
         if ($this->relationLoaded('categories') && is_object($this->categories) && method_exists($this->categories, 'map')) {
-            return $this->categories->map(fn($category) => $category->name)->toArray();
+            return $this->categories->map(fn ($category) => $category->name)->toArray();
         }
 
         // Otherwise return empty array

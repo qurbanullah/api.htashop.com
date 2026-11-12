@@ -4,6 +4,7 @@ namespace App\Http\Resources\V1\Forum;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Str;
 
 class ForumPostResource extends JsonResource
 {
@@ -18,8 +19,8 @@ class ForumPostResource extends JsonResource
             'title' => $this->title,
             'body' => $this->body,
             'body_preview' => $this->when(
-                !$request->routeIs('forum.posts.show', 'forum.posts.show-by-slug'),
-                fn () => \Illuminate\Support\Str::limit(strip_tags($this->body), 280)
+                ! $request->routeIs('forum.posts.show', 'forum.posts.show-by-slug'),
+                fn () => Str::limit(strip_tags($this->body), 280)
             ),
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
@@ -39,7 +40,7 @@ class ForumPostResource extends JsonResource
                 $this->relationLoaded('author') && $this->author,
                 fn () => [
                     'id' => $this->author->id,
-                    'name' => $this->author->name ?? trim(($this->author->first_name ?? '') . ' ' . ($this->author->last_name ?? '')),
+                    'name' => $this->author->name ?? trim(($this->author->first_name ?? '').' '.($this->author->last_name ?? '')),
                     'avatar_url' => $this->author->avatar_small ?? null,
                 ]
             ),

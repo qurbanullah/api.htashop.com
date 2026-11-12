@@ -10,9 +10,8 @@ class GetPopularTagsAction
     /**
      * Get popular tags by type and usage count
      *
-     * @param string $type Tag type (product, blog, etc.)
-     * @param int $limit Number of tags to return
-     * @return Collection
+     * @param  string  $type  Tag type (product, blog, etc.)
+     * @param  int  $limit  Number of tags to return
      */
     public function execute(string $type = 'product', int $limit = 20): Collection
     {

@@ -2,19 +2,19 @@
 
 namespace Database\Factories;
 
-use App\Models\User;
-use App\Models\Ticket;
-use App\Enums\StatusEnum;
 use App\Enums\PriorityEnum;
-use App\Enums\SeverityEnum;
 use App\Enums\ReproducibilityEnum;
+use App\Enums\SeverityEnum;
+use App\Enums\StatusEnum;
 use App\Enums\StypeEnum;
+use App\Models\Ticket;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Ticket>
+ * @extends Factory<Ticket>
  */
 class TicketFactory extends Factory
 {
@@ -45,14 +45,14 @@ class TicketFactory extends Factory
                     'Email notifications not being sent',
                     'File upload feature broken',
                     'Dashboard statistics not updating',
-                    'Export feature generates empty files'
+                    'Export feature generates empty files',
                 ]),
                 'description' => fake()->paragraph(mt_rand(3, 6)),
                 'steps' => fake()->randomElement([
                     "1. Open the application\n2. Navigate to the form\n3. Fill out required fields\n4. Click submit\n5. Application crashes",
                     "1. Go to login page\n2. Enter valid credentials\n3. Click login button\n4. Error message appears",
-                    "1. Open user profile\n2. Edit information\n3. Save changes\n4. Data is not persisted"
-                ])
+                    "1. Open user profile\n2. Edit information\n3. Save changes\n4. Data is not persisted",
+                ]),
             ],
             'feature' => [
                 'title' => fake()->randomElement([
@@ -65,10 +65,10 @@ class TicketFactory extends Factory
                     'Add bulk operations support',
                     'Create API integration',
                     'Add user role management',
-                    'Implement automated backups'
+                    'Implement automated backups',
                 ]),
                 'description' => fake()->paragraph(mt_rand(2, 4)),
-                'steps' => null
+                'steps' => null,
             ],
             'question' => [
                 'title' => fake()->randomElement([
@@ -81,11 +81,11 @@ class TicketFactory extends Factory
                     'How to manage user permissions?',
                     'Can I export my data?',
                     'How to set up automated reports?',
-                    'What is the data retention policy?'
+                    'What is the data retention policy?',
                 ]),
                 'description' => fake()->paragraph(mt_rand(1, 3)),
-                'steps' => null
-            ]
+                'steps' => null,
+            ],
         ];
 
         $type = fake()->randomElement(['bug', 'feature', 'question']);
@@ -104,7 +104,7 @@ class TicketFactory extends Factory
             'uuid' => fake()->uuid(),
             'user_id' => User::factory(),
             'title' => $ticketData['title'],
-            'slug' => Str::slug($ticketData['title']) . '-' . Str::random(6),
+            'slug' => Str::slug($ticketData['title']).'-'.Str::random(6),
             'stype' => fake()->randomElement(StypeEnum::cases())->value,
             'severity' => fake()->randomElement(SeverityEnum::cases())->value,
             'reproducibility' => fake()->randomElement(ReproducibilityEnum::cases())->value,
@@ -186,12 +186,12 @@ class TicketFactory extends Factory
                 SeverityEnum::MINOR->value,
                 SeverityEnum::MAJOR->value,
                 SeverityEnum::CRASH->value,
-                SeverityEnum::BLOCK->value
+                SeverityEnum::BLOCK->value,
             ]),
             'priority' => fake()->randomElement([
                 PriorityEnum::NORMAL->value,
                 PriorityEnum::HIGH->value,
-                PriorityEnum::URGENT->value
+                PriorityEnum::URGENT->value,
             ]),
         ]);
     }
@@ -207,7 +207,7 @@ class TicketFactory extends Factory
             'priority' => fake()->randomElement([
                 PriorityEnum::LOW->value,
                 PriorityEnum::NORMAL->value,
-                PriorityEnum::HIGH->value
+                PriorityEnum::HIGH->value,
             ]),
         ]);
     }

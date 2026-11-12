@@ -44,6 +44,7 @@ class ProductStoreRequest extends FormRequest
             'status' => ['nullable', 'string', 'max:100'],
             'summary' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
+            'cost_price' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
             'is_active' => ['nullable', 'boolean'],
             'metadata' => ['nullable', 'array'],
             'channel_codes' => ['nullable', 'array'],

@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\V1\Post;
 
-use App\Enums\PostTypeEnum;
 use App\Enums\PostStatusEnum;
+use App\Enums\PostTypeEnum;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use App\Models\Post;
 use App\Http\Requests\V1\Post\PostStoreRequest;
 use App\Http\Requests\V1\Post\PostUpdateRequest;
 use App\Http\Resources\V1\Post\PostResource;
+use App\Models\Post;
 use App\Services\Post\PostService;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class AdminPostController extends Controller
 {
@@ -156,7 +157,7 @@ class AdminPostController extends Controller
         try {
             $post = $this->postService->getPostByUuid($uuid);
 
-            if (!$post) {
+            if (! $post) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Post not found',
@@ -211,7 +212,7 @@ class AdminPostController extends Controller
         try {
             $post = $this->postService->getPostByUuid($uuid);
 
-            if (!$post) {
+            if (! $post) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Post not found',
@@ -244,7 +245,7 @@ class AdminPostController extends Controller
         try {
             $post = $this->postService->getPostByUuid($uuid);
 
-            if (!$post) {
+            if (! $post) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Post not found',
@@ -286,7 +287,7 @@ class AdminPostController extends Controller
         try {
             $post = $this->postService->getPostByUuid($uuid);
 
-            if (!$post) {
+            if (! $post) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Post not found',
@@ -322,14 +323,14 @@ class AdminPostController extends Controller
 
             $post = $this->postService->getPostByUuid($uuid);
 
-            if (!$post) {
+            if (! $post) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Post not found',
                 ], 404);
             }
 
-            $scheduledAt = \Carbon\Carbon::parse($validated['scheduled_at']);
+            $scheduledAt = Carbon::parse($validated['scheduled_at']);
             $post = $this->postService->schedulePost($post, $scheduledAt);
 
             return response()->json([
@@ -355,14 +356,14 @@ class AdminPostController extends Controller
         try {
             $post = $this->postService->getPostByUuid($uuid);
 
-            if (!$post) {
+            if (! $post) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Post not found',
                 ], 404);
             }
 
-            $post = $this->postService->publishAsBlog($post, !$post->is_published_as_blog);
+            $post = $this->postService->publishAsBlog($post, ! $post->is_published_as_blog);
 
             return response()->json([
                 'success' => true,

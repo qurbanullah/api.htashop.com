@@ -14,9 +14,7 @@ use Illuminate\Http\Request;
 
 class AssignmentController extends Controller
 {
-    public function __construct(protected AssignmentService $assignmentService)
-    {
-    }
+    public function __construct(protected AssignmentService $assignmentService) {}
 
     public function index(Request $request): JsonResponse
     {

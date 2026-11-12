@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Price;
 
+use App\Http\Controllers\V1\Price\PriceController;
+
 test('the Price controller class exists', function () {
-    expect(class_exists(\App\Http\Controllers\V1\Price\PriceController::class))->toBeTrue();
+    expect(class_exists(PriceController::class))->toBeTrue();
 });

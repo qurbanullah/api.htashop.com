@@ -15,7 +15,7 @@ class FeedbackTypeFilter
 
     public function __invoke(Builder $query): Builder
     {
-        if (!$this->type) {
+        if (! $this->type) {
             return $query;
         }
 

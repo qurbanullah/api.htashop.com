@@ -14,9 +14,7 @@ use Illuminate\Http\Request;
 
 class LabelController extends Controller
 {
-    public function __construct(protected LabelService $labelService)
-    {
-    }
+    public function __construct(protected LabelService $labelService) {}
 
     public function index(Request $request): JsonResponse
     {

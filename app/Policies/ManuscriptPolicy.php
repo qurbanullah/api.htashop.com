@@ -57,12 +57,12 @@ class ManuscriptPolicy
     public function withdraw(User $user, Manuscript $manuscript): bool
     {
         // Only authors can withdraw their own manuscripts
-        if (!$this->isAuthor($user, $manuscript)) {
+        if (! $this->isAuthor($user, $manuscript)) {
             return false;
         }
 
         // Can only withdraw if manuscript is submitted and not already withdrawn or rejected
-        return !in_array($manuscript->status, ['draft', 'withdrawn', 'rejected']);
+        return ! in_array($manuscript->status, ['draft', 'withdrawn', 'rejected']);
     }
 
     /**

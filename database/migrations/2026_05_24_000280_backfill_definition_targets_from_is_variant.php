@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('definitions') || !Schema::hasTable('definition_targets') || !Schema::hasColumn('definitions', 'is_variant')) {
+        if (! Schema::hasTable('definitions') || ! Schema::hasTable('definition_targets') || ! Schema::hasColumn('definitions', 'is_variant')) {
             return;
         }
 
@@ -28,7 +28,5 @@ return new class extends Migration
             });
     }
 
-    public function down(): void
-    {
-    }
+    public function down(): void {}
 };

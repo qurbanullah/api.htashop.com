@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Services\Gdpr\GdprService;
+use Illuminate\Console\Command;
 
 class GdprCleanupCommand extends Command
 {
@@ -31,19 +31,20 @@ class GdprCleanupCommand extends Command
     {
         $retentionDays = (int) $this->option('retention-days');
         $dryRun = $this->option('dry-run');
-        $anonymize = !$this->option('no-anonymize');
+        $anonymize = ! $this->option('no-anonymize');
 
-        $this->info("GDPR Cleanup Process Starting...");
+        $this->info('GDPR Cleanup Process Starting...');
         $this->info("Retention Period: {$retentionDays} days");
-        $this->info("Anonymize Data: " . ($anonymize ? 'Yes' : 'No'));
-        $this->info("Dry Run: " . ($dryRun ? 'Yes' : 'No'));
+        $this->info('Anonymize Data: '.($anonymize ? 'Yes' : 'No'));
+        $this->info('Dry Run: '.($dryRun ? 'Yes' : 'No'));
         $this->newLine();
 
         // Get eligible users
         $eligibleUsers = $gdprService->getUsersEligibleForPermanentDeletion($retentionDays);
 
         if ($eligibleUsers->isEmpty()) {
-            $this->info("✅ No users found eligible for permanent deletion.");
+            $this->info('✅ No users found eligible for permanent deletion.');
+
             return Command::SUCCESS;
         }
 
@@ -54,7 +55,7 @@ class GdprCleanupCommand extends Command
                     $user->id,
                     $user->email,
                     $user->deleted_at->format('Y-m-d H:i:s'),
-                    $user->deleted_at->diffInDays(now())
+                    $user->deleted_at->diffInDays(now()),
                 ];
             })
         );
@@ -62,12 +63,14 @@ class GdprCleanupCommand extends Command
         $this->warn("Found {$eligibleUsers->count()} users eligible for permanent deletion.");
 
         if ($dryRun) {
-            $this->info("🔍 DRY RUN: These users would be permanently deleted.");
+            $this->info('🔍 DRY RUN: These users would be permanently deleted.');
+
             return Command::SUCCESS;
         }
 
-        if (!$this->confirm('Are you sure you want to permanently delete these users? This action cannot be undone.')) {
-            $this->info("Operation cancelled.");
+        if (! $this->confirm('Are you sure you want to permanently delete these users? This action cannot be undone.')) {
+            $this->info('Operation cancelled.');
+
             return Command::SUCCESS;
         }
 
@@ -80,7 +83,7 @@ class GdprCleanupCommand extends Command
             [
                 'type' => 'manual_gdpr_cleanup_command',
                 'executed_by' => 'artisan_command',
-                'executed_at' => now()->toISOString()
+                'executed_at' => now()->toISOString(),
             ],
             $anonymize
         );
@@ -89,7 +92,7 @@ class GdprCleanupCommand extends Command
         $this->newLine(2);
 
         // Display results
-        $this->info("✅ GDPR Cleanup Completed!");
+        $this->info('✅ GDPR Cleanup Completed!');
         $this->table(
             ['Metric', 'Count'],
             [
@@ -99,8 +102,8 @@ class GdprCleanupCommand extends Command
             ]
         );
 
-        if (!empty($results['failed_deletions'])) {
-            $this->error("❌ Failed Deletions:");
+        if (! empty($results['failed_deletions'])) {
+            $this->error('❌ Failed Deletions:');
             $this->table(
                 ['User ID', 'Error'],
                 collect($results['failed_deletions'])->map(function ($failure) {

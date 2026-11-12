@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('assignments')) {
+        if (! Schema::hasTable('assignments')) {
             Schema::create('assignments', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('tenant_id')->nullable()->constrained('tenants')->cascadeOnDelete();
@@ -35,23 +35,23 @@ return new class extends Migration
                 $table->foreignId('assigned_to')->nullable()->change();
             }
 
-            if (!Schema::hasColumn('assignments', 'tenant_id')) {
+            if (! Schema::hasColumn('assignments', 'tenant_id')) {
                 $table->foreignId('tenant_id')->nullable()->after('id')->constrained('tenants')->cascadeOnDelete();
             }
 
-            if (!Schema::hasColumn('assignments', 'organization_id')) {
+            if (! Schema::hasColumn('assignments', 'organization_id')) {
                 $table->foreignId('organization_id')->nullable()->after('tenant_id')->constrained('organizations')->cascadeOnDelete();
             }
 
-            if (!Schema::hasColumn('assignments', 'role')) {
+            if (! Schema::hasColumn('assignments', 'role')) {
                 $table->string('role')->nullable()->after('assignable_id');
             }
 
-            if (!Schema::hasColumn('assignments', 'is_primary')) {
+            if (! Schema::hasColumn('assignments', 'is_primary')) {
                 $table->boolean('is_primary')->default(false)->after('role');
             }
 
-            if (!Schema::hasColumn('assignments', 'metadata')) {
+            if (! Schema::hasColumn('assignments', 'metadata')) {
                 $table->json('metadata')->nullable()->after('is_primary');
             }
         });

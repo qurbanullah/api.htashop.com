@@ -1,22 +1,23 @@
 <?php
 
+use App\Helpers\UserOnlineHelper;
+use App\Models\User;
+
 /**
  * Global helper functions for user online status
  *
  * These functions can be used anywhere in the application without importing classes
  */
-
-if (!function_exists('is_user_online')) {
+if (! function_exists('is_user_online')) {
     /**
      * Check if a user is online
      *
-     * @param int|\App\Models\User|string $user User ID, User model, or string user ID
-     * @return bool
+     * @param  int|User|string  $user  User ID, User model, or string user ID
      */
     function is_user_online($user): bool
     {
         // Handle different input types
-        if ($user instanceof \App\Models\User) {
+        if ($user instanceof User) {
             $userId = $user->id;
         } elseif (is_string($user) || is_numeric($user)) {
             $userId = (int) $user;
@@ -31,52 +32,46 @@ if (!function_exists('is_user_online')) {
             return false;
         }
 
-        return \App\Helpers\UserOnlineHelper::isUserOnline($userId);
+        return UserOnlineHelper::isUserOnline($userId);
     }
 }
 
-if (!function_exists('get_online_users_count')) {
+if (! function_exists('get_online_users_count')) {
     /**
      * Get count of online users
-     *
-     * @return int
      */
     function get_online_users_count(): int
     {
-        return \App\Helpers\UserOnlineHelper::getOnlineUsersCount();
+        return UserOnlineHelper::getOnlineUsersCount();
     }
 }
 
-if (!function_exists('get_online_users_count_direct')) {
+if (! function_exists('get_online_users_count_direct')) {
     /**
      * Get count of online users using direct database query
      * More efficient for statistics
-     *
-     * @return int
      */
     function get_online_users_count_direct(): int
     {
-        return \App\Helpers\UserOnlineHelper::getOnlineUsersCountDirect();
+        return UserOnlineHelper::getOnlineUsersCountDirect();
     }
 }
 
-if (!function_exists('get_online_user_ids')) {
+if (! function_exists('get_online_user_ids')) {
     /**
      * Get all online user IDs
-     *
-     * @return array
      */
     function get_online_user_ids(): array
     {
-        return \App\Helpers\UserOnlineHelper::getOnlineUserIds();
+        return UserOnlineHelper::getOnlineUserIds();
     }
 }
 
-if (!function_exists('are_users_online')) {
+if (! function_exists('are_users_online')) {
     /**
      * Check if multiple users are online
      *
-     * @param array $users Array of user IDs, User models, or mixed
+     * @param  array  $users  Array of user IDs, User models, or mixed
      * @return array [userId => isOnline]
      */
     function are_users_online(array $users): array
@@ -84,7 +79,7 @@ if (!function_exists('are_users_online')) {
         // Convert all inputs to user IDs
         $userIds = [];
         foreach ($users as $user) {
-            if ($user instanceof \App\Models\User) {
+            if ($user instanceof User) {
                 $userIds[] = $user->id;
             } elseif (is_string($user) || is_numeric($user)) {
                 $userId = (int) $user;
@@ -96,6 +91,6 @@ if (!function_exists('are_users_online')) {
             }
         }
 
-        return \App\Helpers\UserOnlineHelper::areUsersOnline($userIds);
+        return UserOnlineHelper::areUsersOnline($userIds);
     }
 }

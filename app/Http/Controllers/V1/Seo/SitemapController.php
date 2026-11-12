@@ -14,8 +14,7 @@ class SitemapController extends Controller
 {
     public function __construct(
         protected SitemapService $sitemapService,
-    ) {
-    }
+    ) {}
 
     public function robots(): Response
     {
@@ -57,11 +56,11 @@ class SitemapController extends Controller
     {
         $configuredKey = trim((string) config('indexnow.key'));
 
-        if ($configuredKey === '' || !hash_equals($configuredKey, $indexnowKey)) {
+        if ($configuredKey === '' || ! hash_equals($configuredKey, $indexnowKey)) {
             abort(404);
         }
 
-        return response($configuredKey . "\n")
+        return response($configuredKey."\n")
             ->header('Content-Type', 'text/plain; charset=UTF-8')
             ->header('Cache-Control', 'public, max-age=86400');
     }

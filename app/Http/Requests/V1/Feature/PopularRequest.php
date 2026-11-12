@@ -17,7 +17,7 @@ class PopularRequest extends FormRequest
 
             'type' => 'string|in:product,service',
             'limit' => 'integer|min:1|max:100',
-        
+
         ];
     }
 }

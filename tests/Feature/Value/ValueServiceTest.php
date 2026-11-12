@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Value;
 
+use App\Services\Value\ValueService;
+
 test('the Value service classes exist', function () {
-    expect(class_exists(\App\Services\Value\ValueService::class))->toBeTrue();
+    expect(class_exists(ValueService::class))->toBeTrue();
 });

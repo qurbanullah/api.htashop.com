@@ -2,16 +2,17 @@
 
 namespace App\Mail\Post;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Mail\Mailables\Address;
-use Illuminate\Queue\SerializesModels;
 use App\Models\Post;
 use App\Models\Subscribe;
 use App\Models\User;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
+use Illuminate\Mail\Mailables\Attachment;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
 
 class PostMail extends Mailable implements ShouldQueue
 {
@@ -64,7 +65,7 @@ class PostMail extends Mailable implements ShouldQueue
     /**
      * Get the attachments for the message.
      *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {
@@ -96,7 +97,7 @@ class PostMail extends Mailable implements ShouldQueue
 
             return $token
                 ? rtrim((string) config('app.frontend_url', 'https://htashop.com'), '/')
-                    . '/unsubscribe/' . $token
+                    .'/unsubscribe/'.$token
                 : rtrim((string) config('app.frontend_url', 'https://htashop.com'), '/');
         }
 
@@ -120,7 +121,7 @@ class PostMail extends Mailable implements ShouldQueue
         // Generate a secure view link for private post
         return route('post.view', [
             'uuid' => $this->post->uuid,
-            'token' => hash('sha256', $this->post->uuid . $email . config('app.key')),
+            'token' => hash('sha256', $this->post->uuid.$email.config('app.key')),
         ]);
     }
 }

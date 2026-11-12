@@ -82,12 +82,14 @@ class Product extends Model
         'description',
         'is_active',
         'metadata',
+        'cost_price',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'lead_time_days' => 'integer',
         'metadata' => 'array',
+        'cost_price' => 'decimal:2',
     ];
 
     /**

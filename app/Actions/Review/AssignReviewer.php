@@ -2,10 +2,10 @@
 
 namespace App\Actions\Review;
 
+use App\Enums\DecisionType;
+use App\Models\Assignment;
 use App\Models\Manuscript;
 use App\Models\User;
-use App\Models\Assignment;
-use App\Enums\AssignmentType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -30,21 +30,21 @@ class AssignReviewer
                 'review_criteria' => $data['review_criteria'] ?? $this->getDefaultCriteria(),
                 'round' => $data['round'] ?? 1,
                 'is_confidential' => $data['is_confidential'] ?? true,
-                'notes' => $data['notes'] ?? null
+                'notes' => $data['notes'] ?? null,
             ]);
 
             // Create corresponding decision record
             $manuscript->decisions()->create([
                 'user_id' => $assignedBy->id,
-                'type' => \App\Enums\DecisionType::EDITORIAL,
+                'type' => DecisionType::EDITORIAL,
                 'decision' => 'reviewer_assigned',
                 'content' => "Reviewer assigned: {$reviewer->name}",
                 'completed_at' => now(),
                 'metadata' => [
                     'reviewer_id' => $reviewer->id,
                     'assignment_id' => $assignment->id,
-                    'due_date' => $assignment->due_date->toISOString()
-                ]
+                    'due_date' => $assignment->due_date->toISOString(),
+                ],
             ]);
 
             Log::info('Reviewer assigned to manuscript', [
@@ -52,7 +52,7 @@ class AssignReviewer
                 'reviewer_id' => $reviewer->id,
                 'assigned_by' => $assignedBy->id,
                 'assignment_id' => $assignment->id,
-                'due_date' => $assignment->due_date
+                'due_date' => $assignment->due_date,
             ]);
 
             return $assignment;
@@ -62,7 +62,7 @@ class AssignReviewer
     private function validateReviewerAssignment(Manuscript $manuscript, User $reviewer, User $assignedBy): void
     {
         // Check if assignor has permission
-        if (!$this->canAssignReviewers($manuscript, $assignedBy)) {
+        if (! $this->canAssignReviewers($manuscript, $assignedBy)) {
             throw new \Exception('You do not have permission to assign reviewers for this manuscript.');
         }
 
@@ -100,9 +100,9 @@ class AssignReviewer
 
     private function getDefaultInstructions(Manuscript $manuscript): string
     {
-        return "Please review this manuscript titled '{$manuscript->title}' according to the journal's review criteria. " .
-               "Provide detailed feedback on the scientific merit, methodology, clarity, and significance of the work. " .
-               "Your review should be constructive and help improve the manuscript quality.";
+        return "Please review this manuscript titled '{$manuscript->title}' according to the journal's review criteria. ".
+               'Provide detailed feedback on the scientific merit, methodology, clarity, and significance of the work. '.
+               'Your review should be constructive and help improve the manuscript quality.';
     }
 
     private function getDefaultCriteria(): array
@@ -113,7 +113,7 @@ class AssignReviewer
             'clarity' => 'Comment on the clarity and organization of the manuscript',
             'technical_quality' => 'Review the technical accuracy and completeness',
             'ethical_considerations' => 'Ensure ethical standards are met',
-            'references' => 'Check if references are appropriate and complete'
+            'references' => 'Check if references are appropriate and complete',
         ];
     }
 }

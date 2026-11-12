@@ -22,12 +22,13 @@ declare(strict_types=1);
 
 namespace App\Services\Types;
 
-use App\Helpers\CacheHelper;
 use App\Actions\Types\SupportTypes\StypeCreateAction;
+use App\Actions\Types\SupportTypes\StypeSearchByIdAction;
 use App\Actions\Types\SupportTypes\StypeSortAction;
 use App\Actions\Types\SupportTypes\StypeUpdateAction;
-use App\Actions\Types\SupportTypes\StypeSearchByIdAction;
+use App\Helpers\CacheHelper;
 use App\Models\Stype;
+
 /**
  * CRUD operation class for Document Model.
  *
@@ -67,7 +68,6 @@ class StypeService
         return $result;
     }
 
-
     /**
      * Search record in database.
      *
@@ -75,8 +75,8 @@ class StypeService
      */
     public function searchById(int $id): Stype
     {
-        return CacheHelper::remember([], 
-            'cached_stype_' . $id, 31536000,
+        return CacheHelper::remember([],
+            'cached_stype_'.$id, 31536000,
             fn () => (new StypeSearchByIdAction)->handle($id)
         );
     }
@@ -86,7 +86,7 @@ class StypeService
      *
      * @param  int  $modelId  model id to be sorted
      * @param  int  $newPosition  new position of the model
-     * @return \App\Models\Stype
+     * @return Stype
      */
     public function sort($modelId, $newPosition)
     {
@@ -99,7 +99,7 @@ class StypeService
     /**
      * Clear caching after update.
      *
-     * @param  \App\Models\Stype  $stype  data to update
+     * @param  Stype  $stype  data to update
      */
     private function _clearCaching(Stype $stype): void
     {

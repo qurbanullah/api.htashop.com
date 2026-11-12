@@ -2,19 +2,34 @@
 
 namespace Tests\Unit\Tag;
 
+use App\Actions\Tags\AttachTagsAction;
+use App\Actions\Tags\CreateTagAction;
+use App\Actions\Tags\DetachTagsAction;
+use App\Actions\Tags\GetPopularTagsAction;
+use App\Actions\Tags\GetTagsAction;
+use App\Actions\Tags\SyncTagsAction;
+use App\Actions\Tags\TagCreateAction;
+use App\Actions\Tags\TagDeleteAction;
+use App\Actions\Tags\TagPatchAction;
+use App\Actions\Tags\TagReadAction;
+use App\Actions\Tags\TagSearchByIdAction;
+use App\Actions\Tags\TagShowAction;
+use App\Actions\Tags\TagSortAction;
+use App\Actions\Tags\TagUpdateAction;
+
 test('the Tag action classes exist', function () {
-    expect(class_exists(\App\Actions\Tags\AttachTagsAction::class))->toBeTrue();
-    expect(class_exists(\App\Actions\Tags\CreateTagAction::class))->toBeTrue();
-    expect(class_exists(\App\Actions\Tags\DetachTagsAction::class))->toBeTrue();
-    expect(class_exists(\App\Actions\Tags\GetPopularTagsAction::class))->toBeTrue();
-    expect(class_exists(\App\Actions\Tags\GetTagsAction::class))->toBeTrue();
-    expect(class_exists(\App\Actions\Tags\SyncTagsAction::class))->toBeTrue();
-    expect(class_exists(\App\Actions\Tags\TagCreateAction::class))->toBeTrue();
-    expect(class_exists(\App\Actions\Tags\TagDeleteAction::class))->toBeTrue();
-    expect(class_exists(\App\Actions\Tags\TagPatchAction::class))->toBeTrue();
-    expect(class_exists(\App\Actions\Tags\TagReadAction::class))->toBeTrue();
-    expect(class_exists(\App\Actions\Tags\TagSearchByIdAction::class))->toBeTrue();
-    expect(class_exists(\App\Actions\Tags\TagShowAction::class))->toBeTrue();
-    expect(class_exists(\App\Actions\Tags\TagSortAction::class))->toBeTrue();
-    expect(class_exists(\App\Actions\Tags\TagUpdateAction::class))->toBeTrue();
+    expect(class_exists(AttachTagsAction::class))->toBeTrue();
+    expect(class_exists(CreateTagAction::class))->toBeTrue();
+    expect(class_exists(DetachTagsAction::class))->toBeTrue();
+    expect(class_exists(GetPopularTagsAction::class))->toBeTrue();
+    expect(class_exists(GetTagsAction::class))->toBeTrue();
+    expect(class_exists(SyncTagsAction::class))->toBeTrue();
+    expect(class_exists(TagCreateAction::class))->toBeTrue();
+    expect(class_exists(TagDeleteAction::class))->toBeTrue();
+    expect(class_exists(TagPatchAction::class))->toBeTrue();
+    expect(class_exists(TagReadAction::class))->toBeTrue();
+    expect(class_exists(TagSearchByIdAction::class))->toBeTrue();
+    expect(class_exists(TagShowAction::class))->toBeTrue();
+    expect(class_exists(TagSortAction::class))->toBeTrue();
+    expect(class_exists(TagUpdateAction::class))->toBeTrue();
 });

@@ -15,7 +15,7 @@ class FeedbackPriorityFilter
 
     public function __invoke(Builder $query): Builder
     {
-        if (!$this->priority) {
+        if (! $this->priority) {
             return $query;
         }
 

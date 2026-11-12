@@ -119,7 +119,7 @@ class EulaController extends Controller
 
         $eula = $this->eulaService->getActiveEula($softwareId, $versionId);
 
-        if (!$eula) {
+        if (! $eula) {
             return ApiResponse::error(
                 'No active EULA found',
                 null,

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-
 use App\Enums\ForumReportReasonEnum;
 use App\Enums\ForumReportStatusEnum;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +11,7 @@ use Illuminate\Support\Str;
 
 class ForumReport extends Model
 {
-        protected $fillable = [
+    protected $fillable = [
         'uuid',
         'user_id',
         'reportable_id',

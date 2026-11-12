@@ -2,14 +2,16 @@
 
 namespace App\Actions\Post;
 
+use App\Enums\PostStatusEnum;
 use App\Enums\PostTypeEnum;
+use App\Mail\Post\PostMail;
 use App\Models\Post;
 use App\Models\Subscribe;
 use App\Models\User;
-use App\Mail\Post\PostMail;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SendPostAction
 {
@@ -18,7 +20,7 @@ class SendPostAction
      */
     public function execute(Post $post, array $options = []): array
     {
-        if (!$post->canBeSent()) {
+        if (! $post->canBeSent()) {
             $this->throwDetailedValidationError($post);
         }
 
@@ -50,7 +52,7 @@ class SendPostAction
 
             } catch (\Exception $e) {
                 $failedCount++;
-                Log::error("Failed to queue post '{$post->title}' to {$subscriber->email}: " . $e->getMessage());
+                Log::error("Failed to queue post '{$post->title}' to {$subscriber->email}: ".$e->getMessage());
             }
         }
 
@@ -65,18 +67,18 @@ class SendPostAction
         Log::info("Post '{$post->title}' sending completed. Sent: {$sentCount}, Failed: {$failedCount}");
 
         if ($failedCount > 0) {
-            Log::warning("Post '{$post->title}' had {$failedCount} failed sends out of " . $recipients->count() . " total recipients.");
+            Log::warning("Post '{$post->title}' had {$failedCount} failed sends out of ".$recipients->count().' total recipients.');
         }
 
         return [
             'success' => true,
             'sent_count' => $sentCount,
             'failed_count' => $failedCount,
-            'total_recipients' => $recipients->count()
+            'total_recipients' => $recipients->count(),
         ];
     }
 
-    private function getRecipients(Post $post, array $criteria): \Illuminate\Support\Collection
+    private function getRecipients(Post $post, array $criteria): Collection
     {
         $type = $post->type instanceof PostTypeEnum
             ? $post->type->value
@@ -98,7 +100,7 @@ class SendPostAction
         if (empty($criteria)) {
             return $query->whereHas('subscriptions', function ($q) {
                 $q->where('type', 'post')
-                  ->where('is_subscribed', true);
+                    ->where('is_subscribed', true);
             })->get();
         }
 
@@ -106,7 +108,7 @@ class SendPostAction
         foreach ($criteria as $criterion => $value) {
             switch ($criterion) {
                 case 'roles':
-                    if (!empty($value)) {
+                    if (! empty($value)) {
                         $query->whereHas('roles', function ($q) use ($value) {
                             $q->whereIn('name', $value);
                         });
@@ -126,7 +128,7 @@ class SendPostAction
                     if ($value) {
                         $query->whereHas('subscriptions', function ($q) {
                             $q->where('type', 'post')
-                              ->where('is_subscribed', true);
+                                ->where('is_subscribed', true);
                         });
                     }
                     break;
@@ -134,10 +136,10 @@ class SendPostAction
         }
 
         // Always ensure users are subscribed unless explicitly disabled
-        if (!isset($criteria['subscribed_only']) || $criteria['subscribed_only']) {
+        if (! isset($criteria['subscribed_only']) || $criteria['subscribed_only']) {
             $query->whereHas('subscriptions', function ($q) {
                 $q->where('type', 'post')
-                  ->where('is_subscribed', true);
+                    ->where('is_subscribed', true);
             });
         }
 
@@ -150,23 +152,23 @@ class SendPostAction
     private function throwDetailedValidationError(Post $post): void
     {
         $errors = [];
-        $statusLabel = $post->status instanceof \App\Enums\PostStatusEnum
+        $statusLabel = $post->status instanceof PostStatusEnum
             ? $post->status->value
             : (string) $post->status;
 
         // Check status
-        if (!in_array($statusLabel, ['draft', 'scheduled'])) {
+        if (! in_array($statusLabel, ['draft', 'scheduled'])) {
             $errors[] = "Status is '{$statusLabel}' (must be 'draft' or 'scheduled')";
         }
 
         // Check content
         if (empty($post->content)) {
-            $errors[] = "Content is empty (post must have content)";
+            $errors[] = 'Content is empty (post must have content)';
         }
 
         // Check title
         if (empty($post->title)) {
-            $errors[] = "Title is missing";
+            $errors[] = 'Title is missing';
         }
 
         // Additional helpful information
@@ -175,17 +177,17 @@ class SendPostAction
             "Post UUID: {$post->uuid}",
             "Current Status: {$statusLabel}",
             "Created: {$post->created_at->format('Y-m-d H:i:s')}",
-            "Updated: {$post->updated_at->format('Y-m-d H:i:s')}"
+            "Updated: {$post->updated_at->format('Y-m-d H:i:s')}",
         ];
 
         if ($post->scheduled_at) {
             $additionalInfo[] = "Scheduled At: {$post->scheduled_at->format('Y-m-d H:i:s')}";
         }
 
-        $errorMessage = "Post cannot be sent. Issues found:\n" .
-                       "• " . implode("\n• ", $errors) . "\n\n" .
-                       "Post Details:\n" .
-                       "• " . implode("\n• ", $additionalInfo);
+        $errorMessage = "Post cannot be sent. Issues found:\n".
+                       '• '.implode("\n• ", $errors)."\n\n".
+                       "Post Details:\n".
+                       '• '.implode("\n• ", $additionalInfo);
 
         throw new \Exception($errorMessage);
     }

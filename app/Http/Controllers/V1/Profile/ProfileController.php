@@ -2,14 +2,18 @@
 
 namespace App\Http\Controllers\V1\Profile;
 
+use App\Actions\Onboarding\CompleteOnboardingAction;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\V1\ApiResponse;
 use App\Models\User;
 use App\Services\Profile\ProfileService;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class ProfileController extends Controller
 {
@@ -19,9 +23,6 @@ class ProfileController extends Controller
 
     /**
      * Get a paginated list of profiles.
-     *
-     * @param  Request  $request
-     * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
@@ -65,9 +66,6 @@ class ProfileController extends Controller
 
     /**
      * Get a single profile by ID.
-     *
-     * @param  string  $id
-     * @return JsonResponse
      */
     public function show(string $id): JsonResponse
     {
@@ -78,12 +76,12 @@ class ProfileController extends Controller
                 'success' => true,
                 'data' => $profile,
             ]);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to view this profile.',
             ], 403);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Profile not found.',
@@ -104,9 +102,6 @@ class ProfileController extends Controller
 
     /**
      * Get the authenticated user's profile.
-     *
-     * @param  Request  $request
-     * @return JsonResponse
      */
     public function me(Request $request): JsonResponse
     {
@@ -114,7 +109,7 @@ class ProfileController extends Controller
             $user = $request->user();
             $profile = $this->profileService->getUserProfile($user);
 
-            if (!$profile) {
+            if (! $profile) {
                 return response()->json([
                     'success' => false,
                     'data' => null,
@@ -142,9 +137,6 @@ class ProfileController extends Controller
 
     /**
      * Get a profile by user ID.
-     *
-     * @param  string  $userId
-     * @return JsonResponse
      */
     public function getByUserId(string $userId): JsonResponse
     {
@@ -152,7 +144,7 @@ class ProfileController extends Controller
             $user = User::findOrFail((int) $userId);
             $profile = $this->profileService->getUserProfile($user);
 
-            if (!$profile) {
+            if (! $profile) {
                 return response()->json([
                     'success' => true,
                     'data' => null,
@@ -163,7 +155,7 @@ class ProfileController extends Controller
             // Check authorization
             if (auth()->check()) {
                 Gate::authorize('view', $profile);
-            } elseif (!$profile->is_public || !$profile->is_active) {
+            } elseif (! $profile->is_public || ! $profile->is_active) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Profile not found or not accessible.',
@@ -174,12 +166,12 @@ class ProfileController extends Controller
                 'success' => true,
                 'data' => $profile,
             ]);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to view this profile.',
             ], 403);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'User or profile not found.',
@@ -200,9 +192,6 @@ class ProfileController extends Controller
 
     /**
      * Create a new profile.
-     *
-     * @param  Request  $request
-     * @return JsonResponse
      */
     public function store(Request $request): JsonResponse
     {
@@ -215,12 +204,12 @@ class ProfileController extends Controller
                 'data' => $profile,
                 'message' => 'Profile created successfully.',
             ], 201);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to create a profile.',
             ], 403);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed.',
@@ -242,10 +231,6 @@ class ProfileController extends Controller
 
     /**
      * Update an existing profile.
-     *
-     * @param  Request  $request
-     * @param  string  $id
-     * @return JsonResponse
      */
     public function update(Request $request, string $id): JsonResponse
     {
@@ -257,18 +242,18 @@ class ProfileController extends Controller
                 'data' => $profile,
                 'message' => 'Profile updated successfully.',
             ]);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to update this profile.',
             ], 403);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed.',
                 'errors' => $e->errors(),
             ], 422);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Profile not found.',
@@ -289,9 +274,6 @@ class ProfileController extends Controller
 
     /**
      * Delete a profile.
-     *
-     * @param  string  $id
-     * @return JsonResponse
      */
     public function destroy(string $id): JsonResponse
     {
@@ -302,12 +284,12 @@ class ProfileController extends Controller
                 'success' => true,
                 'message' => 'Profile deleted successfully.',
             ]);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to delete this profile.',
             ], 403);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Profile not found.',
@@ -328,10 +310,6 @@ class ProfileController extends Controller
 
     /**
      * Toggle profile visibility.
-     *
-     * @param  Request  $request
-     * @param  string  $id
-     * @return JsonResponse
      */
     public function toggleVisibility(Request $request, string $id): JsonResponse
     {
@@ -347,12 +325,12 @@ class ProfileController extends Controller
                 'data' => $profile,
                 'message' => 'Profile visibility updated successfully.',
             ]);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to modify this profile.',
             ], 403);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed.',
@@ -374,10 +352,6 @@ class ProfileController extends Controller
 
     /**
      * Update reviewer availability settings.
-     *
-     * @param  Request  $request
-     * @param  string  $id
-     * @return JsonResponse
      */
     public function updateReviewerAvailability(Request $request, string $id): JsonResponse
     {
@@ -398,12 +372,12 @@ class ProfileController extends Controller
                 'data' => $profile,
                 'message' => 'Reviewer availability updated successfully.',
             ]);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to modify reviewer settings.',
             ], 403);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed.',
@@ -425,10 +399,6 @@ class ProfileController extends Controller
 
     /**
      * Verify a profile (admin/editor only).
-     *
-     * @param  Request  $request
-     * @param  string  $id
-     * @return JsonResponse
      */
     public function verify(Request $request, string $id): JsonResponse
     {
@@ -441,7 +411,7 @@ class ProfileController extends Controller
                 'data' => $profile,
                 'message' => 'Profile verified successfully.',
             ]);
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+        } catch (AuthorizationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to verify profiles.',
@@ -462,9 +432,6 @@ class ProfileController extends Controller
 
     /**
      * Complete onboarding - Initialize user profile during onboarding flow
-     *
-     * @param  Request  $request
-     * @return JsonResponse
      */
     public function completeOnboarding(Request $request): JsonResponse
     {
@@ -489,7 +456,7 @@ class ProfileController extends Controller
                 'business_type' => ['required', 'string', 'in:Supplier,Distributor,Manufacturer,Reseller'],
             ]);
 
-            $action = new \App\Actions\Onboarding\CompleteOnboardingAction();
+            $action = new CompleteOnboardingAction;
             $updatedUser = $action->execute($user, $validated);
 
             $updatedUser->load(['roles', 'avatars']);
@@ -514,7 +481,7 @@ class ProfileController extends Controller
                 ],
             ], 'Onboarding completed successfully.', 201);
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation errors',

@@ -15,7 +15,7 @@ class FeedbackSearchFilter
 
     public function __invoke(Builder $query): Builder
     {
-        if (!$this->search) {
+        if (! $this->search) {
             return $query;
         }
 

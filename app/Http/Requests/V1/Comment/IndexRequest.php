@@ -18,7 +18,7 @@ class IndexRequest extends FormRequest
             'commentable_type' => 'required|string',
             'commentable_id' => 'required|integer',
             'include_internal' => 'nullable|boolean',
-        
+
         ];
     }
 }

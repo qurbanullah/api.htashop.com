@@ -22,11 +22,11 @@ declare(strict_types=1);
 
 namespace App\Actions\Post;
 
+use App\Enums\PostTypeEnum;
+use App\Models\Category;
 use App\Models\Post;
 use App\Models\Tag;
-use App\Models\Category;
 use App\Traits\Post\GeneratesUniqueSlug;
-use App\Enums\PostTypeEnum;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -97,7 +97,7 @@ class CreatePostAction
                         );
                         $tagIds[] = $tag->id;
                     }
-                    if (!empty($tagIds)) {
+                    if (! empty($tagIds)) {
                         $post->tags()->sync($tagIds);
                     }
                 }
@@ -117,11 +117,11 @@ class CreatePostAction
                         );
                         $categoryIds[] = $category->id;
                     }
-                    if (!empty($categoryIds)) {
+                    if (! empty($categoryIds)) {
                         $post->categories()->sync($categoryIds);
 
                         // Auto-set primary_category_id to first category if not provided
-                        if (empty($data['primary_category_id']) && !empty($categoryIds)) {
+                        if (empty($data['primary_category_id']) && ! empty($categoryIds)) {
                             $post->primary_category_id = $categoryIds[0];
                             $post->save();
                         }

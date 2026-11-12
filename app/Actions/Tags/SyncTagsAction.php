@@ -2,19 +2,19 @@
 
 namespace App\Actions\Tags;
 
+use App\Models\Tag;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use App\Models\Tag;
 
 class SyncTagsAction
 {
     /**
      * Sync tags for a taggable model (add new, remove old)
      *
-     * @param Model $taggable The model to sync tags for
-     * @param array|Collection $tags Array of tag names or IDs
-     * @param string $type Tag type (product, blog, etc.)
+     * @param  Model  $taggable  The model to sync tags for
+     * @param  array|Collection  $tags  Array of tag names or IDs
+     * @param  string  $type  Tag type (product, blog, etc.)
      * @return Collection The synced tags
      */
     public function execute(Model $taggable, array|Collection $tags, string $type = 'product'): Collection

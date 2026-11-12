@@ -17,7 +17,7 @@ class PostFactory extends Factory
             'title' => $this->faker->sentence(),
             'slug' => $this->faker->slug(),
             'excerpt' => $this->faker->paragraph(),
-            'content' => '<h1>' . $this->faker->sentence() . '</h1><p>' . $this->faker->paragraph() . '</p>',
+            'content' => '<h1>'.$this->faker->sentence().'</h1><p>'.$this->faker->paragraph().'</p>',
             'featured_image' => $this->faker->imageUrl(800, 600, 'post', true),
             'images' => [
                 $this->faker->imageUrl(400, 300, 'content1', true),

@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Avatar>
+ * @extends Factory<Avatar>
  */
 class AvatarFactory extends Factory
 {
@@ -24,8 +24,8 @@ class AvatarFactory extends Factory
             'avatareable_id' => fn () => User::factory()->create()->id,
             'avatareable_type' => User::class,
             'type' => fake()->randomElement(['original', 'thumb', 'small', 'medium', 'large']),
-            'path' => 'avatars/' . fake()->uuid() . '.jpg',
-            'original_filename' => fake()->word() . '.jpg',
+            'path' => 'avatars/'.fake()->uuid().'.jpg',
+            'original_filename' => fake()->word().'.jpg',
             'mime_type' => 'image/jpeg',
             'file_size' => fake()->numberBetween(1024, 512000),
             'width' => fake()->numberBetween(100, 800),

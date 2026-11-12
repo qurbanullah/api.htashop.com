@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Attachment>
+ * @extends Factory<Attachment>
  */
 class AttachmentFactory extends Factory
 {
@@ -24,8 +24,8 @@ class AttachmentFactory extends Factory
             'attachable_type' => User::class,
             'attachable_id' => fn () => User::factory()->create()->id,
             'name' => fake()->word(),
-            'filename' => fake()->word() . '.pdf',
-            'path' => 'attachments/' . fake()->uuid() . '.pdf',
+            'filename' => fake()->word().'.pdf',
+            'path' => 'attachments/'.fake()->uuid().'.pdf',
             'type' => fake()->randomElement(['document', 'image', 'other']),
             'mime_type' => 'application/pdf',
             'size' => fake()->numberBetween(1024, 1024000),

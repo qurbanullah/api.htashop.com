@@ -22,6 +22,10 @@ declare(strict_types=1);
 
 namespace App\Actions\Feedbacks;
 
+use App\Filters\Feedbacks\FeedbackPriorityFilter;
+use App\Filters\Feedbacks\FeedbackSearchFilter;
+use App\Filters\Feedbacks\FeedbackStatusFilter;
+use App\Filters\Feedbacks\FeedbackTypeFilter;
 use App\Models\Feedback;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Pipeline;
@@ -48,10 +52,10 @@ class FeedbackShowAction
         return Pipeline::send(Feedback::query())
             ->through(
                 [
-                    new \App\Filters\Feedbacks\FeedbackSearchFilter(data_get($data, 'filters.search')),
-                    new \App\Filters\Feedbacks\FeedbackTypeFilter(data_get($data, 'filters.type')),
-                    new \App\Filters\Feedbacks\FeedbackStatusFilter(data_get($data, 'filters.status')),
-                    new \App\Filters\Feedbacks\FeedbackPriorityFilter(data_get($data, 'filters.priority')),
+                    new FeedbackSearchFilter(data_get($data, 'filters.search')),
+                    new FeedbackTypeFilter(data_get($data, 'filters.type')),
+                    new FeedbackStatusFilter(data_get($data, 'filters.status')),
+                    new FeedbackPriorityFilter(data_get($data, 'filters.priority')),
                 ]
             )
             ->thenReturn()

@@ -18,7 +18,7 @@ enum ManuscriptType: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::RESEARCH_ARTICLE => 'Research Article',
             self::REVIEW_ARTICLE => 'Review Article',
             self::SHORT_COMMUNICATION => 'Short Communication',
@@ -35,7 +35,7 @@ enum ManuscriptType: string
 
     public function description(): string
     {
-        return match($this) {
+        return match ($this) {
             self::RESEARCH_ARTICLE => 'Original research with novel findings and comprehensive methodology',
             self::REVIEW_ARTICLE => 'Comprehensive review of existing literature on a specific topic',
             self::SHORT_COMMUNICATION => 'Brief report of preliminary or significant findings',

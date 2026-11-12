@@ -14,6 +14,7 @@ class CreatePostJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected array $postData;
+
     protected int $createdByUserId;
 
     /**

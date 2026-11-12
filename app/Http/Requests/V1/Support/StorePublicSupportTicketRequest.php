@@ -57,9 +57,9 @@ class StorePublicSupportTicketRequest extends FormRequest
         $additionalInformation = array_filter([
             'Submitted from public website support form.',
             'Portal access: unavailable for guest submissions.',
-            'Selected category: ' . ($categoryLabels[$validated['category']] ?? $validated['category']),
-            'Selected priority: ' . ucfirst($validated['priority']),
-            !empty($validated['source_page']) ? 'Source page: ' . $validated['source_page'] : null,
+            'Selected category: '.($categoryLabels[$validated['category']] ?? $validated['category']),
+            'Selected priority: '.ucfirst($validated['priority']),
+            ! empty($validated['source_page']) ? 'Source page: '.$validated['source_page'] : null,
         ]);
 
         return [

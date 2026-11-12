@@ -22,6 +22,8 @@ declare(strict_types=1);
 
 namespace App\Traits\Post;
 
+use Illuminate\Contracts\Validation\ValidationRule;
+
 /**
  * Post validation rules trait.
  *
@@ -37,7 +39,7 @@ trait PostValidationRules
     /**
      * Run the validation rule.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function formRules(): array
     {
@@ -66,7 +68,7 @@ trait PostValidationRules
     /**
      * Validation rules for creating post (simplified - no status/scheduling).
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function createRules(): array
     {
@@ -85,7 +87,7 @@ trait PostValidationRules
     /**
      * Validation rules for sending post (no scheduling validation).
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function sendRules(): array
     {

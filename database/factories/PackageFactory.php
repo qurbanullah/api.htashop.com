@@ -2,10 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\Package;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Package>
+ * @extends Factory<Package>
  */
 class PackageFactory extends Factory
 {
@@ -19,10 +21,10 @@ class PackageFactory extends Factory
         $packageTypes = [
             'Standard', 'Professional', 'Premium', 'Enterprise', 'Basic', 'Advanced',
             'Studio', 'Ultimate', 'Student', 'Academic', 'Commercial', 'Startup',
-            'Demo', 'Trial', 'Researcher', 'Developer', 'Personal', 'Business'
+            'Demo', 'Trial', 'Researcher', 'Developer', 'Personal', 'Business',
         ];
 
-        $name = fake()->randomElement($packageTypes) . ' ' . fake()->randomElement(['Edition', 'Package', 'Plan', 'License']);
+        $name = fake()->randomElement($packageTypes).' '.fake()->randomElement(['Edition', 'Package', 'Plan', 'License']);
 
         // Package descriptions based on type
         $descriptions = [
@@ -35,15 +37,15 @@ class PackageFactory extends Factory
             'Limited-time demonstration package to explore core functionality',
             'Time-limited trial access to evaluate the full feature set',
             'Professional-grade tools for serious creative work',
-            'Enterprise-level package with advanced collaboration and management features'
+            'Enterprise-level package with advanced collaboration and management features',
         ];
 
         return [
             'name' => $name,
-            'slug' => \Illuminate\Support\Str::slug($name),
+            'slug' => Str::slug($name),
             'summary' => fake()->sentence(6),
             'description' => fake()->randomElement($descriptions),
-            'image' => 'packages/' . \Illuminate\Support\Str::slug($name) . '.png',
+            'image' => 'packages/'.Str::slug($name).'.png',
             'is_active' => fake()->boolean(90), // 90% chance of being active
             'sorting' => fake()->numberBetween(1, 20),
         ];

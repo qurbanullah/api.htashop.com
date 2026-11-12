@@ -2,6 +2,7 @@
 
 namespace App\Actions\Review;
 
+use App\Enums\DecisionType;
 use App\Models\Assignment;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -20,14 +21,14 @@ class SubmitReview
                 'status' => 'completed',
                 'completed_at' => now(),
                 'notes' => $data['review_content'],
-                'decline_reason' => null // Clear any previous decline reason
+                'decline_reason' => null, // Clear any previous decline reason
             ]);
 
             // Create review decision record
             $manuscript = $assignment->submission; // Assuming relationship exists
             $manuscript->decisions()->create([
                 'user_id' => $reviewer->id,
-                'type' => \App\Enums\DecisionType::REVIEW,
+                'type' => DecisionType::REVIEW,
                 'decision' => $data['recommendation'],
                 'content' => $data['review_content'],
                 'reasoning' => $data['detailed_comments'] ?? null,
@@ -39,8 +40,8 @@ class SubmitReview
                     'review_criteria_scores' => $data['criteria_scores'] ?? [],
                     'confidential_comments' => $data['confidential_comments'] ?? null,
                     'review_round' => $assignment->round,
-                    'time_to_complete' => $assignment->created_at->diffInDays(now())
-                ]
+                    'time_to_complete' => $assignment->created_at->diffInDays(now()),
+                ],
             ]);
 
             // Update manuscript status if this was the last pending review
@@ -51,7 +52,7 @@ class SubmitReview
                 'manuscript_id' => $manuscript->id,
                 'reviewer_id' => $reviewer->id,
                 'recommendation' => $data['recommendation'],
-                'completed_at' => $assignment->completed_at
+                'completed_at' => $assignment->completed_at,
             ]);
 
             return $assignment->fresh();
@@ -96,19 +97,19 @@ class SubmitReview
                 // Create editorial decision noting that all reviews are complete
                 $manuscript->decisions()->create([
                     'user_id' => $manuscript->journal->editor_in_chief_id,
-                    'type' => \App\Enums\DecisionType::EDITORIAL,
+                    'type' => DecisionType::EDITORIAL,
                     'decision' => 'reviews_completed',
                     'content' => "All reviews completed. {$completedReviews} reviews received.",
                     'completed_at' => now(),
                     'metadata' => [
                         'completed_reviews_count' => $completedReviews,
-                        'pending_editorial_decision' => true
-                    ]
+                        'pending_editorial_decision' => true,
+                    ],
                 ]);
 
                 Log::info('All reviews completed for manuscript', [
                     'manuscript_id' => $manuscript->id,
-                    'completed_reviews' => $completedReviews
+                    'completed_reviews' => $completedReviews,
                 ]);
             }
         }

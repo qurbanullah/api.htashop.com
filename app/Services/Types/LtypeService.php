@@ -22,14 +22,15 @@ declare(strict_types=1);
 
 namespace App\Services\Types;
 
-use App\Helpers\CacheHelper;
 use App\Actions\Types\LicenseTypes\LtypeCreateAction;
 use App\Actions\Types\LicenseTypes\LtypeReadAction;
 use App\Actions\Types\LicenseTypes\LtypeSearchByIdAction;
 use App\Actions\Types\LicenseTypes\LtypeSortAction;
 use App\Actions\Types\LicenseTypes\LtypeUpdateAction;
+use App\Helpers\CacheHelper;
 use App\Models\Ltype;
 use Illuminate\Database\Eloquent\Collection;
+
 /**
  * CRUD operation class for Document Model.
  *
@@ -62,10 +63,10 @@ class LtypeService
      */
     public function read(array $data = []): Collection
     {
-        $cacheKey = 'cached_ltypes_' . md5(serialize($data));
+        $cacheKey = 'cached_ltypes_'.md5(serialize($data));
 
-        if (! (!is_null(CacheHelper::get([], $cacheKey)))) {
-            return CacheHelper::remember([], 
+        if (! (! is_null(CacheHelper::get([], $cacheKey)))) {
+            return CacheHelper::remember([],
                 $cacheKey, 31536000, function () use ($data) {
                     return (new LtypeReadAction)->handle($data);
                 }
@@ -96,10 +97,10 @@ class LtypeService
      */
     public function searchById(int $id): Ltype
     {
-        $cacheKey = 'cached_ltype_' . $id;
+        $cacheKey = 'cached_ltype_'.$id;
 
-        if (! (!is_null(CacheHelper::get([], $cacheKey)))) {
-            return CacheHelper::remember([], 
+        if (! (! is_null(CacheHelper::get([], $cacheKey)))) {
+            return CacheHelper::remember([],
                 $cacheKey, 31536000,
                 function () use ($id) {
                     return (new LtypeSearchByIdAction)->handle($id);
@@ -115,7 +116,7 @@ class LtypeService
      *
      * @param  int  $modelId  model id to be sorted
      * @param  int  $newPosition  new position of the model
-     * @return \App\Models\Ltype
+     * @return Ltype
      */
     public function sort($modelId, $newPosition)
     {
@@ -147,14 +148,14 @@ class LtypeService
     /**
      * Clear caching after update.
      *
-     * @param  \App\Models\Ltype  $ltype  data to update
+     * @param  Ltype  $ltype  data to update
      */
     private function _clearCaching(Ltype $ltype): void
     {
         // Clear ltype-specific caches
-        CacheHelper::forget([], 'cached_ltype_' . $ltype->id);
-        CacheHelper::forget([], 'cached_ltype' . $ltype->slug);
-        CacheHelper::forget([], 'form_key_' . $ltype->slug);
+        CacheHelper::forget([], 'cached_ltype_'.$ltype->id);
+        CacheHelper::forget([], 'cached_ltype'.$ltype->slug);
+        CacheHelper::forget([], 'form_key_'.$ltype->slug);
 
         // Clear all cached read queries
         $this->_clearReadCaches();
@@ -177,7 +178,7 @@ class LtypeService
         ];
 
         foreach ($commonFilters as $filters) {
-            $cacheKey = 'cached_ltypes_' . md5(serialize(['filters' => $filters]));
+            $cacheKey = 'cached_ltypes_'.md5(serialize(['filters' => $filters]));
             CacheHelper::forget([], $cacheKey);
         }
     }

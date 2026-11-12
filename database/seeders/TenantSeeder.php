@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Tenant;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -46,11 +45,11 @@ class TenantSeeder extends Seeder
             $tenantsToCreate = 10 - $existingTenantCount;
 
             for ($i = 0; $i < $tenantsToCreate; $i++) {
-                $name = fake()->company() . ' ' . fake()->unique()->numberBetween(101, 999);
+                $name = fake()->company().' '.fake()->unique()->numberBetween(101, 999);
                 Tenant::create([
                     'name' => $name,
                     'slug' => Str::slug($name),
-                    'domain' => Str::slug($name) . '.example.com',
+                    'domain' => Str::slug($name).'.example.com',
                     'is_active' => true,
                     'settings' => [
                         'currency' => fake()->randomElement(['USD', 'EUR', 'GBP']),
@@ -60,6 +59,6 @@ class TenantSeeder extends Seeder
             }
         }
 
-        $this->command->info('✅ Tenant seeding complete. Total tenants: ' . Tenant::count());
+        $this->command->info('✅ Tenant seeding complete. Total tenants: '.Tenant::count());
     }
 }

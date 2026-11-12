@@ -36,7 +36,7 @@ class LabelCreateAction
         }
 
         while ($query->exists()) {
-            $candidate = $base . '_' . $suffix;
+            $candidate = $base.'_'.$suffix;
             $suffix++;
             $query = Label::query()->where('slug', $candidate);
             if (is_null($tenantId)) {

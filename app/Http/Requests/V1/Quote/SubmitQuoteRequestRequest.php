@@ -41,7 +41,7 @@ class SubmitQuoteRequestRequest extends FormRequest
             'quotable_id' => 'nullable|integer',
             // Metadata
             'source_page' => 'nullable|string|max:500',
-        
+
         ];
     }
 }

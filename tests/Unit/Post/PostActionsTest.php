@@ -2,10 +2,16 @@
 
 namespace Tests\Unit\Post;
 
+use App\Actions\Post\CreatePostAction;
+use App\Actions\Post\DeletePostAction;
+use App\Actions\Post\SchedulePostAction;
+use App\Actions\Post\SendPostAction;
+use App\Actions\Post\UpdatePostAction;
+
 test('the Post action classes exist', function () {
-    expect(class_exists(\App\Actions\Post\CreatePostAction::class))->toBeTrue();
-    expect(class_exists(\App\Actions\Post\DeletePostAction::class))->toBeTrue();
-    expect(class_exists(\App\Actions\Post\SchedulePostAction::class))->toBeTrue();
-    expect(class_exists(\App\Actions\Post\SendPostAction::class))->toBeTrue();
-    expect(class_exists(\App\Actions\Post\UpdatePostAction::class))->toBeTrue();
+    expect(class_exists(CreatePostAction::class))->toBeTrue();
+    expect(class_exists(DeletePostAction::class))->toBeTrue();
+    expect(class_exists(SchedulePostAction::class))->toBeTrue();
+    expect(class_exists(SendPostAction::class))->toBeTrue();
+    expect(class_exists(UpdatePostAction::class))->toBeTrue();
 });

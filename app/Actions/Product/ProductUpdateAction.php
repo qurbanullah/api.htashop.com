@@ -47,6 +47,7 @@ class ProductUpdateAction
                 'status' => data_get($data, 'status', $product->status),
                 'summary' => array_key_exists('summary', $data) ? data_get($data, 'summary') : $product->summary,
                 'description' => array_key_exists('description', $data) ? data_get($data, 'description') : $product->description,
+                'cost_price' => array_key_exists('cost_price', $data) ? data_get($data, 'cost_price') : $product->cost_price,
                 'is_active' => data_get($data, 'is_active', $product->is_active),
                 'metadata' => array_key_exists('metadata', $data) ? data_get($data, 'metadata') : $product->metadata,
             ]);

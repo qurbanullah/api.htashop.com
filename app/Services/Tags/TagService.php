@@ -22,14 +22,15 @@ declare(strict_types=1);
 
 namespace App\Services\Tags;
 
-use App\Helpers\CacheHelper;
 use App\Actions\Tags\TagCreateAction;
 use App\Actions\Tags\TagDeleteAction;
-use App\Actions\Tags\TagSortAction;
-use App\Actions\Tags\TagUpdateAction;
 use App\Actions\Tags\TagPatchAction;
 use App\Actions\Tags\TagSearchByIdAction;
+use App\Actions\Tags\TagSortAction;
+use App\Actions\Tags\TagUpdateAction;
+use App\Helpers\CacheHelper;
 use App\Models\Tag;
+
 /**
  * CRUD operation class for Document Model.
  *
@@ -103,8 +104,8 @@ class TagService
      */
     public function searchById(int $id): Tag
     {
-        return CacheHelper::remember([], 
-            'cached_tag_' . $id, 31536000,
+        return CacheHelper::remember([],
+            'cached_tag_'.$id, 31536000,
             fn () => (new TagSearchByIdAction)->handle($id)
         );
     }
@@ -114,7 +115,7 @@ class TagService
      *
      * @param  int  $modelId  model id to be sorted
      * @param  int  $newPosition  new position of the model
-     * @return \App\Models\Tag
+     * @return Tag
      */
     public function sort($modelId, $newPosition)
     {
@@ -127,7 +128,7 @@ class TagService
     /**
      * Clear caching after update.
      *
-     * @param  \App\Models\Tag  $tag  data to update
+     * @param  Tag  $tag  data to update
      */
     private function _clearCaching(Tag $tag): void
     {

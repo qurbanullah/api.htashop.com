@@ -29,7 +29,7 @@ return new class extends Migration
             $table->json('additional_info')->nullable(); // For any additional metadata
 
             // Source tracking
-            $table->string('source')->default('web'); //web, app. api
+            $table->string('source')->default('web'); // web, app. api
             $table->string('user_agent')->nullable();
             $table->ipAddress('ip_address')->nullable();
 

@@ -9,6 +9,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -33,11 +34,11 @@ class TicketUnassigned extends Mailable
      */
     public function envelope(): Envelope
     {
-        $subject = match($this->recipientType) {
-            'previous_assignee' => 'You\'ve Been Unassigned from Ticket - ' . $this->ticket->title,
-            'creator' => 'Ticket Unassigned - ' . $this->ticket->title,
-            'support' => 'Unassigned Ticket Requires Action - ' . $this->ticket->title,
-            default => 'Ticket Unassignment Update - ' . $this->ticket->title,
+        $subject = match ($this->recipientType) {
+            'previous_assignee' => 'You\'ve Been Unassigned from Ticket - '.$this->ticket->title,
+            'creator' => 'Ticket Unassigned - '.$this->ticket->title,
+            'support' => 'Unassigned Ticket Requires Action - '.$this->ticket->title,
+            default => 'Ticket Unassignment Update - '.$this->ticket->title,
         };
 
         return new Envelope(
@@ -64,7 +65,7 @@ class TicketUnassigned extends Mailable
     /**
      * Get the attachments for the message.
      *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {

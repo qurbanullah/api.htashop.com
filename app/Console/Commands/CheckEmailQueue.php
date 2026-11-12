@@ -41,8 +41,8 @@ class CheckEmailQueue extends Command
             ->orderBy('failed_at', 'desc')
             ->get();
 
-        $this->info("Pending Email Jobs: " . $pendingJobs->count());
-        $this->info("Failed Email Jobs: " . $failedJobs->count());
+        $this->info('Pending Email Jobs: '.$pendingJobs->count());
+        $this->info('Failed Email Jobs: '.$failedJobs->count());
 
         if ($this->option('show-jobs')) {
             if ($pendingJobs->count() > 0) {
@@ -66,9 +66,10 @@ class CheckEmailQueue extends Command
                     ['ID', 'Exception', 'Failed At'],
                     $failedJobs->map(function ($job) {
                         $exception = json_decode($job->exception, true);
+
                         return [
                             $job->id,
-                            substr($exception['message'] ?? 'Unknown error', 0, 50) . '...',
+                            substr($exception['message'] ?? 'Unknown error', 0, 50).'...',
                             $job->failed_at,
                         ];
                     })->toArray()
@@ -81,15 +82,15 @@ class CheckEmailQueue extends Command
         exec('pgrep -f "queue:work"', $output, $return_var);
 
         if ($return_var === 0) {
-            $this->info("✅ Queue worker is running (PIDs: " . implode(', ', $output) . ")");
+            $this->info('✅ Queue worker is running (PIDs: '.implode(', ', $output).')');
         } else {
-            $this->warn("⚠️  No queue worker detected. Start with: php artisan queue:work");
+            $this->warn('⚠️  No queue worker detected. Start with: php artisan queue:work');
         }
 
         $this->info("\nCommands:");
-        $this->info("  Start worker: php artisan queue:work --queue=emails");
-        $this->info("  Retry failed: php artisan queue:retry all");
-        $this->info("  Clear failed: php artisan queue:flush");
+        $this->info('  Start worker: php artisan queue:work --queue=emails');
+        $this->info('  Retry failed: php artisan queue:retry all');
+        $this->info('  Clear failed: php artisan queue:flush');
 
         return 0;
     }

@@ -8,14 +8,15 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SendContactReplyEmail implements ShouldQueue
 {
-    use Queueable, InteractsWithQueue, SerializesModels;
+    use InteractsWithQueue, Queueable, SerializesModels;
 
     public $tries = 3;
+
     public $timeout = 60;
 
     /**
@@ -52,13 +53,13 @@ class SendContactReplyEmail implements ShouldQueue
                 'senderName' => $this->senderName,
             ], function ($mail) {
                 $mail->to($this->message->email, $this->message->name)
-                     ->from(config('mail.from.address'), config('mail.from.name'))
-                     ->subject($this->replySubject);
+                    ->from(config('mail.from.address'), config('mail.from.name'))
+                    ->subject($this->replySubject);
             });
 
             // Mark as replied if requested
             if ($this->markAsReplied) {
-                $contactMessageService = new ContactMessageService();
+                $contactMessageService = new ContactMessageService;
                 $contactMessageService->markAsReplied(
                     $this->message->id,
                     $this->replyMessage,

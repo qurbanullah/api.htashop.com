@@ -9,8 +9,8 @@ use App\Models\ForumReport;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class ForumReportService
 {
@@ -48,15 +48,15 @@ class ForumReportService
                 'reportable',
             ]);
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['reason'])) {
+        if (! empty($filters['reason'])) {
             $query->where('reason', $filters['reason']);
         }
 
-        if (!empty($filters['reportable_type'])) {
+        if (! empty($filters['reportable_type'])) {
             $type = match ($filters['reportable_type']) {
                 'post' => ForumPost::class,
                 'comment' => ForumComment::class,

@@ -22,10 +22,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
@@ -40,7 +38,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  */
 class Package extends Model
 {
-        use HasFactory;
+    use HasFactory;
 
     /**
      * The database used by the model.
@@ -109,18 +107,14 @@ class Package extends Model
 
     /**
      * Get all of the features that are assigned this packages.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
      */
-    public function features() : MorphToMany
+    public function features(): MorphToMany
     {
         return $this->morphToMany(Feature::class, 'featureable');
     }
 
     /**
      * Get all tickets that are related to this package.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
      */
     public function tickets(): MorphToMany
     {

@@ -27,29 +27,29 @@ class ReadDamAssetsAction
                                     ->where('products.tenant_id', $tenantId);
                             });
                     })
-                    ->orWhere(function ($query) use ($tenantId) {
-                        $query->where('damable_type', Variant::class)
-                            ->whereExists(function ($exists) use ($tenantId) {
-                                $exists->select(DB::raw(1))
-                                    ->from('variants')
-                                    ->join('products', 'products.id', 'variants.product_id')
-                                    ->whereColumn('variants.id', 'dams.damable_id')
-                                    ->where('products.tenant_id', $tenantId);
-                            });
-                    })
-                    ->orWhere(function ($query) use ($tenantId) {
-                        $query->where('damable_type', Organization::class)
-                            ->whereExists(function ($exists) use ($tenantId) {
-                                $exists->select(DB::raw(1))
-                                    ->from('organizations')
-                                    ->whereColumn('organizations.id', 'dams.damable_id')
-                                    ->where('organizations.tenant_id', $tenantId);
-                            });
-                    })
-                    ->orWhere(function ($query) use ($tenantId) {
-                        $query->where('damable_type', Tenant::class)
-                            ->where('damable_id', $tenantId);
-                    });
+                        ->orWhere(function ($query) use ($tenantId) {
+                            $query->where('damable_type', Variant::class)
+                                ->whereExists(function ($exists) use ($tenantId) {
+                                    $exists->select(DB::raw(1))
+                                        ->from('variants')
+                                        ->join('products', 'products.id', 'variants.product_id')
+                                        ->whereColumn('variants.id', 'dams.damable_id')
+                                        ->where('products.tenant_id', $tenantId);
+                                });
+                        })
+                        ->orWhere(function ($query) use ($tenantId) {
+                            $query->where('damable_type', Organization::class)
+                                ->whereExists(function ($exists) use ($tenantId) {
+                                    $exists->select(DB::raw(1))
+                                        ->from('organizations')
+                                        ->whereColumn('organizations.id', 'dams.damable_id')
+                                        ->where('organizations.tenant_id', $tenantId);
+                                });
+                        })
+                        ->orWhere(function ($query) use ($tenantId) {
+                            $query->where('damable_type', Tenant::class)
+                                ->where('damable_id', $tenantId);
+                        });
                 });
             })
             ->when(data_get($filters, 'organization_id'), function ($query, $organizationId) {
@@ -63,20 +63,20 @@ class ReadDamAssetsAction
                                     ->where('products.organization_id', $organizationId);
                             });
                     })
-                    ->orWhere(function ($query) use ($organizationId) {
-                        $query->where('damable_type', Variant::class)
-                            ->whereExists(function ($exists) use ($organizationId) {
-                                $exists->select(DB::raw(1))
-                                    ->from('variants')
-                                    ->join('products', 'products.id', 'variants.product_id')
-                                    ->whereColumn('variants.id', 'dams.damable_id')
-                                    ->where('products.organization_id', $organizationId);
-                            });
-                    })
-                    ->orWhere(function ($query) use ($organizationId) {
-                        $query->where('damable_type', Organization::class)
-                            ->where('damable_id', $organizationId);
-                    });
+                        ->orWhere(function ($query) use ($organizationId) {
+                            $query->where('damable_type', Variant::class)
+                                ->whereExists(function ($exists) use ($organizationId) {
+                                    $exists->select(DB::raw(1))
+                                        ->from('variants')
+                                        ->join('products', 'products.id', 'variants.product_id')
+                                        ->whereColumn('variants.id', 'dams.damable_id')
+                                        ->where('products.organization_id', $organizationId);
+                                });
+                        })
+                        ->orWhere(function ($query) use ($organizationId) {
+                            $query->where('damable_type', Organization::class)
+                                ->where('damable_id', $organizationId);
+                        });
                 });
             })
             ->when(data_get($filters, 'damable_type'), fn ($query, $damableType) => $query->where('damable_type', $damableType))

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\V1\Post;
 
 use App\Enums\PostTypeEnum;
+use App\Models\Post;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -27,7 +28,7 @@ class PostUpdateRequest extends FormRequest
         $uuid = $this->route('uuid');
 
         // Find the post ID by UUID for the unique rule
-        $post = \App\Models\Post::where('uuid', $uuid)->first();
+        $post = Post::where('uuid', $uuid)->first();
         $postId = $post ? $post->id : null;
 
         return [
@@ -82,7 +83,7 @@ class PostUpdateRequest extends FormRequest
         // Convert is_published_as_blog to boolean if provided
         if ($this->has('is_published_as_blog')) {
             $this->merge([
-                'is_published_as_blog' => filter_var($this->is_published_as_blog, FILTER_VALIDATE_BOOLEAN)
+                'is_published_as_blog' => filter_var($this->is_published_as_blog, FILTER_VALIDATE_BOOLEAN),
             ]);
         }
     }

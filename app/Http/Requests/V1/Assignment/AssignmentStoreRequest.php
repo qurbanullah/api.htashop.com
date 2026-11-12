@@ -51,7 +51,7 @@ class AssignmentStoreRequest extends FormRequest
 
     private function resolveAssignable(?string $type, ?string $uuid): Product|Variant|null
     {
-        if (!$type || !$uuid) {
+        if (! $type || ! $uuid) {
             return null;
         }
 

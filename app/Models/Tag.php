@@ -22,9 +22,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-
-use App\Models\Product;
-use App\Models\Variant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
@@ -41,7 +38,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  */
 class Tag extends Model
 {
-        use HasFactory;
+    use HasFactory;
 
     /**
      * The database used by the model.
@@ -109,20 +106,16 @@ class Tag extends Model
 
     /**
      * Get all of the tickets that are assigned this tag.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
      */
-    public function tickets() : MorphToMany
+    public function tickets(): MorphToMany
     {
         return $this->morphedByMany(Ticket::class, 'taggable');
     }
 
     /**
      * Get all of the licenses that are assigned this tag.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
      */
-    public function licenses() : MorphToMany
+    public function licenses(): MorphToMany
     {
         return $this->morphedByMany(License::class, 'taggable');
     }

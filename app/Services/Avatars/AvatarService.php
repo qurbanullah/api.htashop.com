@@ -2,11 +2,12 @@
 
 namespace App\Services\Avatars;
 
+use App\Actions\Avatar\CreateAvatarsFromUploadAction;
+use App\Actions\Avatar\DeleteAvatarsAction;
 use App\Helpers\CacheHelper;
 use App\Models\Avatar;
 use App\Models\User;
-use App\Actions\Avatar\CreateAvatarsFromUploadAction;
-use App\Actions\Avatar\DeleteAvatarsAction;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -24,9 +25,7 @@ class AvatarService
     /**
      * Get user's avatar URL with caching
      *
-     * @param User $user
-     * @param string $type Avatar type: 'original', 'thumb', 'small', 'medium', 'large'
-     * @return string|null
+     * @param  string  $type  Avatar type: 'original', 'thumb', 'small', 'medium', 'large'
      */
     public function getUserAvatarUrl(User $user, string $type = 'medium'): ?string
     {
@@ -40,7 +39,6 @@ class AvatarService
     /**
      * Get all avatar URLs (all types) with caching
      *
-     * @param User $user
      * @return array Format: ['thumb' => 'url', 'small' => 'url', ...]
      */
     public function getUserAvatarUrls(User $user): array
@@ -55,12 +53,10 @@ class AvatarService
     /**
      * Create avatars from S3 upload with variant paths
      *
-     * @param User $user
-     * @param array $variantPaths Format: ['thumb' => 's3/path', 'small' => 's3/path', ...]
-     * @param string $filename Original filename
-     * @param string $mimeType MIME type (default: image/jpeg)
-     * @param array|null $metadata Additional metadata
-     * @return bool
+     * @param  array  $variantPaths  Format: ['thumb' => 's3/path', 'small' => 's3/path', ...]
+     * @param  string  $filename  Original filename
+     * @param  string  $mimeType  MIME type (default: image/jpeg)
+     * @param  array|null  $metadata  Additional metadata
      */
     public function createAvatarFromUpload(
         User $user,
@@ -79,21 +75,18 @@ class AvatarService
         );
 
         Log::info('Avatar created', [
-                'user_id' => $user->id,
-                'types' => array_keys($variantPaths),
-            ]);
+            'user_id' => $user->id,
+            'types' => array_keys($variantPaths),
+        ]);
 
-            // Clear all avatar caches for this user
-            $this->clearUserAvatarCaches($user->id);
+        // Clear all avatar caches for this user
+        $this->clearUserAvatarCaches($user->id);
 
         return true;
     }
 
     /**
      * Delete user's avatar
-     *
-     * @param User $user
-     * @return bool
      */
     public function deleteAvatar(User $user): bool
     {
@@ -126,7 +119,6 @@ class AvatarService
      * Optimize avatar variants (generate WebP, re-compress, update metadata)
      * This is typically run as a background job after initial upload
      *
-     * @param User $user
      * @return bool True if optimization was performed, false if skipped
      */
     public function optimizeAvatarIfNeeded(User $user): bool
@@ -135,6 +127,7 @@ class AvatarService
             Log::warning('User has no avatars to optimize', [
                 'user_id' => $user->id,
             ]);
+
             return false;
         }
 
@@ -172,15 +165,13 @@ class AvatarService
                 'user_id' => $user->id,
                 'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
 
     /**
      * Clear all caches for a user's avatar
-     *
-     * @param int $userId
-     * @return void
      */
     public function clearUserAvatarCaches(int $userId): void
     {
@@ -196,10 +187,6 @@ class AvatarService
 
     /**
      * Generate cache key for user avatar URL
-     *
-     * @param int $userId
-     * @param string $type
-     * @return string
      */
     private function getUserAvatarUrlCacheKey(int $userId, string $type): string
     {
@@ -208,9 +195,6 @@ class AvatarService
 
     /**
      * Generate cache key for user avatar URLs (all types)
-     *
-     * @param int $userId
-     * @return string
      */
     private function getUserAvatarUrlsCacheKey(int $userId): string
     {
@@ -220,9 +204,7 @@ class AvatarService
     /**
      * Update avatar metadata (file size, dimensions)
      *
-     * @param Avatar $avatar
-     * @param \Illuminate\Contracts\Filesystem\Filesystem $disk
-     * @return void
+     * @param  Filesystem  $disk
      */
     private function updateAvatarMetadata(Avatar $avatar, $disk): void
     {
@@ -287,4 +269,4 @@ class AvatarService
             ]);
         }
     }
-};
+}

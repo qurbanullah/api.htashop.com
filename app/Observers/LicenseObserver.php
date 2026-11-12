@@ -23,8 +23,8 @@ declare(strict_types=1);
 namespace App\Observers;
 
 use App\Models\License;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * License Observer class for handling automatic file content extraction.
@@ -41,9 +41,6 @@ class LicenseObserver
     /**
      * Handle the License "saved" event (fires after both create and update).
      * Reads and stores file contents whenever license_file or data_file are present.
-     *
-     * @param  \App\Models\License  $license
-     * @return void
      */
     public function saved(License $license): void
     {
@@ -53,9 +50,6 @@ class LicenseObserver
     /**
      * Handle the License "updated" event.
      * Ensure file syncing runs on explicit updates as well.
-     *
-     * @param  \App\Models\License  $license
-     * @return void
      */
     public function updated(License $license): void
     {
@@ -66,9 +60,6 @@ class LicenseObserver
      * Sync file contents from storage to database.
      * Reads the license file and data file contents and stores them in database columns.
      * For data_file: decodes base64 and parses as JSON key-value pairs.
-     *
-     * @param  \App\Models\License  $license
-     * @return void
      */
     private function syncFileContents(License $license): void
     {
@@ -126,7 +117,7 @@ class LicenseObserver
                     } else {
                         // Not JSON, try to parse as key=value pairs
                         $parsedData = $this->parseKeyValuePairs($decodedContent);
-                        if (!empty($parsedData)) {
+                        if (! empty($parsedData)) {
                             $updateData['decoded_data'] = $parsedData;
                             Log::info("License Observer: Decoded base64 data file content as key-value pairs for license ID {$license->id}");
                         } else {
@@ -148,15 +139,12 @@ class LicenseObserver
                 $license->updateQuietly($updateData);
             }
         } catch (\Exception $e) {
-            Log::error("License Observer: Failed to sync file contents for license ID {$license->id}: " . $e->getMessage());
+            Log::error("License Observer: Failed to sync file contents for license ID {$license->id}: ".$e->getMessage());
         }
     }
 
     /**
      * Parse key=value pairs from text content.
-     *
-     * @param  string  $content
-     * @return array
      */
     private function parseKeyValuePairs(string $content): array
     {
@@ -165,7 +153,7 @@ class LicenseObserver
 
         foreach ($lines as $line) {
             $line = trim($line);
-            if (empty($line) || !str_contains($line, '=')) {
+            if (empty($line) || ! str_contains($line, '=')) {
                 continue;
             }
 

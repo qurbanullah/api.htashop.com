@@ -15,8 +15,7 @@ class OrderController extends Controller
 {
     public function __construct(
         protected OrderService $orderService,
-    ) {
-    }
+    ) {}
 
     public function index(OrderIndexRequest $request): JsonResponse
     {
@@ -67,7 +66,7 @@ class OrderController extends Controller
     {
         $filters = $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
-            'status' => ['nullable', 'string', 'in:' . implode(',', OrderStatus::ALL)],
+            'status' => ['nullable', 'string', 'in:'.implode(',', OrderStatus::ALL)],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],
         ]);
 

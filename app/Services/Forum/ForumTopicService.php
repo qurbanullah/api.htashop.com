@@ -2,22 +2,24 @@
 
 namespace App\Services\Forum;
 
-use App\Helpers\CacheHelper;
 use App\Enums\ForumPostStatusEnum;
+use App\Helpers\CacheHelper;
 use App\Models\ForumComment;
 use App\Models\ForumPost;
 use App\Models\ForumTopic;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class ForumTopicService
 {
     private const CACHE_PREFIX = 'forum_topics';
+
     private const CACHE_TTL = 600; // 10 minutes
 
-    public function getActiveTopics(): \Illuminate\Database\Eloquent\Collection
+    public function getActiveTopics(): Collection
     {
-        return CacheHelper::remember([], self::CACHE_PREFIX . ':active', self::CACHE_TTL, function () {
+        return CacheHelper::remember([], self::CACHE_PREFIX.':active', self::CACHE_TTL, function () {
             return ForumTopic::active()
                 ->ordered()
                 ->withCount(['publishedPosts'])
@@ -32,11 +34,11 @@ class ForumTopicService
             ->withCount(['posts', 'publishedPosts'])
             ->ordered();
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -72,6 +74,7 @@ class ForumTopicService
         });
 
         $this->clearCache();
+
         return $topic;
     }
 
@@ -82,6 +85,7 @@ class ForumTopicService
         });
 
         $this->clearCache();
+
         return $topic->fresh();
     }
 
@@ -134,6 +138,6 @@ class ForumTopicService
 
     private function clearCache(): void
     {
-        CacheHelper::forget([], self::CACHE_PREFIX . ':active');
+        CacheHelper::forget([], self::CACHE_PREFIX.':active');
     }
 }

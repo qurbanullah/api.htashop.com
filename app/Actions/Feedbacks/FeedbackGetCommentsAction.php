@@ -14,9 +14,7 @@ class FeedbackGetCommentsAction
     /**
      * Get all comments for a feedback
      *
-     * @param Feedback $feedback
-     * @param bool $includeInternal Include internal comments (default: true)
-     * @return Collection
+     * @param  bool  $includeInternal  Include internal comments (default: true)
      */
     public function handle(Feedback $feedback, bool $includeInternal = true): Collection
     {
@@ -25,7 +23,7 @@ class FeedbackGetCommentsAction
             ->with('user:id,name,email,avatar')
             ->orderBy('created_at', 'asc');
 
-        if (!$includeInternal) {
+        if (! $includeInternal) {
             $query->where('is_internal', false);
         }
 

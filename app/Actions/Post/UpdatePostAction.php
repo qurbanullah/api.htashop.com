@@ -22,11 +22,12 @@ declare(strict_types=1);
 
 namespace App\Actions\Post;
 
+use App\Models\Category;
 use App\Models\Post;
 use App\Models\Tag;
-use App\Models\Category;
 use App\Traits\Post\GeneratesUniqueSlug;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * CRUD operation class for Post Model.
@@ -93,7 +94,7 @@ class UpdatePostAction
                         }
                         $tag = Tag::firstOrCreate(
                             ['name' => $name],
-                            ['slug' => \Illuminate\Support\Str::slug($name)]
+                            ['slug' => Str::slug($name)]
                         );
                         $tagIds[] = $tag->id;
                     }
@@ -111,14 +112,14 @@ class UpdatePostAction
                         }
                         $category = Category::firstOrCreate(
                             ['name' => $name],
-                            ['slug' => \Illuminate\Support\Str::slug($name), 'is_active' => true]
+                            ['slug' => Str::slug($name), 'is_active' => true]
                         );
                         $categoryIds[] = $category->id;
                     }
                     $post->categories()->sync($categoryIds);
 
                     // Auto-set primary_category_id to first category if not provided
-                    if (empty($data['primary_category_id']) && !empty($categoryIds)) {
+                    if (empty($data['primary_category_id']) && ! empty($categoryIds)) {
                         $post->primary_category_id = $categoryIds[0];
                         $post->save();
                     }

@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class ForumLike extends Model
 {
-        protected $fillable = [
+    protected $fillable = [
         'user_id',
         'likeable_id',
         'likeable_type',

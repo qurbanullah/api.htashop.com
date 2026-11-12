@@ -64,6 +64,7 @@ use App\Http\Controllers\V1\Post\AdminPostController;
 use App\Http\Controllers\V1\Post\PostApiController;
 use App\Http\Controllers\V1\Price\PriceController;
 use App\Http\Controllers\V1\Product\ProductController;
+use App\Http\Controllers\V1\Product\ProductImportController;
 use App\Http\Controllers\V1\Product\ProductRevisionController;
 use App\Http\Controllers\V1\Product\ProductShippingController;
 use App\Http\Controllers\V1\ProductReview\ProductReviewController;
@@ -617,6 +618,16 @@ Route::prefix('v1')->group(function () {
         Route::delete('/products/{uuid}', [ProductController::class, 'destroy']);
         Route::get('/products/{uuid}/shipping', [ProductShippingController::class, 'show']);
         Route::put('/products/{uuid}/shipping', [ProductShippingController::class, 'update']);
+
+        // Bulk product imports (CSV/XLSX/ODS). The file is parsed on upload;
+        // applying the staged rows is queued in chunks on the `imports` queue.
+        Route::get('/product-imports', [ProductImportController::class, 'index']);
+        Route::post('/product-imports', [ProductImportController::class, 'store'])->middleware('throttle:10,1');
+        Route::get('/product-imports/{uuid}', [ProductImportController::class, 'show']);
+        Route::get('/product-imports/{uuid}/rows', [ProductImportController::class, 'rows']);
+        Route::get('/product-imports/{uuid}/errors.csv', [ProductImportController::class, 'errorsCsv']);
+        Route::post('/product-imports/{uuid}/commit', [ProductImportController::class, 'commit']);
+        Route::post('/product-imports/{uuid}/cancel', [ProductImportController::class, 'cancel']);
 
         Route::get('/features', [FeatureController::class, 'index']);
         Route::get('/specifications', [SpecificationController::class, 'index']);

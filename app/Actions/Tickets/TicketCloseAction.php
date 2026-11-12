@@ -24,6 +24,7 @@ namespace App\Actions\Tickets;
 
 use App\Enums\StatusEnum;
 use App\Models\Ticket;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -43,7 +44,8 @@ class TicketCloseAction
      * Close a ticket record in database.
      *
      * @param  int  $id  model id
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @throws AuthorizationException
      */
     public function handle(int $id): Ticket
     {

@@ -17,6 +17,7 @@ class UnsubscribeUserAction
 
         if ($subscription) {
             $subscription->unsubscribe();
+
             return true;
         }
 

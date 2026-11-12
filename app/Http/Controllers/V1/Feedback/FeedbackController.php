@@ -80,7 +80,7 @@ class FeedbackController extends Controller
         try {
             $feedback = $this->feedbackService->findByUuid($reference);
 
-            if (!$feedback) {
+            if (! $feedback) {
                 return ApiResponse::error('Feedback not found.', null, 404);
             }
 

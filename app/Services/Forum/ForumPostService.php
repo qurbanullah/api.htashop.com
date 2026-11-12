@@ -25,22 +25,22 @@ class ForumPostService
             ])
             ->withCount(['visibleComments']);
 
-        if (!empty($filters['topic_id'])) {
+        if (! empty($filters['topic_id'])) {
             $query->byTopic($filters['topic_id']);
         }
 
-        if (!empty($filters['topic_slug'])) {
+        if (! empty($filters['topic_slug'])) {
             $topic = ForumTopic::where('slug', $filters['topic_slug'])->first();
             if ($topic) {
                 $query->byTopic($topic->id);
             }
         }
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->search($filters['search']);
         }
 
-        if (!empty($filters['featured'])) {
+        if (! empty($filters['featured'])) {
             $query->where('is_featured', true);
         }
 
@@ -66,31 +66,31 @@ class ForumPostService
             ])
             ->withCount(['comments', 'likes', 'reports']);
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['topic_id'])) {
+        if (! empty($filters['topic_id'])) {
             $query->where('topic_id', $filters['topic_id']);
         }
 
-        if (!empty($filters['user_id'])) {
+        if (! empty($filters['user_id'])) {
             $query->where('user_id', $filters['user_id']);
         }
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->search($filters['search']);
         }
 
-        if (!empty($filters['is_pinned'])) {
+        if (! empty($filters['is_pinned'])) {
             $query->where('is_pinned', true);
         }
 
-        if (!empty($filters['is_locked'])) {
+        if (! empty($filters['is_locked'])) {
             $query->where('is_locked', true);
         }
 
-        if (!empty($filters['is_featured'])) {
+        if (! empty($filters['is_featured'])) {
             $query->where('is_featured', true);
         }
 
@@ -107,7 +107,7 @@ class ForumPostService
             ->with(['topic:id,name,slug,color,icon'])
             ->withCount(['visibleComments', 'likes']);
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         } else {
             $query->whereIn('status', [
@@ -206,11 +206,13 @@ class ForumPostService
         if ($existing) {
             $existing->delete();
             $post->refreshLikeCount();
+
             return ['liked' => false, 'like_count' => $post->fresh()->like_count];
         }
 
         $post->likes()->create(['user_id' => $user->id]);
         $post->refreshLikeCount();
+
         return ['liked' => true, 'like_count' => $post->fresh()->like_count];
     }
 

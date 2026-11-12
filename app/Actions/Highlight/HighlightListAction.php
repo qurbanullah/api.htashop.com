@@ -24,9 +24,9 @@ class HighlightListAction
             })
             ->when(data_get($filters, 'search'), function ($query, $search) {
                 $query->where(function ($inner) use ($search) {
-                    $inner->where('label', 'like', '%' . $search . '%')
-                        ->orWhere('heading', 'like', '%' . $search . '%')
-                        ->orWhere('body', 'like', '%' . $search . '%');
+                    $inner->where('label', 'like', '%'.$search.'%')
+                        ->orWhere('heading', 'like', '%'.$search.'%')
+                        ->orWhere('body', 'like', '%'.$search.'%');
                 });
             })
             ->when(! empty(data_get($filters, 'category_ids')), function ($query) use ($filters) {

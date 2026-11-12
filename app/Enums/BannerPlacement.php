@@ -5,8 +5,11 @@ namespace App\Enums;
 class BannerPlacement
 {
     public const HOME = 'home';
+
     public const CATEGORY = 'category';
+
     public const SEARCH = 'search';
+
     public const PRODUCT_DETAIL = 'product_detail';
 
     public const ALL = [

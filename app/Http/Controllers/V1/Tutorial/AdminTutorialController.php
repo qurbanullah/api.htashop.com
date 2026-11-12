@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\V1\Tutorial;
 
-use App\Enums\TutorialTypeEnum;
 use App\Enums\TutorialStatusEnum;
+use App\Enums\TutorialTypeEnum;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use App\Models\Tutorial;
 use App\Http\Requests\V1\Tutorial\TutorialStoreRequest;
 use App\Http\Requests\V1\Tutorial\TutorialUpdateRequest;
 use App\Http\Resources\V1\Tutorial\TutorialResource;
+use App\Models\Tutorial;
 use App\Services\Tutorial\TutorialService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * AdminTutorialController - Handles admin operations for tutorials
@@ -142,7 +142,7 @@ class AdminTutorialController extends Controller
         try {
             $tutorial = $this->tutorialService->getTutorialByUuid($uuid);
 
-            if (!$tutorial) {
+            if (! $tutorial) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Tutorial not found',
@@ -201,7 +201,7 @@ class AdminTutorialController extends Controller
         try {
             $tutorial = $this->tutorialService->getTutorialByUuid($uuid);
 
-            if (!$tutorial) {
+            if (! $tutorial) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Tutorial not found',
@@ -236,7 +236,7 @@ class AdminTutorialController extends Controller
         try {
             $tutorial = $this->tutorialService->getTutorialByUuid($uuid);
 
-            if (!$tutorial) {
+            if (! $tutorial) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Tutorial not found',

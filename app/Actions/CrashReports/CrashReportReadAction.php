@@ -47,7 +47,7 @@ class CrashReportReadAction
         }
 
         // Apply search
-        if (isset($input['search']) && !empty($input['search'])) {
+        if (isset($input['search']) && ! empty($input['search'])) {
             $search = $input['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('machine_id', 'like', "%{$search}%")

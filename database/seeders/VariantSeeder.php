@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Product;
 use App\Models\Variant;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -16,6 +15,7 @@ class VariantSeeder extends Seeder
 
         if ($products->isEmpty()) {
             $this->command->warn('⚠️  No products found. Run ProductSeeder before VariantSeeder.');
+
             return;
         }
 
@@ -24,6 +24,7 @@ class VariantSeeder extends Seeder
 
         if ($existingVariantCount >= $desiredVariantCount) {
             $this->command->info("Found {$existingVariantCount} existing variants, skipping variant creation.");
+
             return;
         }
 
@@ -65,7 +66,7 @@ class VariantSeeder extends Seeder
                     'is_default' => $index === 1,
                     'is_active' => fake()->boolean(90),
                     'metadata' => [
-                        'sku' => 'VAR-' . strtoupper(fake()->bothify('????-####')),
+                        'sku' => 'VAR-'.strtoupper(fake()->bothify('????-####')),
                         'weight' => fake()->randomFloat(2, 0.5, 12.5),
                         'dimensions' => sprintf('%dx%dx%d', fake()->numberBetween(10, 100), fake()->numberBetween(10, 120), fake()->numberBetween(1, 20)),
                     ],
@@ -75,6 +76,6 @@ class VariantSeeder extends Seeder
             }
         }
 
-        $this->command->info('✅ Variant seeding complete. Total variants: ' . Variant::count());
+        $this->command->info('✅ Variant seeding complete. Total variants: '.Variant::count());
     }
 }

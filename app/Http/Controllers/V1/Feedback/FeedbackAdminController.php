@@ -6,11 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Feedback\ReplyFeedbackRequest;
 use App\Http\Requests\V1\Feedback\StoreFeedbackCommentRequest;
 use App\Http\Resources\V1\Feedback\CommentResource;
-use App\Http\Resources\V1\Feedback\FeedbackResource;
 use App\Http\Resources\V1\Feedback\FeedbackCollection;
-use App\Services\Feedbacks\FeedbackService;
-use App\Jobs\Feedback\SendFeedbackReplyEmailJob;
+use App\Http\Resources\V1\Feedback\FeedbackResource;
 use App\Http\Responses\V1\ApiResponse;
+use App\Jobs\Feedback\SendFeedbackReplyEmailJob;
+use App\Services\Feedbacks\FeedbackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -65,7 +65,7 @@ class FeedbackAdminController extends Controller
         try {
             $feedback = $this->feedbackService->findByUuid($uuid);
 
-            if (!$feedback) {
+            if (! $feedback) {
                 return ApiResponse::error('Feedback not found', null, 404);
             }
 
@@ -121,12 +121,12 @@ class FeedbackAdminController extends Controller
         try {
             $feedback = $this->feedbackService->findByUuid($uuid);
 
-            if (!$feedback) {
+            if (! $feedback) {
                 return ApiResponse::error('Feedback not found', null, 404);
             }
 
             $replyMessage = $request->input('reply_message');
-            $replySubject = $request->input('reply_subject', 'Re: ' . $feedback->subject);
+            $replySubject = $request->input('reply_subject', 'Re: '.$feedback->subject);
             $markAsReplied = $request->input('mark_as_replied', true);
 
             // Mark feedback as replied
@@ -177,7 +177,7 @@ class FeedbackAdminController extends Controller
         try {
             $feedback = $this->feedbackService->findByUuid($uuid);
 
-            if (!$feedback) {
+            if (! $feedback) {
                 return ApiResponse::error('Feedback not found', null, 404);
             }
 
@@ -206,7 +206,7 @@ class FeedbackAdminController extends Controller
         try {
             $feedback = $this->feedbackService->findByUuid($uuid);
 
-            if (!$feedback) {
+            if (! $feedback) {
                 return ApiResponse::error('Feedback not found', null, 404);
             }
 
@@ -235,7 +235,7 @@ class FeedbackAdminController extends Controller
         try {
             $feedback = $this->feedbackService->findByUuid($uuid);
 
-            if (!$feedback) {
+            if (! $feedback) {
                 return ApiResponse::error('Feedback not found', null, 404);
             }
 
@@ -265,7 +265,7 @@ class FeedbackAdminController extends Controller
         try {
             $feedback = $this->feedbackService->findByUuid($uuid);
 
-            if (!$feedback) {
+            if (! $feedback) {
                 return ApiResponse::error('Feedback not found', null, 404);
             }
 
@@ -295,7 +295,7 @@ class FeedbackAdminController extends Controller
         try {
             $feedback = $this->feedbackService->findByUuid($uuid);
 
-            if (!$feedback) {
+            if (! $feedback) {
                 return ApiResponse::error('Feedback not found', null, 404);
             }
 

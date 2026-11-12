@@ -38,7 +38,7 @@ class UnitUpdateRequest extends FormRequest
         $validator->after(function ($validator): void {
             $unit = Unit::query()->where('uuid', $this->route('uuid'))->first();
 
-            if (!$unit) {
+            if (! $unit) {
                 return;
             }
 

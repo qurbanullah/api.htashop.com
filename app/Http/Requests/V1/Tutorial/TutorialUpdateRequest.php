@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\V1\Tutorial;
 
+use App\Enums\TutorialStatusEnum;
+use App\Enums\TutorialTypeEnum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Enums\TutorialTypeEnum;
-use App\Enums\TutorialStatusEnum;
 
 class TutorialUpdateRequest extends FormRequest
 {

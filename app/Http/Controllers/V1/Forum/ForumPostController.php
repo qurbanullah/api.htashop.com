@@ -11,6 +11,7 @@ use App\Http\Resources\V1\Forum\ForumCommentResource;
 use App\Http\Resources\V1\Forum\ForumPostResource;
 use App\Models\ForumComment;
 use App\Models\ForumPost;
+use App\Models\ForumTopic;
 use App\Services\Forum\ForumCommentService;
 use App\Services\Forum\ForumPostService;
 use App\Services\Forum\ForumReportService;
@@ -55,9 +56,9 @@ class ForumPostController extends Controller
     public function store(ForumPostStoreRequest $request): JsonResponse
     {
         $validated = $request->validated();
-        $topic = \App\Models\ForumTopic::where('uuid', $validated['topic_uuid'])->first();
+        $topic = ForumTopic::where('uuid', $validated['topic_uuid'])->first();
 
-        if (!$topic || !$topic->is_active || $topic->is_locked) {
+        if (! $topic || ! $topic->is_active || $topic->is_locked) {
             return response()->json([
                 'success' => false,
                 'message' => 'Cannot create posts in this topic.',
@@ -84,7 +85,7 @@ class ForumPostController extends Controller
     {
         $post = $this->postService->findByUuid($uuid);
 
-        if (!$post) {
+        if (! $post) {
             return response()->json([
                 'success' => false,
                 'message' => 'Post not found.',
@@ -110,7 +111,7 @@ class ForumPostController extends Controller
         $data = $request->validated();
 
         // Regular users can only update title and body
-        if (!$request->user()->hasAnyRole(['super-admin', 'admin'])) {
+        if (! $request->user()->hasAnyRole(['super-admin', 'admin'])) {
             $data = array_intersect_key($data, array_flip(['title', 'body', 'topic_id']));
         }
 
@@ -179,7 +180,7 @@ class ForumPostController extends Controller
                 ->where('status', 'visible')
                 ->first();
 
-            if (!$parentComment) {
+            if (! $parentComment) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Parent comment not found.',

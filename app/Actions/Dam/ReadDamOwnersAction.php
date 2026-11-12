@@ -42,11 +42,12 @@ class ReadDamOwnersAction
                 $builder->where(function (Builder $innerBuilder) use ($query, $searchColumns) {
                     foreach ($searchColumns as $index => $column) {
                         if ($index === 0) {
-                            $innerBuilder->where($column, 'like', '%' . $query . '%');
+                            $innerBuilder->where($column, 'like', '%'.$query.'%');
+
                             continue;
                         }
 
-                        $innerBuilder->orWhere($column, 'like', '%' . $query . '%');
+                        $innerBuilder->orWhere($column, 'like', '%'.$query.'%');
                     }
                 });
             })

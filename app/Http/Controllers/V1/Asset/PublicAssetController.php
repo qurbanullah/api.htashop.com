@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers\V1\Asset;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\V1\Asset\GenerateUrlRequest;
 use App\Http\Responses\V1\ApiResponse;
 use App\Services\Dam\DamService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 /**
  * Controller for generating public asset URLs.
@@ -19,9 +19,7 @@ use Illuminate\Support\Facades\Validator;
  */
 class PublicAssetController extends Controller
 {
-    public function __construct(protected DamService $damService)
-    {
-    }
+    public function __construct(protected DamService $damService) {}
 
     /**
      * Generate signed URL for public images (public endpoint - no auth required)
@@ -37,18 +35,16 @@ class PublicAssetController extends Controller
      * - images/versions/
      * - images/changelogs/
      *
-     * @param Request $request
-     * @return JsonResponse
+     * @param  Request  $request
      */
-    public function generateUrl(\App\Http\Requests\V1\Asset\GenerateUrlRequest $request): JsonResponse
+    public function generateUrl(GenerateUrlRequest $request): JsonResponse
     {
-        
 
         $key = $request->input('key');
         $expiresIn = (int) $request->input('expires_in', 3600);
 
         // Security: Only allow paths starting with 'images/'
-        if (!str_starts_with($key, 'images/')) {
+        if (! str_starts_with($key, 'images/')) {
             return ApiResponse::error(
                 'Invalid image path. Only images in the images/ directory are accessible.',
                 null,

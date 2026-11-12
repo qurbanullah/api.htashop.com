@@ -22,7 +22,7 @@ class IndexRequest extends FormRequest
                 Rule::unique('emails', 'email'),
             ],
             'is_primary' => 'boolean',
-        
+
         ];
     }
 }

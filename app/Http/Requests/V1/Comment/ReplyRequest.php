@@ -17,7 +17,7 @@ class ReplyRequest extends FormRequest
 
             'commentable_type' => 'required|string',
             'commentable_id' => 'required|integer',
-        
+
         ];
     }
 }

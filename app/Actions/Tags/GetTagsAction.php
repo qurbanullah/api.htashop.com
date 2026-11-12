@@ -10,8 +10,7 @@ class GetTagsAction
     /**
      * Get all tags for a taggable model
      *
-     * @param Model $taggable The model to get tags for
-     * @return Collection
+     * @param  Model  $taggable  The model to get tags for
      */
     public function execute(Model $taggable): Collection
     {

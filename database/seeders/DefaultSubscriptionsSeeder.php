@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class DefaultSubscriptionsSeeder extends Seeder
 {
@@ -18,7 +17,7 @@ class DefaultSubscriptionsSeeder extends Seeder
 
         foreach ($users as $user) {
             // Check if user already has a post subscription
-            if (!$user->isSubscribedTo('post')) {
+            if (! $user->isSubscribedTo('post')) {
                 $user->subscribeTo('post');
             }
         }

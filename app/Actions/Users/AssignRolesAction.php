@@ -3,16 +3,17 @@
 namespace App\Actions\Users;
 
 use App\Models\User;
+use App\Services\Audit\AuditService;
 use App\Services\User\UserService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 
 class AssignRolesAction
 {
     public function __construct(
         protected UserService $userService,
-        protected \App\Services\Audit\AuditService $auditService
+        protected AuditService $auditService
     ) {}
 
     /**

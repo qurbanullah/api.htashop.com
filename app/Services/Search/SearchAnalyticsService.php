@@ -6,7 +6,6 @@ use App\Helpers\CacheHelper;
 use App\Http\Middleware\AssignRequestId;
 use App\Jobs\Analytics\RecordEvent;
 use App\Models\SearchQuery;
-use App\Services\Search\ProductSearchService;
 use App\Support\Observability\IpHasher;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Support\Facades\Cache;

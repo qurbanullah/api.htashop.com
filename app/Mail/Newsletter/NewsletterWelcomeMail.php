@@ -5,9 +5,10 @@ namespace App\Mail\Newsletter;
 use App\Models\Subscribe;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Mail\Mailables\Address;
 use Illuminate\Queue\SerializesModels;
 
 /**
@@ -50,7 +51,7 @@ class NewsletterWelcomeMail extends Mailable
                 'email' => $this->subscription->email,
                 'siteUrl' => rtrim((string) config('app.frontend_url', 'https://htashop.com'), '/'),
                 'unsubscribeUrl' => rtrim((string) config('app.frontend_url', 'https://htashop.com'), '/')
-                    . '/unsubscribe/' . $this->subscription->unsubscribe_token,
+                    .'/unsubscribe/'.$this->subscription->unsubscribe_token,
             ],
         );
     }
@@ -58,7 +59,7 @@ class NewsletterWelcomeMail extends Mailable
     /**
      * Get the attachments for the message.
      *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {

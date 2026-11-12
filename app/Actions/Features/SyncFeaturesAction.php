@@ -32,6 +32,7 @@ class SyncFeaturesAction
                     $featureModel = Feature::find($featureId);
                     if ($featureModel) {
                         $featureModel->pivot_value = $value;
+
                         return $featureModel;
                     }
                 }
@@ -42,6 +43,7 @@ class SyncFeaturesAction
                         ['name' => $featureName, 'usage_count' => 0]
                     );
                     $featureModel->pivot_value = $value;
+
                     return $featureModel;
                 }
 
@@ -64,7 +66,7 @@ class SyncFeaturesAction
         $syncData = [];
         foreach ($featureModels as $featureModel) {
             $syncData[$featureModel->id] = [
-                'value' => $featureModel->pivot_value ?? null
+                'value' => $featureModel->pivot_value ?? null,
             ];
         }
 

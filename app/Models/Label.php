@@ -22,10 +22,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Str;
 
@@ -41,7 +40,7 @@ use Illuminate\Support\Str;
  */
 class Label extends Model
 {
-        use HasFactory;
+    use HasFactory;
 
     /**
      * The database used by the model.
@@ -156,10 +155,8 @@ class Label extends Model
 
     /**
      * Get all of the tickets that are assigned this label.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
      */
-    public function tickets() : MorphToMany
+    public function tickets(): MorphToMany
     {
         return $this->morphedByMany(Ticket::class, 'labelable');
     }

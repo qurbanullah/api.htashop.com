@@ -2,6 +2,8 @@
 
 namespace App\Actions\Manuscript;
 
+use App\Enums\DecisionType;
+use App\Enums\ManuscriptStatus;
 use App\Models\Manuscript;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -13,21 +15,21 @@ class WithdrawManuscript
     {
         return DB::transaction(function () use ($manuscript, $user, $data) {
             // Validate that manuscript can be withdrawn
-            if (!$this->canWithdraw($manuscript, $user)) {
+            if (! $this->canWithdraw($manuscript, $user)) {
                 throw new \Exception('You are not authorized to withdraw this manuscript or it cannot be withdrawn in its current status.');
             }
 
             // Update manuscript status
             $manuscript->update([
-                'status' => \App\Enums\ManuscriptStatus::WITHDRAWN,
+                'status' => ManuscriptStatus::WITHDRAWN,
                 'archived_at' => now(),
-                'archive_reason' => 'Withdrawn by author'
+                'archive_reason' => 'Withdrawn by author',
             ]);
 
             // Create withdrawal decision record
             $manuscript->decisions()->create([
                 'user_id' => $user->id,
-                'type' => \App\Enums\DecisionType::EDITORIAL,
+                'type' => DecisionType::EDITORIAL,
                 'decision' => 'withdrawn',
                 'content' => $data['withdrawal_reason'] ?? 'Manuscript withdrawn by author',
                 'reasoning' => $data['detailed_reason'] ?? null,
@@ -35,8 +37,8 @@ class WithdrawManuscript
                 'completed_at' => now(),
                 'metadata' => array_merge($data['metadata'] ?? [], [
                     'withdrawal_type' => $this->isAuthorWithdrawal($manuscript, $user) ? 'author' : 'editorial',
-                    'original_status' => $manuscript->getOriginal('status')
-                ])
+                    'original_status' => $manuscript->getOriginal('status'),
+                ]),
             ]);
 
             // Cancel any active assignments
@@ -46,7 +48,7 @@ class WithdrawManuscript
                 'manuscript_id' => $manuscript->id,
                 'title' => $manuscript->title,
                 'withdrawn_by' => $user->id,
-                'reason' => $data['withdrawal_reason'] ?? 'No reason provided'
+                'reason' => $data['withdrawal_reason'] ?? 'No reason provided',
             ]);
 
             return $manuscript->fresh();
@@ -57,17 +59,17 @@ class WithdrawManuscript
     {
         // Authors can withdraw before acceptance
         if ($this->isAuthorWithdrawal($manuscript, $user)) {
-            return !in_array($manuscript->status, [
-                \App\Enums\ManuscriptStatus::ACCEPTED,
-                \App\Enums\ManuscriptStatus::IN_COPYEDIT,
-                \App\Enums\ManuscriptStatus::IN_PRODUCTION,
-                \App\Enums\ManuscriptStatus::PUBLISHED
+            return ! in_array($manuscript->status, [
+                ManuscriptStatus::ACCEPTED,
+                ManuscriptStatus::IN_COPYEDIT,
+                ManuscriptStatus::IN_PRODUCTION,
+                ManuscriptStatus::PUBLISHED,
             ]);
         }
 
         // Editors can withdraw at any stage before publication
         if ($this->isEditorialWithdrawal($manuscript, $user)) {
-            return $manuscript->status !== \App\Enums\ManuscriptStatus::PUBLISHED;
+            return $manuscript->status !== ManuscriptStatus::PUBLISHED;
         }
 
         return false;
@@ -94,7 +96,7 @@ class WithdrawManuscript
         // Implementation depends on the final assignment structure
         Log::info('Active assignments cancelled for withdrawn manuscript', [
             'manuscript_id' => $manuscript->id,
-            'cancelled_by' => $user->id
+            'cancelled_by' => $user->id,
         ]);
     }
 }

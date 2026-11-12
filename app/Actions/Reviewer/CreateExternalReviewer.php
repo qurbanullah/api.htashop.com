@@ -2,14 +2,15 @@
 
 namespace App\Actions\Reviewer;
 
-use App\Models\User;
+use App\Mail\ReviewerInvitation;
 use App\Models\Manuscript;
 use App\Models\Reviewer;
-use App\Mail\ReviewerInvitation;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class CreateExternalReviewer
@@ -17,16 +18,12 @@ class CreateExternalReviewer
     /**
      * Create a new external reviewer and assign to manuscript
      *
-     * @param Manuscript $manuscript
-     * @param array $data
-     * @param User $createdBy
-     * @return Reviewer
      * @throws \Exception
      */
     public function handle(Manuscript $manuscript, array $data, User $createdBy): Reviewer
     {
         // Check user has permission
-        if (!$createdBy->hasRole(['editor-in-chief', 'editor', 'admin'])) {
+        if (! $createdBy->hasRole(['editor-in-chief', 'editor', 'admin'])) {
             throw new \Exception('Only editors can create external reviewers');
         }
 
@@ -53,10 +50,10 @@ class CreateExternalReviewer
             throw new \Exception('This email belongs to the corresponding author. Authors cannot be assigned as reviewers.');
         }
 
-        return DB::transaction(function () use ($manuscript, $data, $createdBy, $authorEmails) {
+        return DB::transaction(function () use ($manuscript, $data, $createdBy) {
             // Create new user account
             $user = User::create([
-                'name' => trim($data['first_name'] . ' ' . ($data['middle_name'] ?? '') . ' ' . $data['last_name']),
+                'name' => trim($data['first_name'].' '.($data['middle_name'] ?? '').' '.$data['last_name']),
                 'email' => $data['email'],
                 'password' => bcrypt(Str::random(32)), // Random temporary password
                 'email_verified_at' => now(), // Auto-verify email for external reviewers
@@ -105,7 +102,7 @@ class CreateExternalReviewer
                     manuscript: $manuscript,
                     resetPasswordUrl: $resetUrl,
                     dueDateFormatted: $data['due_date']
-                        ? \Carbon\Carbon::parse($data['due_date'])->format('F d, Y')
+                        ? Carbon::parse($data['due_date'])->format('F d, Y')
                         : 'To be determined'
                 ));
             } catch (\Exception $mailException) {

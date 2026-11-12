@@ -54,7 +54,7 @@ class TicketPolicy
         }
 
         // Users can update their own tickets if open/pending and not locked
-        if ($user->id === $ticket->user_id && !$ticket->is_locked && in_array($ticket->status, ['open', 'pending'])) {
+        if ($user->id === $ticket->user_id && ! $ticket->is_locked && in_array($ticket->status, ['open', 'pending'])) {
             return true;
         }
 
@@ -72,15 +72,15 @@ class TicketPolicy
         }
 
         // Client and guest users can delete their own tickets if not resolved and not locked
-        if ($user->hasRole(['client', 'guest']) && $user->id === $ticket->user_id && !$ticket->is_resolved && !$ticket->is_locked) {
+        if ($user->hasRole(['client', 'guest']) && $user->id === $ticket->user_id && ! $ticket->is_resolved && ! $ticket->is_locked) {
             return true;
         }
 
         // Fallback to permission check for other users
         return $user->id === $ticket->user_id
             && $user->can('delete tickets')
-            && !$ticket->is_resolved
-            && !$ticket->is_locked;
+            && ! $ticket->is_resolved
+            && ! $ticket->is_locked;
     }
 
     /**
@@ -165,12 +165,12 @@ class TicketPolicy
         }
 
         // Client and guest users can change status of their own tickets if not locked
-        if ($user->hasRole(['client', 'guest']) && $user->id === $ticket->user_id && !$ticket->is_locked) {
+        if ($user->hasRole(['client', 'guest']) && $user->id === $ticket->user_id && ! $ticket->is_locked) {
             return true;
         }
 
         // Fallback: Users can only change status of their own tickets and only if not locked
-        return $user->id === $ticket->user_id && !$ticket->is_locked;
+        return $user->id === $ticket->user_id && ! $ticket->is_locked;
     }
 
     /**

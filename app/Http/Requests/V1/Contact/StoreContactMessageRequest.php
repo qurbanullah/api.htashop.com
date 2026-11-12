@@ -50,7 +50,7 @@ class StoreContactMessageRequest extends FormRequest
         ];
 
         return [
-            'name' => trim($validated['first_name'] . ' ' . $validated['last_name']),
+            'name' => trim($validated['first_name'].' '.$validated['last_name']),
             'email' => strtolower(trim($validated['email'])),
             'phone' => $validated['phone'] ?? null,
             'order_uuid' => $validated['order_uuid'] ?? null,

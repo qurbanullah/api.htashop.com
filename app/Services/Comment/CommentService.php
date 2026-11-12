@@ -35,7 +35,7 @@ class CommentService
             'user.academicProfile',
             'commentable',
             'parent',
-            'replies.user'
+            'replies.user',
         ])->findOrFail($commentId);
     }
 
@@ -59,7 +59,7 @@ class CommentService
             ]);
 
             // Attach revision contexts if provided
-            if (!empty($options['revision_ids'])) {
+            if (! empty($options['revision_ids'])) {
                 $comment->syncRevisions($options['revision_ids']);
             }
 
@@ -129,6 +129,7 @@ class CommentService
     public function markAsRead(Comment $comment): Comment
     {
         $comment->markAsRead();
+
         return $comment;
     }
 

@@ -12,8 +12,7 @@ class CartController extends Controller
 {
     public function __construct(
         protected CartService $cartService,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): JsonResponse
     {

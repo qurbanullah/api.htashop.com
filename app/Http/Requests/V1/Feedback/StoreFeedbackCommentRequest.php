@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\V1\Feedback;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,7 +23,7 @@ class StoreFeedbackCommentRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -49,8 +50,6 @@ class StoreFeedbackCommentRequest extends FormRequest
 
     /**
      * Get validated data with user ID
-     *
-     * @return array
      */
     public function getValidatedData(): array
     {

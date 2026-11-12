@@ -20,7 +20,7 @@ class ResolveProductAction
 
                 $segments = explode('-', $key);
                 $prefix = (string) end($segments);
-                $query->where('uuid', 'like', $prefix . '%');
+                $query->where('uuid', 'like', $prefix.'%');
             })
             ->firstOrFail();
     }

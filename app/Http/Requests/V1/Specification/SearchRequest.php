@@ -22,7 +22,7 @@ class SearchRequest extends FormRequest
             'group' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'sort_order' => 'nullable|integer',
-        
+
         ];
     }
 }

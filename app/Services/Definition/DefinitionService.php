@@ -13,8 +13,7 @@ class DefinitionService
         return Definition::query()
             ->with(['options', 'targets'])
             ->when(data_get($filters, 'kind'), fn ($q, $kind) => $q->where('kind', $kind))
-            ->when(data_get($filters, 'target_type'), fn ($q, $type) =>
-                $q->whereHas('targets', fn ($tq) => $tq->where('target_type', $type))
+            ->when(data_get($filters, 'target_type'), fn ($q, $type) => $q->whereHas('targets', fn ($tq) => $tq->where('target_type', $type))
             )
             ->when(data_get($filters, 'group_name'), fn ($q, $g) => $q->where('group_name', $g))
             ->when(data_get($filters, 'section_name'), fn ($q, $s) => $q->where('section_name', $s))
@@ -75,7 +74,7 @@ class DefinitionService
             ->where('code', $candidate)
             ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
             ->exists()) {
-            $candidate = $base . '_' . $suffix;
+            $candidate = $base.'_'.$suffix;
             $suffix++;
         }
 

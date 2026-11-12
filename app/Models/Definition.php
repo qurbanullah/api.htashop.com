@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +13,7 @@ use Illuminate\Support\Str;
 
 class Definition extends Model
 {
-        use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'uuid',
@@ -137,7 +136,7 @@ class Definition extends Model
     {
         $label = $this->resolvePrimaryLabel();
 
-        if (!$label) {
+        if (! $label) {
             return null;
         }
 
@@ -188,7 +187,7 @@ class Definition extends Model
     {
         $measurement = $this->resolveMeasurement();
 
-        if (!$measurement) {
+        if (! $measurement) {
             return null;
         }
 

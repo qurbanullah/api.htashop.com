@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\V1\Tag;
 
 use App\Http\Controllers\Controller;
-use App\Models\Tag;
-use App\Services\Tag\TagService;
 use App\Http\Resources\V1\Tags\TagResource;
 use App\Http\Responses\V1\ApiResponse;
-use Illuminate\Http\Request;
+use App\Models\Product;
+use App\Models\Tag;
+use App\Services\Tag\TagService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Log;
 
 class TagController extends Controller
 {
@@ -37,8 +38,9 @@ class TagController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to retrieve tags', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return ApiResponse::error('Failed to retrieve tags', null, 500);
         }
     }
@@ -77,8 +79,9 @@ class TagController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to create tag', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return ApiResponse::error('Failed to create tag', null, 500);
         }
     }
@@ -100,7 +103,7 @@ class TagController extends Controller
             'meta' => [
                 'type' => $type,
                 'count' => $tags->count(),
-            ]
+            ],
         ]);
     }
 
@@ -118,7 +121,7 @@ class TagController extends Controller
         if (empty($query)) {
             return response()->json([
                 'data' => [],
-                'meta' => ['message' => 'Search query required']
+                'meta' => ['message' => 'Search query required'],
             ], 400);
         }
 
@@ -130,7 +133,7 @@ class TagController extends Controller
                 'query' => $query,
                 'type' => $type,
                 'count' => $tags->count(),
-            ]
+            ],
         ]);
     }
 
@@ -143,14 +146,14 @@ class TagController extends Controller
     {
         $tag = $this->tagService->findBySlug($slug, $type);
 
-        if (!$tag) {
+        if (! $tag) {
             return response()->json([
-                'message' => 'Tag not found'
+                'message' => 'Tag not found',
             ], 404);
         }
 
         return response()->json([
-            'data' => $tag
+            'data' => $tag,
         ]);
     }
 
@@ -163,24 +166,24 @@ class TagController extends Controller
     {
         $tag = $this->tagService->findBySlug($slug, $type);
 
-        if (!$tag) {
+        if (! $tag) {
             return response()->json([
-                'message' => 'Tag not found'
+                'message' => 'Tag not found',
             ], 404);
         }
 
         // Map item type to model class
         $modelMap = [
-            'products' => \App\Models\Product::class,
+            'products' => Product::class,
             // Add more as needed:
             // 'posts' => \App\Models\Post::class,
         ];
 
         $modelClass = $modelMap[$itemType] ?? null;
 
-        if (!$modelClass) {
+        if (! $modelClass) {
             return response()->json([
-                'message' => 'Invalid item type'
+                'message' => 'Invalid item type',
             ], 400);
         }
 
@@ -193,7 +196,7 @@ class TagController extends Controller
                 'type' => $type,
                 'item_type' => $itemType,
                 'count' => $items->count(),
-            ]
+            ],
         ]);
     }
 
@@ -214,7 +217,7 @@ class TagController extends Controller
 
         return response()->json([
             'data' => $tag,
-            'message' => 'Tag created successfully'
+            'message' => 'Tag created successfully',
         ], 201);
     }
 
@@ -233,7 +236,7 @@ class TagController extends Controller
         $tag->delete();
 
         return response()->json([
-            'message' => 'Tag deleted successfully'
+            'message' => 'Tag deleted successfully',
         ]);
     }
 
@@ -250,7 +253,7 @@ class TagController extends Controller
 
         return response()->json([
             'message' => "Cleaned up {$count} unused tags",
-            'count' => $count
+            'count' => $count,
         ]);
     }
 }

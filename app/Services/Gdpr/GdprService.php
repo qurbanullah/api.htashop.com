@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services\Gdpr;
 
-use App\Models\User;
 use App\Models\DeletedUser;
+use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -18,28 +19,29 @@ class GdprService
     public function __construct(
         protected AuditLogger $auditLogger,
     ) {}
+
     /**
      * Permanently delete a user after GDPR retention period
      * This method handles the complete process of permanent deletion
      *
-     * @param User $user The user to permanently delete
-     * @param array $deletionReason Reason for deletion
-     * @param bool $anonymize Whether to anonymize user data
-     * @param User|null $deletedBy Who is deleting the user (null for system)
-     * @return DeletedUser
+     * @param  User  $user  The user to permanently delete
+     * @param  array  $deletionReason  Reason for deletion
+     * @param  bool  $anonymize  Whether to anonymize user data
+     * @param  User|null  $deletedBy  Who is deleting the user (null for system)
+     *
      * @throws \Exception
      */
     public function permanentlyDeleteUser(User $user, array $deletionReason = [], bool $anonymize = true, ?User $deletedBy = null): DeletedUser
     {
         return DB::transaction(function () use ($user, $deletionReason, $anonymize, $deletedBy) {
             // Log the deletion for audit purposes
-            Log::info("Starting permanent deletion of user", [
+            Log::info('Starting permanent deletion of user', [
                 'user_id' => $user->id,
                 'user_email' => $user->email,
                 'anonymize' => $anonymize,
                 'reason' => $deletionReason,
                 'deleted_by_id' => $deletedBy?->id,
-                'deleted_by_type' => $deletedBy ? 'manual' : 'system'
+                'deleted_by_type' => $deletedBy ? 'manual' : 'system',
             ]);
 
             // Create the deleted user record first
@@ -69,9 +71,9 @@ class GdprService
             // Force delete the user (permanent deletion)
             $user->forceDelete();
 
-            Log::info("Successfully permanently deleted user", [
+            Log::info('Successfully permanently deleted user', [
                 'original_user_id' => $deletedUser->original_user_id,
-                'anonymized_identifier' => $deletedUser->anonymized_identifier
+                'anonymized_identifier' => $deletedUser->anonymized_identifier,
             ]);
 
             return $deletedUser;
@@ -81,10 +83,10 @@ class GdprService
     /**
      * Batch permanently delete multiple users
      *
-     * @param array $userIds Array of user IDs to delete
-     * @param array $deletionReason Reason for deletion
-     * @param bool $anonymize Whether to anonymize user data
-     * @param User|null $deletedBy Who is deleting the users
+     * @param  array  $userIds  Array of user IDs to delete
+     * @param  array  $deletionReason  Reason for deletion
+     * @param  bool  $anonymize  Whether to anonymize user data
+     * @param  User|null  $deletedBy  Who is deleting the users
      * @return array Array of DeletedUser records
      */
     public function batchPermanentlyDeleteUsers(array $userIds, array $deletionReason = [], bool $anonymize = true, ?User $deletedBy = null): array
@@ -104,8 +106,8 @@ class GdprService
     /**
      * Get users eligible for permanent deletion based on GDPR retention period
      *
-     * @param int $retentionDays Number of days after soft deletion before permanent deletion (default: 30)
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @param  int  $retentionDays  Number of days after soft deletion before permanent deletion (default: 30)
+     * @return Collection
      */
     public function getUsersEligibleForPermanentDeletion(int $retentionDays = 30)
     {
@@ -119,9 +121,9 @@ class GdprService
     /**
      * Automated GDPR cleanup - permanently delete users past retention period
      *
-     * @param int $retentionDays Number of days after soft deletion
-     * @param array $deletionReason Reason for automated deletion
-     * @param bool $anonymize Whether to anonymize data
+     * @param  int  $retentionDays  Number of days after soft deletion
+     * @param  array  $deletionReason  Reason for automated deletion
+     * @param  bool  $anonymize  Whether to anonymize data
      * @return array Results of the cleanup
      */
     public function performAutomatedGdprCleanup(int $retentionDays = 30, array $deletionReason = [], bool $anonymize = true): array
@@ -132,13 +134,13 @@ class GdprService
             'total_eligible' => $eligibleUsers->count(),
             'successfully_deleted' => 0,
             'failed_deletions' => [],
-            'deleted_user_records' => []
+            'deleted_user_records' => [],
         ];
 
         $defaultDeletionReason = array_merge([
             'type' => 'automated_gdpr_cleanup',
             'retention_period_days' => $retentionDays,
-            'cleanup_date' => now()->toISOString()
+            'cleanup_date' => now()->toISOString(),
         ], $deletionReason);
 
         foreach ($eligibleUsers as $user) {
@@ -149,16 +151,16 @@ class GdprService
             } catch (\Exception $e) {
                 $results['failed_deletions'][] = [
                     'user_id' => $user->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
-                Log::error("Failed to permanently delete user during GDPR cleanup", [
+                Log::error('Failed to permanently delete user during GDPR cleanup', [
                     'user_id' => $user->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
 
-        Log::info("GDPR automated cleanup completed", $results);
+        Log::info('GDPR automated cleanup completed', $results);
 
         return $results;
     }
@@ -166,9 +168,6 @@ class GdprService
     /**
      * Update related records when a user is permanently deleted
      * This method should be extended based on your application's relationships
-     *
-     * @param int $userId
-     * @return void
      */
     protected function updateRelatedRecords(int $userId): void
     {
@@ -180,16 +179,13 @@ class GdprService
         // For now, we don't need to do anything special since we're using
         // the WithTrashed relationships and safe helper functions
 
-        Log::info("Updated related records for permanently deleted user", [
-            'user_id' => $userId
+        Log::info('Updated related records for permanently deleted user', [
+            'user_id' => $userId,
         ]);
     }
 
     /**
      * Check if a user ID corresponds to a permanently deleted user
-     *
-     * @param int $userId
-     * @return bool
      */
     public function isUserPermanentlyDeleted(int $userId): bool
     {
@@ -198,9 +194,6 @@ class GdprService
 
     /**
      * Get information about a permanently deleted user
-     *
-     * @param int $originalUserId
-     * @return DeletedUser|null
      */
     public function getPermanentlyDeletedUserInfo(int $originalUserId): ?DeletedUser
     {
@@ -210,8 +203,7 @@ class GdprService
     /**
      * Generate a report of all permanently deleted users
      *
-     * @param int $days Number of days to look back
-     * @return array
+     * @param  int  $days  Number of days to look back
      */
     public function generateDeletionReport(int $days = 30): array
     {

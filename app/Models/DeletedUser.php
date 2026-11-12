@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -12,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class DeletedUser extends Model
 {
-        use HasFactory;
+    use HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -112,7 +111,7 @@ class DeletedUser extends Model
      */
     private static function getDeletedByInfo(?User $deletedBy): array
     {
-        if (!$deletedBy) {
+        if (! $deletedBy) {
             return [
                 'id' => null,
                 'type' => 'system',

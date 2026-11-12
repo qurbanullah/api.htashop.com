@@ -14,15 +14,15 @@ class DefinitionIndexRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tenant_id'    => ['nullable', 'integer'],
-            'kind'         => ['nullable', 'string', 'max:100'],
-            'target_type'  => ['nullable', 'string', 'max:100'],
-            'value_type'   => ['nullable', 'string', 'max:100'],
-            'group_name'   => ['nullable', 'string', 'max:255'],
+            'tenant_id' => ['nullable', 'integer'],
+            'kind' => ['nullable', 'string', 'max:100'],
+            'target_type' => ['nullable', 'string', 'max:100'],
+            'value_type' => ['nullable', 'string', 'max:100'],
+            'group_name' => ['nullable', 'string', 'max:255'],
             'section_name' => ['nullable', 'string', 'max:255'],
-            'is_active'    => ['nullable', 'boolean'],
-            'search'       => ['nullable', 'string', 'max:255'],
-            'per_page'     => ['nullable', 'integer', 'min:1', 'max:100'],
+            'is_active' => ['nullable', 'boolean'],
+            'search' => ['nullable', 'string', 'max:255'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ];
     }
 }

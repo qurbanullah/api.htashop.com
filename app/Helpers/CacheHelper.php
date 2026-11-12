@@ -22,6 +22,7 @@ class CacheHelper
         if (config('cache.default') === 'redis' || config('cache.default') === 'memcached') {
             return Cache::tags($tags)->remember($key, $ttl, $callback);
         }
+
         return Cache::remember($key, $ttl, $callback);
     }
 
@@ -38,6 +39,7 @@ class CacheHelper
         if (config('cache.default') === 'redis' || config('cache.default') === 'memcached') {
             return Cache::tags($tags)->put($key, $value, $ttl);
         }
+
         return Cache::put($key, $value, $ttl);
     }
 
@@ -49,6 +51,7 @@ class CacheHelper
         if (config('cache.default') === 'redis' || config('cache.default') === 'memcached') {
             return Cache::tags($tags)->get($key, $default);
         }
+
         return Cache::get($key, $default);
     }
 
@@ -60,6 +63,7 @@ class CacheHelper
         if (config('cache.default') === 'redis' || config('cache.default') === 'memcached') {
             return Cache::tags($tags)->forget($key);
         }
+
         return Cache::forget($key);
     }
 
@@ -126,6 +130,7 @@ class CacheHelper
         if (config('cache.default') === 'redis') {
             return self::getRedisKeys($pattern);
         }
+
         return [];
     }
 
@@ -140,9 +145,9 @@ class CacheHelper
 
             $redisPrefix = config('database.redis.options.prefix', '');
             $cachePrefix = $store->getPrefix();
-            $fullPrefix  = $redisPrefix . $cachePrefix;
+            $fullPrefix = $redisPrefix.$cachePrefix;
 
-            $keys = $redis->keys($cachePrefix . $pattern);
+            $keys = $redis->keys($cachePrefix.$pattern);
 
             return array_map(function ($key) use ($fullPrefix) {
                 return $fullPrefix !== '' ? str_replace($fullPrefix, '', $key) : $key;

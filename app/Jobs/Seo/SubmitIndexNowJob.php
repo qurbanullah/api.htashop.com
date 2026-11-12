@@ -18,6 +18,7 @@ class SubmitIndexNowJob implements ShouldQueue
     use Queueable;
 
     public int $tries = 3;
+
     public int $timeout = 20;
 
     /**
@@ -31,7 +32,7 @@ class SubmitIndexNowJob implements ShouldQueue
 
     public function handle(): void
     {
-        if (!config('indexnow.enabled')) {
+        if (! config('indexnow.enabled')) {
             return;
         }
 
@@ -55,11 +56,11 @@ class SubmitIndexNowJob implements ShouldQueue
                 ->post($endpoint, [
                     'host' => $host,
                     'key' => $key,
-                    'keyLocation' => config('app.frontend_url') . '/' . $key . '.txt',
+                    'keyLocation' => config('app.frontend_url').'/'.$key.'.txt',
                     'urlList' => array_slice($urls, 0, 10000),
                 ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 Log::warning('IndexNow submission failed', [
                     'host' => $host,
                     'status' => $response->status(),

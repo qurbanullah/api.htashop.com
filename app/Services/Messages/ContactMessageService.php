@@ -82,7 +82,7 @@ class ContactMessageService
     {
         if (is_numeric($message)) {
             $message = $this->findVisible((int) $message);
-            if (!$message) {
+            if (! $message) {
                 return;
             }
         }
@@ -98,7 +98,7 @@ class ContactMessageService
     {
         if (is_numeric($message)) {
             $message = $this->findVisible((int) $message);
-            if (!$message) {
+            if (! $message) {
                 return;
             }
         }
@@ -114,7 +114,7 @@ class ContactMessageService
     {
         if (is_numeric($message)) {
             $message = $this->findVisible((int) $message);
-            if (!$message) {
+            if (! $message) {
                 return false;
             }
         }
@@ -138,9 +138,9 @@ class ContactMessageService
         if ($query) {
             $builder->where(function ($q) use ($query) {
                 $q->where('name', 'LIKE', "%{$query}%")
-                  ->orWhere('email', 'LIKE', "%{$query}%")
-                  ->orWhere('subject', 'LIKE', "%{$query}%")
-                  ->orWhere('message', 'LIKE', "%{$query}%");
+                    ->orWhere('email', 'LIKE', "%{$query}%")
+                    ->orWhere('subject', 'LIKE', "%{$query}%")
+                    ->orWhere('message', 'LIKE', "%{$query}%");
             });
         }
 
@@ -214,6 +214,6 @@ class ContactMessageService
     {
         return $scope === null
             ? 'support:contact:stats:all'
-            : 'support:contact:stats:tenant:' . $scope;
+            : 'support:contact:stats:tenant:'.$scope;
     }
 }

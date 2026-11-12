@@ -8,9 +8,7 @@ use Illuminate\Contracts\Database\Eloquent\Builder;
 
 class FilterBySubmitterType
 {
-    public function __construct(protected array $filters)
-    {
-    }
+    public function __construct(protected array $filters) {}
 
     public function handle(Builder $builder, \Closure $next)
     {

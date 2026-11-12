@@ -5,9 +5,9 @@ namespace App\Http\Controllers\V1\Unsubscribe;
 use App\Http\Controllers\Controller;
 use App\Models\Subscribe;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
 class UnsubscribeController extends Controller
 {
@@ -18,7 +18,7 @@ class UnsubscribeController extends Controller
     {
         $subscription = Subscribe::where('unsubscribe_token', $token)->first();
 
-        if (!$subscription) {
+        if (! $subscription) {
             abort(404, 'Invalid unsubscribe link.');
         }
 
@@ -34,7 +34,7 @@ class UnsubscribeController extends Controller
     {
         $subscription = Subscribe::where('unsubscribe_token', $token)->first();
 
-        if (!$subscription) {
+        if (! $subscription) {
             return redirect()->route('home')->with('error', 'Invalid unsubscribe link.');
         }
 
@@ -55,7 +55,7 @@ class UnsubscribeController extends Controller
     {
         $subscription = Subscribe::where('unsubscribe_token', $token)->first();
 
-        if (!$subscription) {
+        if (! $subscription) {
             abort(404, 'Invalid unsubscribe link.');
         }
 
@@ -71,7 +71,7 @@ class UnsubscribeController extends Controller
     {
         $subscription = Subscribe::where('unsubscribe_token', $token)->first();
 
-        if (!$subscription) {
+        if (! $subscription) {
             return redirect()->route('home')->with('error', 'Invalid link.');
         }
 

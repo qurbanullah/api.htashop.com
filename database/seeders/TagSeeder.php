@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Tag;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -60,8 +59,8 @@ class TagSeeder extends Seeder
         }
 
         $this->command->info('Tags seeded successfully!');
-        $this->command->info('Created ' . Tag::count() . ' tags total');
-        $this->command->info('Active tags: ' . Tag::where('is_active', true)->count());
-        $this->command->info('Inactive tags: ' . Tag::where('is_active', false)->count());
+        $this->command->info('Created '.Tag::count().' tags total');
+        $this->command->info('Active tags: '.Tag::where('is_active', true)->count());
+        $this->command->info('Inactive tags: '.Tag::where('is_active', false)->count());
     }
 }

@@ -22,7 +22,12 @@ declare(strict_types=1);
 
 namespace App\Actions\Tickets;
 
+use App\Filters\FilterByStatus;
+use App\Filters\FilterBySubmitterType;
+use App\Filters\FilterByTitle;
+use App\Filters\FilterByUserId;
 use App\Models\Ticket;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Pipeline;
@@ -43,7 +48,8 @@ class TicketShowAction
      * Validate and create record in database.
      *
      * @param  array  $data  model values
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @throws AuthorizationException
      */
     public function handle(array $data): LengthAwarePaginator
     {
@@ -54,7 +60,7 @@ class TicketShowAction
 
         // Apply user-specific filters based on permissions
         $user = auth()->user();
-        if (!$user->hasRole(['super-admin', 'admin'])) {
+        if (! $user->hasRole(['super-admin', 'admin'])) {
             // Regular users can only see their own tickets.
             $query->where('user_id', $user->id);
         }
@@ -62,10 +68,10 @@ class TicketShowAction
         return Pipeline::send($query)
             ->through(
                 [
-                    new \App\Filters\FilterByUserId(data_get($data, 'filters')),
-                    new \App\Filters\FilterBySubmitterType(data_get($data, 'filters')),
-                    new \App\Filters\FilterByStatus(data_get($data, 'filters')),
-                    new \App\Filters\FilterByTitle(data_get($data, 'filters')),
+                    new FilterByUserId(data_get($data, 'filters')),
+                    new FilterBySubmitterType(data_get($data, 'filters')),
+                    new FilterByStatus(data_get($data, 'filters')),
+                    new FilterByTitle(data_get($data, 'filters')),
                 ]
             )
             ->thenReturn()

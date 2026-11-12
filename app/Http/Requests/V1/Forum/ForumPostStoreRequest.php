@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests\V1\Forum;
 
-use App\Enums\ForumPostStatusEnum;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class ForumPostStoreRequest extends FormRequest
 {

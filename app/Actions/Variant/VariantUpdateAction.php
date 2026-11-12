@@ -12,8 +12,7 @@ class VariantUpdateAction
 {
     public function __construct(
         protected RevisionCreateAction $revisionCreateAction,
-    ) {
-    }
+    ) {}
 
     public function handle(Variant $variant, array $data): Variant
     {
@@ -99,7 +98,7 @@ class VariantUpdateAction
             ->where('slug', $candidate)
             ->where('id', '!=', $variant->id)
             ->exists()) {
-            $candidate = $base . '-' . $suffix;
+            $candidate = $base.'-'.$suffix;
             $suffix++;
         }
 

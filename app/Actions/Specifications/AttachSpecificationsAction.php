@@ -31,6 +31,7 @@ class AttachSpecificationsAction
                     if ($specModel) {
                         $specModel->pivot_value = $value;
                         $specModel->pivot_munit_id = $munitId; // Store munit_id
+
                         return $specModel;
                     }
                 }
@@ -46,6 +47,7 @@ class AttachSpecificationsAction
                     );
                     $specModel->pivot_value = $value;
                     $specModel->pivot_munit_id = $munitId; // Store munit_id
+
                     return $specModel;
                 }
 
@@ -64,7 +66,7 @@ class AttachSpecificationsAction
         $syncData = [];
         foreach ($specificationModels as $specModel) {
             $pivotData = [
-                'value' => $specModel->pivot_value ?? ''
+                'value' => $specModel->pivot_value ?? '',
             ];
 
             // Add munit_id if provided
@@ -79,7 +81,7 @@ class AttachSpecificationsAction
 
         // Increment usage count
         $specificationModels->each(function ($spec) {
-            if (!isset($spec->already_counted)) {
+            if (! isset($spec->already_counted)) {
                 $spec->incrementUsage();
             }
         });

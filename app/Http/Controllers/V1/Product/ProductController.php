@@ -17,8 +17,7 @@ class ProductController extends Controller
 {
     public function __construct(
         protected ProductService $productService,
-    ) {
-    }
+    ) {}
 
     public function index(ProductIndexRequest $request): JsonResponse
     {
@@ -44,9 +43,9 @@ class ProductController extends Controller
         $this->authorize('view', $product);
 
         // Enforce the canonical {slug}-{uuid8} URL — stale slugs 301 to the canonical one.
-        $canonical = $product->slug . '-' . substr($product->uuid, 0, 8);
+        $canonical = $product->slug.'-'.substr($product->uuid, 0, 8);
         if (! $this->isUuid($routeKey) && $routeKey !== $canonical) {
-            return redirect()->to(url('api/v1/products/' . $canonical), 301);
+            return redirect()->to(url('api/v1/products/'.$canonical), 301);
         }
 
         return ApiResponse::success(new ProductResource($product), 'Product retrieved successfully');

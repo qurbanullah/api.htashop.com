@@ -5,11 +5,17 @@ namespace App\Enums;
 class BannerType
 {
     public const HERO = 'hero';
+
     public const PROMO = 'promo';
+
     public const SPONSORED = 'sponsored';
+
     public const TOP_BRANDS = 'top_brands';
+
     public const JUST_LAUNCHED = 'just_launched';
+
     public const SPLIT = 'split';
+
     public const SINGLE = 'single';
 
     public const ALL = [

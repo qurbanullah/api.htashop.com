@@ -2,6 +2,8 @@
 
 namespace Tests\Unit\Product;
 
+use App\Services\Product\ProductService;
+
 test('the Product service classes exist', function () {
-    expect(class_exists(\App\Services\Product\ProductService::class))->toBeTrue();
+    expect(class_exists(ProductService::class))->toBeTrue();
 });

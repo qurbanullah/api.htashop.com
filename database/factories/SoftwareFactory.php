@@ -2,10 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\Software;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Software>
+ * @extends Factory<Software>
  */
 class SoftwareFactory extends Factory
 {
@@ -23,15 +25,15 @@ class SoftwareFactory extends Factory
         // ]) . ' ' . fake()->randomElement(['Pro', 'Studio', 'Suite', 'Tools', 'Manager', 'Engine']);
 
         $name = fake()->randomElement([
-            'HTAShop', 'HTAShop Render', 'HTAShop Simulator', 'HTAShop Mesh', 'Real3D VR', 'HTAShop Core'
+            'HTAShop', 'HTAShop Render', 'HTAShop Simulator', 'HTAShop Mesh', 'Real3D VR', 'HTAShop Core',
         ]);
 
         return [
             'name' => $name,
-            'slug' => \Illuminate\Support\Str::slug($name),
+            'slug' => Str::slug($name),
             'summary' => fake()->sentence(8),
             'description' => fake()->paragraphs(3, true),
-            'image' => 'software/' . \Illuminate\Support\Str::slug($name) . '.png',
+            'image' => 'software/'.Str::slug($name).'.png',
             'is_active' => fake()->boolean(85), // 85% chance of being active
             'sorting' => fake()->numberBetween(1, 100),
         ];

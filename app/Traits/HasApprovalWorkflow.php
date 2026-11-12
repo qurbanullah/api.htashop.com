@@ -2,7 +2,6 @@
 
 namespace App\Traits;
 
-use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 

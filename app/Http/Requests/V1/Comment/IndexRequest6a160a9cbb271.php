@@ -22,7 +22,7 @@ class IndexRequest6a160a9cbb271 extends FormRequest
             'attachments' => 'nullable|array',
             'revision_ids' => 'nullable|array',
             'revision_ids.*' => 'integer|exists:revisions,id',
-        
+
         ];
     }
 }

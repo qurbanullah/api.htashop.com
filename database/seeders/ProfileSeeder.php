@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\User;
 use App\Models\Profile;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class ProfileSeeder extends Seeder
 {
@@ -20,7 +20,7 @@ class ProfileSeeder extends Seeder
             $userRoles = $user->getRoleNames()->toArray();
 
             // Skip admin users without academic roles
-            if ($user->hasRole('admin') && !$user->hasAnyRole(['author', 'reviewer', 'editor-in-chief', 'associate-editor', 'managing-editor'])) {
+            if ($user->hasRole('admin') && ! $user->hasAnyRole(['author', 'reviewer', 'editor-in-chief', 'associate-editor', 'managing-editor'])) {
                 continue;
             }
 
@@ -45,9 +45,9 @@ class ProfileSeeder extends Seeder
             'middle_name' => $names['middle'],
             'title' => $this->getAcademicTitle($user->name),
             'orcid' => $this->generateOrcid(),
-            'scopus_id' => 'SCOP-' . str_pad(rand(1, 999999999), 9, '0', STR_PAD_LEFT),
-            'google_scholar_id' => 'GS-' . bin2hex(random_bytes(8)),
-            'researcher_id' => 'RES-' . bin2hex(random_bytes(6)),
+            'scopus_id' => 'SCOP-'.str_pad(rand(1, 999999999), 9, '0', STR_PAD_LEFT),
+            'google_scholar_id' => 'GS-'.bin2hex(random_bytes(8)),
+            'researcher_id' => 'RES-'.bin2hex(random_bytes(6)),
             'primary_affiliation' => $this->getRandomUniversity(),
             'department' => $this->getRandomDepartment(),
             'institution' => $this->getRandomUniversity(),
@@ -100,7 +100,7 @@ class ProfileSeeder extends Seeder
             return [
                 'first' => $parts[0],
                 'middle' => implode(' ', array_slice($parts, 1, -1)),
-                'last' => end($parts)
+                'last' => end($parts),
             ];
         }
     }
@@ -189,7 +189,7 @@ class ProfileSeeder extends Seeder
         $cities = [
             'Boston', 'Cambridge', 'San Francisco', 'New York', 'Chicago',
             'Los Angeles', 'Seattle', 'Austin', 'Philadelphia', 'San Diego',
-            'Houston', 'Phoenix', 'Denver', 'Atlanta', 'Miami'
+            'Houston', 'Phoenix', 'Denver', 'Atlanta', 'Miami',
         ];
 
         return $cities[array_rand($cities)];
@@ -219,11 +219,11 @@ class ProfileSeeder extends Seeder
     private function generateBio(array $roles): string
     {
         $bios = [
-            "Experienced researcher with a focus on cutting-edge developments in the field. Published extensively in peer-reviewed journals.",
-            "Dedicated scientist committed to advancing knowledge through rigorous research and collaboration.",
-            "Interdisciplinary researcher bridging theory and practice. Passionate about mentoring the next generation of scientists.",
-            "Award-winning researcher with expertise spanning multiple domains. Active contributor to the scientific community.",
-            "Innovative thinker exploring novel approaches to complex problems. Extensive publication record and conference presentations.",
+            'Experienced researcher with a focus on cutting-edge developments in the field. Published extensively in peer-reviewed journals.',
+            'Dedicated scientist committed to advancing knowledge through rigorous research and collaboration.',
+            'Interdisciplinary researcher bridging theory and practice. Passionate about mentoring the next generation of scientists.',
+            'Award-winning researcher with expertise spanning multiple domains. Active contributor to the scientific community.',
+            'Innovative thinker exploring novel approaches to complex problems. Extensive publication record and conference presentations.',
         ];
 
         return $bios[array_rand($bios)];
@@ -253,6 +253,7 @@ class ProfileSeeder extends Seeder
         ];
 
         $count = rand(2, 5);
+
         return array_slice($allAreas, 0, $count);
     }
 
@@ -263,7 +264,7 @@ class ProfileSeeder extends Seeder
             'Genomics', 'Proteomics', 'Cell Biology', 'Immunology',
             'Climate Modeling', 'Sustainability', 'Conservation',
             'Statistical Analysis', 'Bayesian Methods', 'Time Series',
-            'Policy Analysis', 'Health Economics', 'Epidemiology'
+            'Policy Analysis', 'Health Economics', 'Epidemiology',
         ];
 
         return array_slice($keywords, 0, rand(3, 7));
@@ -272,6 +273,7 @@ class ProfileSeeder extends Seeder
     private function getRandomLanguages(): array
     {
         $languages = ['Spanish', 'French', 'German', 'Chinese', 'Japanese', 'Korean', 'Arabic'];
+
         return array_slice($languages, 0, rand(0, 2));
     }
 
@@ -377,9 +379,9 @@ class ProfileSeeder extends Seeder
     private function getSocialLinks(): array
     {
         return [
-            'linkedin' => 'https://linkedin.com/in/researcher-' . rand(1000, 9999),
-            'twitter' => 'https://twitter.com/researcher_' . rand(1000, 9999),
-            'researchgate' => 'https://researchgate.net/profile/Researcher_' . rand(1000, 9999),
+            'linkedin' => 'https://linkedin.com/in/researcher-'.rand(1000, 9999),
+            'twitter' => 'https://twitter.com/researcher_'.rand(1000, 9999),
+            'researchgate' => 'https://researchgate.net/profile/Researcher_'.rand(1000, 9999),
         ];
     }
 

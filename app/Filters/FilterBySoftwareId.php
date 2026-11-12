@@ -12,18 +12,15 @@ class FilterBySoftwareId
     /**
      * Class constructor
      *
-     * @param array $filters Query filter
+     * @param  array  $filters  Query filter
      */
-    public function __construct(protected array $filters)
-    {
-    }
+    public function __construct(protected array $filters) {}
 
     /**
      * Handle the filter.
      *
-     * @param Builder  $builder Query builder
-     * @param \Closure $next    Closure
-     *
+     * @param  Builder  $builder  Query builder
+     * @param  \Closure  $next  Closure
      * @return mixed
      */
     public function handle(Builder $builder, \Closure $next)

@@ -21,8 +21,7 @@ class HighlightService
         protected HighlightDeleteAction $deleteAction,
         protected HighlightReadProductAction $readProductAction,
         protected HighlightSyncProductAction $syncProductAction,
-    ) {
-    }
+    ) {}
 
     public function list(array $filters = []): LengthAwarePaginator
     {

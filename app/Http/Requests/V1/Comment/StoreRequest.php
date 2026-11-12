@@ -18,7 +18,7 @@ class StoreRequest extends FormRequest
             'content' => 'required|string|max:5000',
             'is_internal' => 'nullable|boolean',
             'attachments' => 'nullable|array',
-        
+
         ];
     }
 }

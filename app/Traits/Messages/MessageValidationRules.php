@@ -22,6 +22,8 @@ declare(strict_types=1);
 
 namespace App\Traits\Messages;
 
+use Illuminate\Contracts\Validation\ValidationRule;
+
 /**
  * CRUD operation class for Document Model.
  *
@@ -37,7 +39,7 @@ trait MessageValidationRules
     /**
      * Run the validation rule.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function formRules(): array
     {

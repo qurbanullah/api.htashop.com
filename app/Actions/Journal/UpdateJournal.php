@@ -48,7 +48,7 @@ class UpdateJournal
                 'languages' => $data['languages'] ?? $journal->languages,
                 'manuscript_types' => $data['manuscript_types'] ?? $journal->manuscript_types,
                 'settings' => array_merge($journal->settings ?? [], $data['settings'] ?? []),
-                'metadata' => array_merge($journal->metadata ?? [], $data['metadata'] ?? [])
+                'metadata' => array_merge($journal->metadata ?? [], $data['metadata'] ?? []),
             ], function ($value) {
                 return $value !== null;
             }));

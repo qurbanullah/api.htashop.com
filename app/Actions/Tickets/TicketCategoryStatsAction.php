@@ -38,8 +38,6 @@ class TicketCategoryStatsAction
 {
     /**
      * Get ticket statistics by category (stype)
-     *
-     * @return array
      */
     public function handle(): array
     {

@@ -3,9 +3,7 @@
 namespace App\Http\Controllers\V1\Forum;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\V1\Forum\ForumCommentStoreRequest;
 use App\Http\Resources\V1\Forum\ForumCommentResource;
-use App\Models\ForumComment;
 use App\Models\ForumPost;
 use App\Services\Forum\ForumCommentService;
 use Illuminate\Http\JsonResponse;
@@ -26,7 +24,7 @@ class PublicForumCommentController extends Controller
             ->where('status', 'published')
             ->first();
 
-        if (!$post) {
+        if (! $post) {
             return response()->json([
                 'success' => false,
                 'message' => 'Post not found.',

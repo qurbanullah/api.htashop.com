@@ -18,11 +18,11 @@ class FilterByLicenseAnalyticEventName
         $eventName = data_get($this->filters, 'event_name');
         $eventType = data_get($this->filters, 'event_type');
 
-        if (!empty($eventName)) {
+        if (! empty($eventName)) {
             $builder = $builder->where('event_name', '=', $eventName);
         }
 
-        if (!empty($eventType)) {
+        if (! empty($eventType)) {
             $builder = $builder->where('event_type', '=', $eventType);
         }
 

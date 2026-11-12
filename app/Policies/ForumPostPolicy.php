@@ -37,7 +37,7 @@ class ForumPostPolicy
         }
 
         return $user->id === $post->user_id
-            && !$post->is_locked
+            && ! $post->is_locked
             && in_array($post->status->value, ['published', 'pending']);
     }
 
@@ -47,7 +47,7 @@ class ForumPostPolicy
             return true;
         }
 
-        return $user->id === $post->user_id && !$post->is_locked;
+        return $user->id === $post->user_id && ! $post->is_locked;
     }
 
     public function moderate(User $user): bool

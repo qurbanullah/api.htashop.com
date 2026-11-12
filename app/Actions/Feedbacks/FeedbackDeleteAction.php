@@ -44,7 +44,7 @@ class FeedbackDeleteAction
     public function handle(int $feedbackId): bool
     {
         $feedback = Feedback::find($feedbackId);
-        if (!$feedback) {
+        if (! $feedback) {
             return false;
         }
 

@@ -22,26 +22,26 @@ declare(strict_types=1);
 
 namespace App\Services\Tickets;
 
-use App\Helpers\CacheHelper;
+use App\Actions\Tickets\TicketAllStatsAction;
+use App\Actions\Tickets\TicketArchiveAction;
+use App\Actions\Tickets\TicketCloseAction;
 use App\Actions\Tickets\TicketCreateAction;
 use App\Actions\Tickets\TicketDeleteAction;
+use App\Actions\Tickets\TicketLockAction;
+use App\Actions\Tickets\TicketResolveAction;
 use App\Actions\Tickets\TicketSearchByIdAction;
 use App\Actions\Tickets\TicketSearchByUuidAction;
 use App\Actions\Tickets\TicketUpdateAction;
-use App\Actions\Tickets\TicketResolveAction;
-use App\Actions\Tickets\TicketCloseAction;
-use App\Actions\Tickets\TicketArchiveAction;
-use App\Actions\Tickets\TicketLockAction;
-use App\Actions\Tickets\TicketAllStatsAction;
 use App\Actions\Tickets\TicketUserStatsAction;
-use App\Enums\StatusEnum;
 use App\Enums\PriorityEnum;
+use App\Enums\StatusEnum;
 use App\Helpers\AdminHelper;
-use App\Jobs\Tickets\SendTicketCreatedEmail;
-use App\Jobs\Tickets\SendTicketResolvedEmail;
-use App\Jobs\Tickets\SendTicketClosedEmail;
+use App\Helpers\CacheHelper;
 use App\Jobs\Tickets\SendTicketArchivedEmail;
+use App\Jobs\Tickets\SendTicketClosedEmail;
+use App\Jobs\Tickets\SendTicketCreatedEmail;
 use App\Jobs\Tickets\SendTicketLockedEmail;
+use App\Jobs\Tickets\SendTicketResolvedEmail;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Services\Assignment\AssignmentService;
@@ -119,9 +119,6 @@ class TicketService
 
     /**
      * Auto-assign ticket to support assistant with the least active tickets.
-     *
-     * @param  Ticket  $ticket
-     * @return void
      */
     protected function autoAssignTicket(Ticket $ticket): void
     {
@@ -141,7 +138,7 @@ class TicketService
             })->first();
 
             if ($userWithLeastTickets) {
-                $assignmentService = new AssignmentService();
+                $assignmentService = new AssignmentService;
                 $assignmentService->assign(
                     $ticket,
                     $userWithLeastTickets,
@@ -197,7 +194,7 @@ class TicketService
         return CacheHelper::remember([],
             'cached_ticket_'.$id,
             3600, // Cache for 1 hour
-            fn() => (new TicketSearchByIdAction)->handle($id)
+            fn () => (new TicketSearchByIdAction)->handle($id)
         );
     }
 
@@ -212,14 +209,12 @@ class TicketService
         return Cache::remember(
             'cached_ticket_'.$uuid,
             3600, // Cache for 1 hour
-            fn() => (new TicketSearchByUuidAction)->handle($uuid)
+            fn () => (new TicketSearchByUuidAction)->handle($uuid)
         );
     }
 
     /**
      * Get all ticket statistics (optimized single query approach)
-     *
-     * @return array
      */
     public function getAllStatistics(): array
     {
@@ -252,8 +247,6 @@ class TicketService
 
     /**
      * Get ticket statistics by status
-     *
-     * @return array
      */
     public function getStatusStatistics(): array
     {
@@ -262,8 +255,6 @@ class TicketService
 
     /**
      * Get ticket statistics by priority
-     *
-     * @return array
      */
     public function getPriorityStatistics(): array
     {
@@ -272,8 +263,6 @@ class TicketService
 
     /**
      * Get ticket statistics by category (stype)
-     *
-     * @return array
      */
     public function getCategoryStatistics(): array
     {
@@ -282,8 +271,6 @@ class TicketService
 
     /**
      * Get total ticket count
-     *
-     * @return int
      */
     public function getTotalTickets(): int
     {
@@ -292,8 +279,6 @@ class TicketService
 
     /**
      * Clear statistics cache
-     *
-     * @return void
      */
     public function clearStatsCache(): void
     {
@@ -308,18 +293,17 @@ class TicketService
     /**
      * Get comprehensive admin statistics and analytics.
      *
-     * @param array $filters Optional filters (start_date, end_date)
-     * @return array
+     * @param  array  $filters  Optional filters (start_date, end_date)
      */
     public function getAdminStats(array $filters = []): array
     {
         $query = Ticket::query();
 
         // Apply date range filter if provided
-        if (!empty($filters['start_date'])) {
+        if (! empty($filters['start_date'])) {
             $query->where('created_at', '>=', $filters['start_date']);
         }
-        if (!empty($filters['end_date'])) {
+        if (! empty($filters['end_date'])) {
             $query->where('created_at', '<=', $filters['end_date']);
         }
 
@@ -394,6 +378,7 @@ class TicketService
                 // Map reporter to user for frontend compatibility
                 $ticketArray['user'] = $ticketArray['reporter'] ?? null;
                 unset($ticketArray['reporter']);
+
                 return $ticketArray;
             })
             ->toArray();
@@ -432,9 +417,6 @@ class TicketService
 
     /**
      * Get user-specific ticket statistics (optimized single query approach)
-     *
-     * @param int $userId
-     * @return array
      */
     public function getUserStatistics(int $userId): array
     {
@@ -454,9 +436,6 @@ class TicketService
 
     /**
      * Get user-specific ticket statistics by status
-     *
-     * @param int $userId
-     * @return array
      */
     public function getUserStatusStatistics(int $userId): array
     {
@@ -473,9 +452,6 @@ class TicketService
 
     /**
      * Get user-specific ticket statistics by priority
-     *
-     * @param int $userId
-     * @return array
      */
     public function getUserPriorityStatistics(int $userId): array
     {
@@ -484,9 +460,6 @@ class TicketService
 
     /**
      * Get user-specific ticket statistics by category (stype)
-     *
-     * @param int $userId
-     * @return array
      */
     public function getUserCategoryStatistics(int $userId): array
     {
@@ -495,9 +468,6 @@ class TicketService
 
     /**
      * Get user-specific total ticket count
-     *
-     * @param int $userId
-     * @return int
      */
     public function getUserTotalTickets(int $userId): int
     {
@@ -506,9 +476,6 @@ class TicketService
 
     /**
      * Clear user-specific statistics cache
-     *
-     * @param int $userId
-     * @return void
      */
     public function clearUserStatsCache(int $userId): void
     {
@@ -583,7 +550,7 @@ class TicketService
     /**
      * Clear caching after update.
      *
-     * @param  \App\Models\Ticket  $ticket  data to update
+     * @param  Ticket  $ticket  data to update
      */
     private function _clearCaching(Ticket $ticket): void
     {

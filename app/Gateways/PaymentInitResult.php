@@ -12,6 +12,5 @@ class PaymentInitResult
         public readonly ?string $redirectUrl = null,
         public readonly ?string $html = null,
         public readonly array $payload = [],
-    ) {
-    }
+    ) {}
 }

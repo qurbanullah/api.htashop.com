@@ -11,10 +11,9 @@ class CreateReviewAction
     /**
      * Create a new review for a reviewable model
      *
-     * @param Model $reviewable The model being reviewed (Product, Vendor, etc.)
-     * @param User $user The user creating the review
-     * @param array $data Review data (rating, title, comment, order_id)
-     * @return Review
+     * @param  Model  $reviewable  The model being reviewed (Product, Vendor, etc.)
+     * @param  User  $user  The user creating the review
+     * @param  array  $data  Review data (rating, title, comment, order_id)
      */
     public function execute(Model $reviewable, User $user, array $data): Review
     {

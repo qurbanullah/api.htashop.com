@@ -13,6 +13,7 @@ declare(strict_types=1);
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  * Written by Qurban Ullah <qurbanullah@gmail.com>, 2024
+ *
  * @User   CC BY-NC-ND 4.0 Deed https://creativecommons.org/Users/by-nc-nd/4.0/
  *
  * @version   GIT: <git_id>
@@ -22,19 +23,18 @@ declare(strict_types=1);
 
 namespace App\Services\Users;
 
-use App\Helpers\CacheHelper;
+use App\Actions\Users\UserAllStatsAction;
 use App\Actions\Users\UserCreateAction;
 use App\Actions\Users\UserDeleteAction;
-use App\Actions\Users\UserSortAction;
-use App\Actions\Users\UserUpdateAction;
 use App\Actions\Users\UserPatchAction;
 use App\Actions\Users\UserSearchByIdAction;
 use App\Actions\Users\UserShowAction;
-use App\Actions\Users\UserAllStatsAction;
-use App\Actions\Users\UserStatusStatsAction;
-use App\Actions\Users\UserRoleStatsAction;
-use App\Actions\Users\UserTotalCountAction;
+use App\Actions\Users\UserSortAction;
+use App\Actions\Users\UserUpdateAction;
+use App\Helpers\CacheHelper;
 use App\Models\User;
+use Illuminate\Cache\RedisStore;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -44,6 +44,7 @@ use Illuminate\Support\Facades\Log;
  * @category App\Services\Users
  *
  * @author   Qurban Ullah <qurbanullah@gmail.com>
+ *
  * @User  CC BY-NC-ND 4.0 Deed https://creativecommons.org/Users/by-nc-nd/4.0/
  *
  * @link     https://github.com/qurbanullah
@@ -126,7 +127,7 @@ class UserService
      *
      * @param  int  $modelId  model id to be sorted
      * @param  int  $newPosition  new position of the model
-     * @return \App\Models\User
+     * @return User
      */
     public function sort($modelId, $newPosition)
     {
@@ -138,12 +139,8 @@ class UserService
 
     /**
      * Get paginated users with filters and caching
-     *
-     * @param array $filters
-     * @param int $perPage
-     * @return \Illuminate\Pagination\LengthAwarePaginator
      */
-    public function show(array $filters = [], int $perPage = 12): \Illuminate\Pagination\LengthAwarePaginator
+    public function show(array $filters = [], int $perPage = 12): LengthAwarePaginator
     {
         $input = [
             'filters' => $filters,
@@ -156,20 +153,14 @@ class UserService
 
     /**
      * Get user by ID including soft deleted
-     *
-     * @param int $id
-     * @return \App\Models\User|null
      */
-    public function findWithTrashed(int $id): ?\App\Models\User
+    public function findWithTrashed(int $id): ?User
     {
-        return \App\Models\User::withTrashed()->find($id);
+        return User::withTrashed()->find($id);
     }
 
     /**
      * Get safe user display data
-     *
-     * @param int $id
-     * @return array
      */
     public function getSafeUserDisplay(int $id): array
     {
@@ -179,7 +170,7 @@ class UserService
     /**
      * Clear caching after update.
      *
-     * @param  \App\Models\User  $user  data to update
+     * @param  User  $user  data to update
      */
     private function _clearCaching(User $user): void
     {
@@ -193,8 +184,6 @@ class UserService
 
     /**
      * Get all user statistics (optimized single query approach)
-     *
-     * @return array
      */
     public function getAllStatistics(): array
     {
@@ -222,8 +211,6 @@ class UserService
 
     /**
      * Get user statistics by status
-     *
-     * @return array
      */
     public function getStatusStatistics(): array
     {
@@ -232,8 +219,6 @@ class UserService
 
     /**
      * Get user statistics by role
-     *
-     * @return array
      */
     public function getRoleStatistics(): array
     {
@@ -242,8 +227,6 @@ class UserService
 
     /**
      * Get total user count
-     *
-     * @return int
      */
     public function getTotalUsers(): int
     {
@@ -252,8 +235,6 @@ class UserService
 
     /**
      * Clear statistics cache
-     *
-     * @return void
      */
     public function clearStatsCache(): void
     {
@@ -265,10 +246,6 @@ class UserService
 
     /**
      * Update user roles
-     *
-     * @param int $userId
-     * @param array $roles
-     * @return User
      */
     public function updateRoles(int $userId, array $roles): User
     {
@@ -282,12 +259,12 @@ class UserService
         $rolesToRemove = array_diff($currentRoles, $roles);
 
         // Add new roles
-        foreach($rolesToAdd as $role) {
+        foreach ($rolesToAdd as $role) {
             $user->assignRole($role);
         }
 
         // Remove unchecked roles
-        foreach($rolesToRemove as $role) {
+        foreach ($rolesToRemove as $role) {
             $user->removeRole($role);
         }
 
@@ -299,10 +276,6 @@ class UserService
 
     /**
      * Update user status
-     *
-     * @param int $userId
-     * @param bool $isActive
-     * @return bool
      */
     public function updateStatus(int $userId, bool $isActive): bool
     {
@@ -312,7 +285,7 @@ class UserService
 
             if ($updated) {
                 // Clear user cache
-                CacheHelper::forget([], 'cached_user_' . $userId);
+                CacheHelper::forget([], 'cached_user_'.$userId);
                 CacheHelper::forget([], 'cached_users');
 
                 return true;
@@ -320,17 +293,13 @@ class UserService
 
             return false;
         } catch (\Exception $e) {
-            Log::error('Error updating user status: ' . $e->getMessage());
+            Log::error('Error updating user status: '.$e->getMessage());
             throw $e;
         }
     }
 
     /**
      * Update user information
-     *
-     * @param int $userId
-     * @param array $data
-     * @return bool
      */
     public function updateUser(int $userId, array $data): bool
     {
@@ -340,7 +309,7 @@ class UserService
 
             if ($updated) {
                 // Clear user cache
-                CacheHelper::forget([], 'cached_user_' . $userId);
+                CacheHelper::forget([], 'cached_user_'.$userId);
                 CacheHelper::forget([], 'cached_users');
 
                 return true;
@@ -348,15 +317,13 @@ class UserService
 
             return false;
         } catch (\Exception $e) {
-            Log::error('Error updating user: ' . $e->getMessage());
+            Log::error('Error updating user: '.$e->getMessage());
             throw $e;
         }
     }
 
     /**
      * Clear users list cache
-     *
-     * @return void
      */
     public function clearListCache(): void
     {
@@ -365,7 +332,7 @@ class UserService
         // we'll flush the entire cache or use specific known patterns
         try {
             // If using Redis cache driver
-            if (Cache::getStore() instanceof \Illuminate\Cache\RedisStore) {
+            if (Cache::getStore() instanceof RedisStore) {
                 $cacheKeys = Cache::getRedis()->keys('*users_*');
                 if ($cacheKeys) {
                     Cache::getRedis()->del($cacheKeys);
@@ -382,13 +349,13 @@ class UserService
                 // Clear paginated cache entries (we'll clear a reasonable range)
                 for ($page = 1; $page <= 10; $page++) {
                     for ($perPage = 10; $perPage <= 50; $perPage += 10) {
-                        $cacheKey = 'users_' . md5(serialize([]) . $perPage . $page);
+                        $cacheKey = 'users_'.md5(serialize([]).$perPage.$page);
                         CacheHelper::forget([], $cacheKey);
                     }
                 }
             }
         } catch (\Exception $e) {
-            Log::warning('Cache clearing failed: ' . $e->getMessage());
+            Log::warning('Cache clearing failed: '.$e->getMessage());
             // Fallback: just clear the main caches
             CacheHelper::forget([], 'user_all_stats');
             CacheHelper::forget([], 'cached_users');

@@ -2,12 +2,7 @@
 
 namespace App\Models;
 
-
 use App\Traits\Dam\Damable;
-use App\Models\Contract;
-use App\Models\Membership;
-use App\Models\Product;
-use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,7 +13,7 @@ use Illuminate\Support\Str;
 
 class Organization extends Model
 {
-        use Damable, HasFactory, SoftDeletes;
+    use Damable, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'uuid',

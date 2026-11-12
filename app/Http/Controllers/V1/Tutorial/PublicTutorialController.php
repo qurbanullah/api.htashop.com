@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace App\Http\Controllers\V1\Tutorial;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use App\Http\Resources\V1\Tutorial\TutorialResource;
-use App\Services\Tutorial\TutorialService;
-use App\Services\Storage\S3UploadService;
+use App\Http\Requests\V1\Tutorial\Index\IndexRequest;
+use App\Http\Requests\V1\Tutorial\PopularRequest;
+use App\Models\Category;
 use App\Models\Tutorial;
-use Illuminate\Support\Facades\Validator;
+use App\Services\Storage\S3UploadService;
+use App\Services\Tutorial\TutorialService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * PublicTutorialController - Handles public access to tutorials for HTAShop
@@ -41,9 +42,8 @@ class PublicTutorialController extends Controller
      *
      * PUBLIC endpoint - no authentication required
      */
-    public function index(\App\Http\Requests\V1\Tutorial\Index\IndexRequest $request): JsonResponse
+    public function index(IndexRequest $request): JsonResponse
     {
-        
 
         $q = Tutorial::query()
             ->with(['categories', 'tags', 'creator', 'primaryCategory'])
@@ -88,11 +88,11 @@ class PublicTutorialController extends Controller
             ->with(['categories', 'tags', 'creator', 'primaryCategory'])
             ->where(function ($q) use ($identifier) {
                 $q->where('slug', $identifier)
-                  ->orWhere('uuid', $identifier)
-                  ->orWhere('id', $identifier);
+                    ->orWhere('uuid', $identifier)
+                    ->orWhere('id', $identifier);
             })->first();
 
-        if (!$tutorial) {
+        if (! $tutorial) {
             return response()->json(['message' => 'Tutorial not found'], 404);
         }
 
@@ -106,9 +106,8 @@ class PublicTutorialController extends Controller
      * Get popular tutorials
      * PUBLIC endpoint
      */
-    public function popular(\App\Http\Requests\V1\Tutorial\PopularRequest $request): JsonResponse
+    public function popular(PopularRequest $request): JsonResponse
     {
-        
 
         $limit = (int) $request->input('limit', 10);
         $tutorials = Tutorial::where('status', 'published')
@@ -130,15 +129,14 @@ class PublicTutorialController extends Controller
      */
     public function byCategory(Request $request, string $categoryIdentifier): JsonResponse
     {
-        
 
         // Find category by slug or ID
-        $category = \App\Models\Category::where(function($q) use ($categoryIdentifier) {
+        $category = Category::where(function ($q) use ($categoryIdentifier) {
             $q->where('slug', $categoryIdentifier)
-              ->orWhere('id', $categoryIdentifier);
+                ->orWhere('id', $categoryIdentifier);
         })->first();
 
-        if (!$category) {
+        if (! $category) {
             return response()->json(['message' => 'Category not found'], 404);
         }
 
@@ -163,7 +161,7 @@ class PublicTutorialController extends Controller
                     'id' => $category->id,
                     'name' => $category->name,
                     'slug' => $category->slug,
-                ]
+                ],
             ]);
         }
 
@@ -195,14 +193,14 @@ class PublicTutorialController extends Controller
     {
         // Generate signed URL for thumbnail if exists
         $thumbnailUrl = null;
-        if ($t->thumbnail && !str_starts_with($t->thumbnail, 'http')) {
+        if ($t->thumbnail && ! str_starts_with($t->thumbnail, 'http')) {
             try {
                 $thumbnailUrl = $this->s3Service->generatePresignedDownloadUrl($t->thumbnail, 3600);
             } catch (\Exception $e) {
                 \Log::error('Failed to generate thumbnail URL', [
                     'tutorial_id' => $t->id,
                     'thumbnail' => $t->thumbnail,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         } elseif ($t->thumbnail && str_starts_with($t->thumbnail, 'http')) {
@@ -227,19 +225,19 @@ class PublicTutorialController extends Controller
         $frontendBase = config('app.frontend_url', 'https://htashop.com');
         $slug = $t->slug ?? $t->uuid;
         $categorySlug = $t->primaryCategory ? $t->primaryCategory->slug : 'general';
-        $frontendUrl = rtrim($frontendBase, '/') . '/learning-center/' . $categorySlug . '/' . $slug;
+        $frontendUrl = rtrim($frontendBase, '/').'/learning-center/'.$categorySlug.'/'.$slug;
 
         return [
             'id' => $t->id,
             'uuid' => $t->uuid,
             'slug' => $t->slug,
             'type' => $t->type,
-            'type_label' => $t->type->label() ?? (string)$t->type,
+            'type_label' => $t->type->label() ?? (string) $t->type,
             'title' => $t->title,
             'excerpt' => $t->excerpt,
             'thumbnail' => $t->thumbnail,
             'thumbnail_url' => $thumbnailUrl,
-            'has_video' => (bool)($t->video_file || $t->youtube_url),
+            'has_video' => (bool) ($t->video_file || $t->youtube_url),
             'difficulty_level' => $t->difficulty_level,
             'duration_formatted' => $durationFormatted,
             'views_count' => $t->views_count,
@@ -250,12 +248,12 @@ class PublicTutorialController extends Controller
                 'name' => $t->primaryCategory->name,
                 'slug' => $t->primaryCategory->slug,
             ] : null,
-            'tags' => $t->tags ? $t->tags->map(fn($tag) => [
+            'tags' => $t->tags ? $t->tags->map(fn ($tag) => [
                 'id' => $tag->id,
                 'name' => $tag->name,
                 'slug' => $tag->slug,
             ])->toArray() : [],
-            'categories' => $t->categories ? $t->categories->map(fn($cat) => [
+            'categories' => $t->categories ? $t->categories->map(fn ($cat) => [
                 'id' => $cat->id,
                 'name' => $cat->name,
                 'slug' => $cat->slug,
@@ -270,14 +268,14 @@ class PublicTutorialController extends Controller
     {
         // Generate signed URL for thumbnail if exists
         $thumbnailUrl = null;
-        if ($t->thumbnail && !str_starts_with($t->thumbnail, 'http')) {
+        if ($t->thumbnail && ! str_starts_with($t->thumbnail, 'http')) {
             try {
                 $thumbnailUrl = $this->s3Service->generatePresignedDownloadUrl($t->thumbnail, 3600);
             } catch (\Exception $e) {
                 \Log::error('Failed to generate thumbnail URL', [
                     'tutorial_id' => $t->id,
                     'thumbnail' => $t->thumbnail,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         } elseif ($t->thumbnail && str_starts_with($t->thumbnail, 'http')) {
@@ -286,7 +284,7 @@ class PublicTutorialController extends Controller
 
         // Generate signed URL for video file if exists (not YouTube)
         $videoUrl = null;
-        if ($t->video_file && !str_starts_with($t->video_file, 'http')) {
+        if ($t->video_file && ! str_starts_with($t->video_file, 'http')) {
             try {
                 // Videos require authentication, so this might fail for public access
                 // Frontend will handle authentication if needed
@@ -295,7 +293,7 @@ class PublicTutorialController extends Controller
                 \Log::warning('Failed to generate video URL (may require auth)', [
                     'tutorial_id' => $t->id,
                     'video_file' => $t->video_file,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         } elseif ($t->video_file && str_starts_with($t->video_file, 'http')) {
@@ -320,13 +318,13 @@ class PublicTutorialController extends Controller
         $frontendBase = config('app.frontend_url', 'https://htashop.com');
         $slug = $t->slug ?? $t->uuid;
         $categorySlug = $t->primaryCategory ? $t->primaryCategory->slug : 'general';
-        $frontendUrl = rtrim($frontendBase, '/') . '/learning-center/' . $categorySlug . '/' . $slug;
+        $frontendUrl = rtrim($frontendBase, '/').'/learning-center/'.$categorySlug.'/'.$slug;
 
         return [
             'id' => $t->id,
             'uuid' => $t->uuid,
             'type' => $t->type,
-            'type_label' => $t->type->label() ?? (string)$t->type,
+            'type_label' => $t->type->label() ?? (string) $t->type,
             'title' => $t->title,
             'slug' => $t->slug,
             'excerpt' => $t->excerpt,
@@ -337,12 +335,12 @@ class PublicTutorialController extends Controller
             'video_url' => $videoUrl,
             'youtube_url' => $t->youtube_url,
             'video_source' => $t->youtube_url ?: $t->video_file,
-            'has_video' => (bool)($t->video_file || $t->youtube_url),
+            'has_video' => (bool) ($t->video_file || $t->youtube_url),
             'duration' => $t->duration,
             'duration_formatted' => $durationFormatted,
             'difficulty_level' => $t->difficulty_level,
             'status' => $t->status,
-            'status_label' => $t->status->label() ?? (string)$t->status,
+            'status_label' => $t->status->label() ?? (string) $t->status,
             'views_count' => $t->views_count,
             'likes_count' => $t->likes_count,
             'published_at' => $t->published_at ? $t->published_at->toIso8601String() : null,
@@ -362,12 +360,12 @@ class PublicTutorialController extends Controller
                 'email' => $t->creator->email,
                 'avatar' => $t->creator->avatar,
             ] : null,
-            'tags' => $t->tags ? $t->tags->map(fn($tag) => [
+            'tags' => $t->tags ? $t->tags->map(fn ($tag) => [
                 'id' => $tag->id,
                 'name' => $tag->name,
                 'slug' => $tag->slug,
             ])->toArray() : [],
-            'categories' => $t->categories ? $t->categories->map(fn($cat) => [
+            'categories' => $t->categories ? $t->categories->map(fn ($cat) => [
                 'id' => $cat->id,
                 'name' => $cat->name,
                 'slug' => $cat->slug,

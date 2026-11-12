@@ -76,7 +76,7 @@ class PdfService
         }
 
         if ($response->failed()) {
-            throw new \RuntimeException('PDF generation failed: ' . $response->status());
+            throw new \RuntimeException('PDF generation failed: '.$response->status());
         }
 
         return $response->body();
@@ -86,6 +86,6 @@ class PdfService
     {
         $slug = strtolower(str_replace([' ', '/', '\\'], '-', $order->order_number));
 
-        return $type . '-' . $slug . '.pdf';
+        return $type.'-'.$slug.'.pdf';
     }
 }

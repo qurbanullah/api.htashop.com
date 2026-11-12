@@ -18,14 +18,14 @@ trait BuildsTicketUrl
             ? config('app.manage_url')
             : config('app.admin_url');
 
-        if (!$baseUrl) {
+        if (! $baseUrl) {
             return null;
         }
 
-        if (!str_starts_with($baseUrl, 'http')) {
-            $baseUrl = 'https://' . $baseUrl;
+        if (! str_starts_with($baseUrl, 'http')) {
+            $baseUrl = 'https://'.$baseUrl;
         }
 
-        return rtrim($baseUrl, '/') . '/tickets/' . $ticket->uuid;
+        return rtrim($baseUrl, '/').'/tickets/'.$ticket->uuid;
     }
 }

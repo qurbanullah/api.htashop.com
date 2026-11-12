@@ -3,7 +3,6 @@
 namespace App\Actions\Profile;
 
 use App\Models\Profile;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -16,7 +15,7 @@ class UpdateProfileAction
      *
      * @param  Profile  $profile  The profile to update
      * @param  array  $data  Profile data
-     * @return Profile
+     *
      * @throws ValidationException
      */
     public function execute(Profile $profile, array $data): Profile
@@ -47,9 +46,6 @@ class UpdateProfileAction
     /**
      * Validate the profile data.
      *
-     * @param  Profile  $profile
-     * @param  array  $data
-     * @return array
      * @throws ValidationException
      */
     protected function validate(Profile $profile, array $data): array

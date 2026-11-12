@@ -16,7 +16,7 @@ class DocumentResource extends JsonResource
             'filename' => $this->filename,
             'mime' => $this->mime,
             'download_url' => $this->object_key
-                ? config('app.cdn_url', 'https://cdn.htashop.com') . '/' . ltrim($this->object_key, '/')
+                ? config('app.cdn_url', 'https://cdn.htashop.com').'/'.ltrim($this->object_key, '/')
                 : null,
             'created_at' => $this->created_at,
         ];

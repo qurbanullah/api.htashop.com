@@ -2,6 +2,8 @@
 
 namespace Tests\Unit\Message;
 
+use App\Services\Messages\ContactMessageService;
+
 test('the Message service classes exist', function () {
-    expect(class_exists(\App\Services\Messages\ContactMessageService::class))->toBeTrue();
+    expect(class_exists(ContactMessageService::class))->toBeTrue();
 });

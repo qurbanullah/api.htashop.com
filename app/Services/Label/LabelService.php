@@ -14,26 +14,26 @@ class LabelService
 {
     public function create(array $data): Label
     {
-        return (new LabelCreateAction())->handle($data);
+        return (new LabelCreateAction)->handle($data);
     }
 
     public function read(array $filters = []): LengthAwarePaginator
     {
-        return (new LabelReadAction())->handle($filters);
+        return (new LabelReadAction)->handle($filters);
     }
 
     public function searchByUuid(string $uuid): Label
     {
-        return (new LabelSearchByUuidAction())->handle($uuid);
+        return (new LabelSearchByUuidAction)->handle($uuid);
     }
 
     public function update(Label $label, array $data): Label
     {
-        return (new LabelUpdateAction())->handle($label, $data);
+        return (new LabelUpdateAction)->handle($label, $data);
     }
 
     public function delete(Label $label): bool
     {
-        return (new LabelDeleteAction())->handle($label);
+        return (new LabelDeleteAction)->handle($label);
     }
 }

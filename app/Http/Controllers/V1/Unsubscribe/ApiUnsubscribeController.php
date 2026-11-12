@@ -20,7 +20,7 @@ class ApiUnsubscribeController extends Controller
     {
         $subscription = $this->findByToken($token);
 
-        if (!$subscription) {
+        if (! $subscription) {
             return ApiResponse::error('Invalid unsubscribe link.', null, 404);
         }
 
@@ -31,7 +31,7 @@ class ApiUnsubscribeController extends Controller
     {
         $subscription = $this->findByToken($token);
 
-        if (!$subscription) {
+        if (! $subscription) {
             return ApiResponse::error('Invalid unsubscribe link.', null, 404);
         }
 
@@ -44,7 +44,7 @@ class ApiUnsubscribeController extends Controller
     {
         $subscription = $this->findByToken($token);
 
-        if (!$subscription) {
+        if (! $subscription) {
             return ApiResponse::error('Invalid unsubscribe link.', null, 404);
         }
 
@@ -66,7 +66,7 @@ class ApiUnsubscribeController extends Controller
         $email = $subscription->email;
         $subscribable = $subscription->subscribable;
 
-        if (!$email && $subscribable instanceof User) {
+        if (! $email && $subscribable instanceof User) {
             $email = $subscribable->email;
         }
 
@@ -85,7 +85,7 @@ class ApiUnsubscribeController extends Controller
             'post' => 'blog notifications',
             'product' => 'product notifications',
             'announcement' => 'announcements',
-            default => $type . ' notifications',
+            default => $type.' notifications',
         };
     }
 }

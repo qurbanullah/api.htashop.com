@@ -2,15 +2,16 @@
 
 namespace App\Actions\Manuscript;
 
+use App\Enums\DecisionType;
+use App\Enums\ManuscriptStatus;
 use App\Models\Journal;
 use App\Models\Manuscript;
 use App\Models\User;
 use App\Services\Menuscript\ManuscriptNumberService;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Hash;
-use App\Enums\ManuscriptStatus;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class SubmitManuscript
 {
@@ -53,24 +54,24 @@ class SubmitManuscript
                 'author_contribution' => $data['author_contribution'] ?? null,
                 'supplementary_info' => $data['supplementary_info'] ?? null,
                 'version' => 1,
-                'metadata' => $data['metadata'] ?? []
+                'metadata' => $data['metadata'] ?? [],
             ]);
 
             // Attach authors if provided.
             // Support legacy 'author_ids' (array of user IDs) or new 'authors' (array of objects { user_id, is_corresponding, author_order, contribution })
-            if (!empty($data['authors']) && is_array($data['authors'])) {
+            if (! empty($data['authors']) && is_array($data['authors'])) {
                 foreach ($data['authors'] as $index => $a) {
                     // Determine user id: prefer explicit user_id, else try to find by email, else create a lightweight user
                     $userId = null;
-                    if (!empty($a['user_id'])) {
+                    if (! empty($a['user_id'])) {
                         $userId = intval($a['user_id']);
-                    } elseif (!empty($a['email'])) {
+                    } elseif (! empty($a['email'])) {
                         $email = trim(strval($a['email']));
                         $user = User::where('email', $email)->first();
-                        if (!$user) {
+                        if (! $user) {
                             // create a simple user record. Use a random password.
                             $user = User::create([
-                                'name' => trim((($a['first_name'] ?? '') . ' ' . ($a['last_name'] ?? ''))),
+                                'name' => trim((($a['first_name'] ?? '').' '.($a['last_name'] ?? ''))),
                                 'email' => $email,
                                 'password' => Hash::make(Str::random(24)),
                             ]);
@@ -87,8 +88,8 @@ class SubmitManuscript
                     } else {
                         // No user identifier provided. Create a lightweight placeholder user with random email.
                         $user = User::create([
-                            'name' => trim((($a['first_name'] ?? '') . ' ' . ($a['last_name'] ?? ''))),
-                            'email' => 'author+' . Str::random(8) . '@example.invalid',
+                            'name' => trim((($a['first_name'] ?? '').' '.($a['last_name'] ?? ''))),
+                            'email' => 'author+'.Str::random(8).'@example.invalid',
                             'password' => Hash::make(Str::random(24)),
                         ]);
                         $userId = $user->id;
@@ -97,12 +98,12 @@ class SubmitManuscript
                     $manuscript->authors()->create([
                         'user_id' => $userId,
                         'author_order' => isset($a['author_order']) ? intval($a['author_order']) : ($index + 1),
-                        'is_corresponding' => !empty($a['is_corresponding']) ? 1 : 0,
+                        'is_corresponding' => ! empty($a['is_corresponding']) ? 1 : 0,
                         'contribution' => $a['contribution'] ?? null,
                     ]);
 
                     // Save affiliation if provided
-                    if (!empty($a['affiliation'])) {
+                    if (! empty($a['affiliation'])) {
                         $author = $manuscript->authors()->where('user_id', $userId)->first();
                         if ($author) {
                             $author->affiliations()->create([
@@ -112,7 +113,7 @@ class SubmitManuscript
                         }
                     }
                 }
-            } elseif (!empty($data['author_ids'])) {
+            } elseif (! empty($data['author_ids'])) {
                 foreach ($data['author_ids'] as $index => $authorId) {
                     $author = $manuscript->authors()->create([
                         'user_id' => intval($authorId),
@@ -122,7 +123,7 @@ class SubmitManuscript
                     ]);
 
                     // Save affiliation if provided in author_affiliations mapping
-                    if (!empty($data['author_affiliations'][$authorId])) {
+                    if (! empty($data['author_affiliations'][$authorId])) {
                         $author->affiliations()->create([
                             'institution' => $data['author_affiliations'][$authorId],
                             'is_current' => true,
@@ -135,20 +136,20 @@ class SubmitManuscript
             try {
                 Log::debug('Starting media attachment', [
                     'manuscript_id' => $manuscript->id,
-                    'has_manuscript_file' => !empty($data['manuscript_file']),
-                    'has_cover_letter' => !empty($data['cover_letter_file']),
-                    'has_graphical_abstract' => !empty($data['graphical_abstract']),
-                    'has_video_abstract' => !empty($data['video_abstract']),
-                    'supplementary_files_count' => !empty($data['supplementary_files']) ? count($data['supplementary_files']) : 0,
-                    'copyright_permissions_count' => !empty($data['copyright_permissions']) ? count($data['copyright_permissions']) : 0
+                    'has_manuscript_file' => ! empty($data['manuscript_file']),
+                    'has_cover_letter' => ! empty($data['cover_letter_file']),
+                    'has_graphical_abstract' => ! empty($data['graphical_abstract']),
+                    'has_video_abstract' => ! empty($data['video_abstract']),
+                    'supplementary_files_count' => ! empty($data['supplementary_files']) ? count($data['supplementary_files']) : 0,
+                    'copyright_permissions_count' => ! empty($data['copyright_permissions']) ? count($data['copyright_permissions']) : 0,
                 ]);
 
-                if (!empty($data['manuscript_file'])) {
+                if (! empty($data['manuscript_file'])) {
                     // Get file extension
                     $extension = $data['manuscript_file']->getClientOriginalExtension();
 
                     // Generate clean filename using manuscript number
-                    $fileName = $manuscriptNumber . '.' . $extension;
+                    $fileName = $manuscriptNumber.'.'.$extension;
 
                     // $data['manuscript_file'] is expected to be an instance of UploadedFile
                     $manuscript->addMedia($data['manuscript_file'])
@@ -160,7 +161,7 @@ class SubmitManuscript
                 }
 
                 // Attach cover letter
-                if (!empty($data['cover_letter_file'])) {
+                if (! empty($data['cover_letter_file'])) {
                     $manuscript->addMedia($data['cover_letter_file'])
                         ->preservingOriginal()
                         ->toMediaCollection('cover_letter', 'idrivee2');
@@ -168,7 +169,7 @@ class SubmitManuscript
                 }
 
                 // Attach graphical abstract
-                if (!empty($data['graphical_abstract'])) {
+                if (! empty($data['graphical_abstract'])) {
                     $manuscript->addMedia($data['graphical_abstract'])
                         ->preservingOriginal()
                         ->toMediaCollection('graphical_abstract', 'idrivee2');
@@ -176,7 +177,7 @@ class SubmitManuscript
                 }
 
                 // Attach video abstract
-                if (!empty($data['video_abstract'])) {
+                if (! empty($data['video_abstract'])) {
                     $manuscript->addMedia($data['video_abstract'])
                         ->preservingOriginal()
                         ->toMediaCollection('video_abstract', 'idrivee2');
@@ -184,7 +185,7 @@ class SubmitManuscript
                 }
 
                 // Attach supplementary files (array of ['file' => UploadedFile, 'title' => '', 'description' => ''])
-                if (!empty($data['supplementary_files']) && is_array($data['supplementary_files'])) {
+                if (! empty($data['supplementary_files']) && is_array($data['supplementary_files'])) {
                     Log::debug('Processing supplementary files in action', ['count' => count($data['supplementary_files'])]);
                     foreach ($data['supplementary_files'] as $index => $sup) {
                         Log::debug('Supplementary file iteration', [
@@ -192,7 +193,7 @@ class SubmitManuscript
                             'has_file_key' => isset($sup['file']),
                             'file_is_null' => isset($sup['file']) ? ($sup['file'] === null) : 'key_missing',
                             'file_type' => isset($sup['file']) && $sup['file'] ? get_class($sup['file']) : 'null',
-                            'title' => $sup['title'] ?? 'no_title'
+                            'title' => $sup['title'] ?? 'no_title',
                         ]);
 
                         if (isset($sup['file']) && $sup['file'] !== null) {
@@ -211,14 +212,14 @@ class SubmitManuscript
                 }
 
                 // Attach copyright permissions
-                if (!empty($data['copyright_permissions']) && is_array($data['copyright_permissions'])) {
+                if (! empty($data['copyright_permissions']) && is_array($data['copyright_permissions'])) {
                     Log::debug('Processing copyright permissions in action', ['count' => count($data['copyright_permissions'])]);
                     foreach ($data['copyright_permissions'] as $index => $perm) {
                         Log::debug('Copyright permission iteration', [
                             'index' => $index,
                             'has_file_key' => isset($perm['file']),
                             'file_is_null' => isset($perm['file']) ? ($perm['file'] === null) : 'key_missing',
-                            'file_type' => isset($perm['file']) && $perm['file'] ? get_class($perm['file']) : 'null'
+                            'file_type' => isset($perm['file']) && $perm['file'] ? get_class($perm['file']) : 'null',
                         ]);
 
                         if (isset($perm['file']) && $perm['file'] !== null) {
@@ -241,7 +242,7 @@ class SubmitManuscript
                     'error' => $e->getMessage(),
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
-                    'trace' => $e->getTraceAsString()
+                    'trace' => $e->getTraceAsString(),
                 ]);
             }
 
@@ -250,11 +251,11 @@ class SubmitManuscript
             Log::info('Media attachment completed', [
                 'manuscript_id' => $manuscript->id,
                 'total_media_count' => $mediaCount,
-                'collections' => $manuscript->getMedia()->groupBy('collection_name')->map->count()
+                'collections' => $manuscript->getMedia()->groupBy('collection_name')->map->count(),
             ]);
 
             // Attach reviewer suggestions (suggested and excluded)
-            if (!empty($data['reviewer_suggestions']) && is_array($data['reviewer_suggestions'])) {
+            if (! empty($data['reviewer_suggestions']) && is_array($data['reviewer_suggestions'])) {
                 foreach ($data['reviewer_suggestions'] as $suggestion) {
                     $manuscript->reviewerSuggestions()->create([
                         'type' => $suggestion['type'] ?? 'suggested', // 'suggested' or 'excluded'
@@ -268,7 +269,7 @@ class SubmitManuscript
             }
 
             // Attach statements with responses
-            if (!empty($data['statements']) && is_array($data['statements'])) {
+            if (! empty($data['statements']) && is_array($data['statements'])) {
                 foreach ($data['statements'] as $statement) {
                     $manuscript->statements()->attach($statement['statement_id'], [
                         'response' => $statement['response'] ?? null, // 'yes', 'no', 'na'
@@ -279,24 +280,24 @@ class SubmitManuscript
             }
 
             // Attach categories if provided
-            if (!empty($data['category_ids'])) {
+            if (! empty($data['category_ids'])) {
                 $manuscript->categories()->attach($data['category_ids']);
             }
 
             // Create initial editorial decision log
             $manuscript->decisions()->create([
                 'user_id' => $submittingUser->id,
-                'type' => \App\Enums\DecisionType::EDITORIAL,
+                'type' => DecisionType::EDITORIAL,
                 'decision' => 'submitted',
                 'content' => 'Manuscript submitted for review',
-                'completed_at' => now()
+                'completed_at' => now(),
             ]);
 
             Log::info('Manuscript submitted successfully', [
                 'manuscript_id' => $manuscript->id,
                 'journal_id' => $journal->id,
                 'title' => $manuscript->title,
-                'submitted_by' => $submittingUser->id
+                'submitted_by' => $submittingUser->id,
             ]);
 
             return $manuscript;

@@ -17,7 +17,7 @@ enum SubmissionStatus: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::DRAFT => 'Draft',
             self::SUBMITTED => 'Submitted',
             self::UNDER_REVIEW => 'Under Review',
@@ -33,7 +33,7 @@ enum SubmissionStatus: string
 
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::DRAFT => 'gray',
             self::SUBMITTED => 'blue',
             self::UNDER_REVIEW => 'yellow',

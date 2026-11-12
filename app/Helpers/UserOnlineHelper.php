@@ -13,7 +13,6 @@ declare(strict_types=1);
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  * Written by Qurban Ullah <qurbanullah@gmail.com>, 2024
- *
  * @license   CC BY-NC-ND 4.0 Deed https://creativecommons.org/licenses/by-nc-nd/4.0/
  *
  * @version   GIT: <git_id>
@@ -23,6 +22,7 @@ declare(strict_types=1);
 
 namespace App\Helpers;
 
+use Illuminate\Cache\RedisStore;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -30,13 +30,11 @@ use Illuminate\Support\Facades\Log;
 class UserOnlineHelper
 {
     private static array $onlineUsers = [];
+
     private static bool $loaded = false;
 
     /**
      * Check if a user is online
-     *
-     * @param int $userId
-     * @return bool
      */
     public static function isUserOnline(int $userId): bool
     {
@@ -47,8 +45,6 @@ class UserOnlineHelper
 
     /**
      * Get all online user IDs
-     *
-     * @return array
      */
     public static function getOnlineUserIds(): array
     {
@@ -59,8 +55,6 @@ class UserOnlineHelper
 
     /**
      * Get count of online users
-     *
-     * @return int
      */
     public static function getOnlineUsersCount(): int
     {
@@ -70,7 +64,6 @@ class UserOnlineHelper
     /**
      * Check if multiple users are online
      *
-     * @param array $userIds
      * @return array [userId => isOnline]
      */
     public static function areUsersOnline(array $userIds): array
@@ -88,8 +81,6 @@ class UserOnlineHelper
     /**
      * Reset the cached online users data
      * Useful for testing or when you need fresh data
-     *
-     * @return void
      */
     public static function reset(): void
     {
@@ -99,8 +90,6 @@ class UserOnlineHelper
 
     /**
      * Load all online users from cache in a single query
-     *
-     * @return void
      */
     private static function loadOnlineUsers(): void
     {
@@ -111,13 +100,13 @@ class UserOnlineHelper
         self::$onlineUsers = [];
 
         try {
-            if (Cache::getStore() instanceof \Illuminate\Cache\RedisStore) {
+            if (Cache::getStore() instanceof RedisStore) {
                 // For Redis cache driver
                 $onlineKeys = Cache::getRedis()->keys('*user-is-online-*');
                 foreach ($onlineKeys as $key) {
                     // Extract user ID from key like "real3dtech_cache_user-is-online-101"
                     if (preg_match('/user-is-online-(\d+)/', $key, $matches)) {
-                        self::$onlineUsers[(int)$matches[1]] = true;
+                        self::$onlineUsers[(int) $matches[1]] = true;
                     }
                 }
             } else {
@@ -129,13 +118,13 @@ class UserOnlineHelper
                 foreach ($cacheEntries as $key) {
                     // Extract user ID from key like "real3dtech_cache_user-is-online-101"
                     if (preg_match('/user-is-online-(\d+)/', $key, $matches)) {
-                        self::$onlineUsers[(int)$matches[1]] = true;
+                        self::$onlineUsers[(int) $matches[1]] = true;
                     }
                 }
             }
         } catch (\Exception $e) {
             // Log the error but don't throw - fallback to empty array
-            Log::warning('Failed to load online users: ' . $e->getMessage());
+            Log::warning('Failed to load online users: '.$e->getMessage());
             self::$onlineUsers = [];
         }
 
@@ -145,14 +134,13 @@ class UserOnlineHelper
     /**
      * Get online users count efficiently using database query
      * This is useful for statistics where you only need the count
-     *
-     * @return int
      */
     public static function getOnlineUsersCountDirect(): int
     {
         try {
-            if (Cache::getStore() instanceof \Illuminate\Cache\RedisStore) {
+            if (Cache::getStore() instanceof RedisStore) {
                 $onlineKeys = Cache::getRedis()->keys('*user-is-online-*');
+
                 return count($onlineKeys);
             } else {
                 return DB::table('cache')
@@ -160,7 +148,8 @@ class UserOnlineHelper
                     ->count();
             }
         } catch (\Exception $e) {
-            Log::warning('Failed to get online users count: ' . $e->getMessage());
+            Log::warning('Failed to get online users count: '.$e->getMessage());
+
             return 0;
         }
     }

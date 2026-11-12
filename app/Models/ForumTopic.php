@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-
 use App\Enums\ForumPostStatusEnum;
-use App\Traits\GeneratesUniqueSlug;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +12,7 @@ use Illuminate\Support\Str;
 
 class ForumTopic extends Model
 {
-        use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'uuid',
@@ -52,7 +50,7 @@ class ForumTopic extends Model
                 $topic->slug = Str::slug($topic->name);
                 $count = static::withTrashed()->where('slug', $topic->slug)->count();
                 if ($count > 0) {
-                    $topic->slug .= '-' . ($count + 1);
+                    $topic->slug .= '-'.($count + 1);
                 }
             }
         });

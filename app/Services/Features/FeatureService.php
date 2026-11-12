@@ -13,7 +13,6 @@ declare(strict_types=1);
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  * Written by Qurban Ullah <qurbanullah@gmail.com>, 2024
- *
  * @license   CC BY-NC-ND 4.0 Deed https://creativecommons.org/licenses/by-nc-nd/4.0/
  *
  * @version   GIT: <git_id>
@@ -23,20 +22,20 @@ declare(strict_types=1);
 
 namespace App\Services\Features;
 
-use App\Helpers\CacheHelper;
 use App\Actions\Features\FeatureCreateAction;
 use App\Actions\Features\FeatureDeleteAction;
 use App\Actions\Features\FeatureSearchByIdAction;
 use App\Actions\Features\FeatureSortAction;
 use App\Actions\Features\FeatureUpdateAction;
+use App\Helpers\CacheHelper;
 use App\Models\Feature;
+
 /**
  * CRUD operation class for Document Model.
  *
  * @category App\Services\Features
  *
  * @author   Qurban Ullah <qurbanullah@gmail.com>
- *
  * @license  CC BY-NC-ND 4.0 Deed https://creativecommons.org/licenses/by-nc-nd/4.0/
  *
  * @link     https://github.com/qurbanullah
@@ -90,8 +89,8 @@ class FeatureService
      */
     public function searchById(int $id): Feature
     {
-        return CacheHelper::remember([], 
-            'cached_feature_' . $id, 31536000,
+        return CacheHelper::remember([],
+            'cached_feature_'.$id, 31536000,
             fn () => (new FeatureSearchByIdAction)->handle($id)
         );
     }
@@ -101,7 +100,7 @@ class FeatureService
      *
      * @param  int  $modelId  model id to be sorted
      * @param  int  $newPosition  new position of the model
-     * @return \App\Models\Feature
+     * @return Feature
      */
     public function sort($modelId, $newPosition)
     {
@@ -114,7 +113,7 @@ class FeatureService
     /**
      * Clear caching after update.
      *
-     * @param  \App\Models\Feature  $feature  data to update
+     * @param  Feature  $feature  data to update
      */
     private function _clearCaching(Feature $feature): void
     {

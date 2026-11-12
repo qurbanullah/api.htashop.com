@@ -15,7 +15,7 @@ class FeedbackStatusFilter
 
     public function __invoke(Builder $query): Builder
     {
-        if (!$this->status) {
+        if (! $this->status) {
             return $query;
         }
 

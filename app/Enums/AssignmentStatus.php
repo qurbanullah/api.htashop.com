@@ -14,7 +14,7 @@ enum AssignmentStatus: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING => 'Pending',
             self::ACCEPTED => 'Accepted',
             self::DECLINED => 'Declined',
@@ -27,7 +27,7 @@ enum AssignmentStatus: string
 
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING => 'yellow',
             self::ACCEPTED => 'blue',
             self::DECLINED => 'red',

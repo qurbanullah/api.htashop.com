@@ -127,5 +127,4 @@ return [
     // Send a welcome email when an address subscribes to the newsletter.
     'newsletter_welcome_enabled' => (bool) env('NEWSLETTER_WELCOME_ENABLED', true),
 
-
 ];

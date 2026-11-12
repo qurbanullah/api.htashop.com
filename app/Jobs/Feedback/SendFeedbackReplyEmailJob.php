@@ -10,8 +10,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SendFeedbackReplyEmailJob implements ShouldQueue
 {
@@ -48,7 +48,7 @@ class SendFeedbackReplyEmailJob implements ShouldQueue
     public function handle(): void
     {
         try {
-            $emailLogService = new EmailLogService();
+            $emailLogService = new EmailLogService;
 
             // Prepare the mailable
             $mailable = new FeedbackReplyMail(

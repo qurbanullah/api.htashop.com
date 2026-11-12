@@ -14,8 +14,6 @@ class AuditService
     /**
      * Record an audit event.
      *
-     * @param  User|null  $actor
-     * @param  string  $event
      * @param  mixed  $auditable  Model, array with ['type' => 'Class', 'id' => 123], or class name
      * @param  array  $meta  Legacy meta keys plus reason/changed_columns/tenant_id
      */
@@ -27,18 +25,17 @@ class AuditService
     /**
      * Get comprehensive admin statistics and analytics.
      *
-     * @param array $filters Optional filters (start_date, end_date)
-     * @return array
+     * @param  array  $filters  Optional filters (start_date, end_date)
      */
     public function getAdminStats(array $filters = []): array
     {
         $query = Audit::query();
 
         // Apply date range filter if provided
-        if (!empty($filters['start_date'])) {
+        if (! empty($filters['start_date'])) {
             $query->where('occurred_at', '>=', $filters['start_date']);
         }
-        if (!empty($filters['end_date'])) {
+        if (! empty($filters['end_date'])) {
             $query->where('occurred_at', '<=', $filters['end_date']);
         }
 
@@ -66,6 +63,7 @@ class AuditService
             ->mapWithKeys(function ($item) {
                 // Extract short class name
                 $shortName = $item->auditable_type ? class_basename($item->auditable_type) : 'Unknown';
+
                 return [$shortName => $item->count];
             })
             ->toArray();

@@ -8,8 +8,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class DeleteVersionFilesJob implements ShouldQueue
 {
@@ -44,8 +44,7 @@ class DeleteVersionFilesJob implements ShouldQueue
         public readonly ?string $filePath,
         public readonly ?string $imagePath,
         public readonly ?array $metadata
-    ) {
-    }
+    ) {}
 
     /**
      * Execute the job.
@@ -54,9 +53,9 @@ class DeleteVersionFilesJob implements ShouldQueue
     {
         Log::info('DeleteVersionFilesJob: Starting background file deletion', [
             'version_id' => $this->versionId,
-            'has_file' => !empty($this->filePath),
-            'has_image' => !empty($this->imagePath),
-            'has_metadata' => !empty($this->metadata),
+            'has_file' => ! empty($this->filePath),
+            'has_image' => ! empty($this->imagePath),
+            'has_metadata' => ! empty($this->metadata),
         ]);
 
         // Delete software file
@@ -90,7 +89,7 @@ class DeleteVersionFilesJob implements ShouldQueue
         }
 
         // Delete metadata files (terms and privacy)
-        if (!empty($this->metadata)) {
+        if (! empty($this->metadata)) {
             // Delete terms file
             if (isset($this->metadata['terms']['path'])) {
                 try {
@@ -130,7 +129,7 @@ class DeleteVersionFilesJob implements ShouldQueue
      */
     private function clearFileCache(string $path): void
     {
-        $cacheKey = 's3_file_exists_' . md5($path);
+        $cacheKey = 's3_file_exists_'.md5($path);
         Cache::forget($cacheKey);
     }
 

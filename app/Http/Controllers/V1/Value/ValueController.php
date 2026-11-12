@@ -14,19 +14,19 @@ use Illuminate\Http\Request;
 
 class ValueController extends Controller
 {
-    public function __construct(protected ValueService $valueService)
-    {
-    }
+    public function __construct(protected ValueService $valueService) {}
 
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Value::class);
+
         return ApiResponse::success(ValueResource::collection($this->valueService->read($request->all())), 'Values retrieved successfully');
     }
 
     public function store(ValueStoreRequest $request): JsonResponse
     {
         $this->authorize('create', Value::class);
+
         return ApiResponse::success(new ValueResource($this->valueService->create($request->validated())), 'Value created successfully', 201);
     }
 
@@ -34,6 +34,7 @@ class ValueController extends Controller
     {
         $value = $this->valueService->searchById($id);
         $this->authorize('view', $value);
+
         return ApiResponse::success(new ValueResource($value), 'Value retrieved successfully');
     }
 
@@ -41,6 +42,7 @@ class ValueController extends Controller
     {
         $value = $this->valueService->searchById($id);
         $this->authorize('update', $value);
+
         return ApiResponse::success(new ValueResource($this->valueService->update($value, $request->validated())), 'Value updated successfully');
     }
 
@@ -49,6 +51,7 @@ class ValueController extends Controller
         $value = $this->valueService->searchById($id);
         $this->authorize('delete', $value);
         $this->valueService->delete($value);
+
         return ApiResponse::success(null, 'Value deleted successfully');
     }
 }

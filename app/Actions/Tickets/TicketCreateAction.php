@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace App\Actions\Tickets;
 
 use App\Models\Ticket;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -42,7 +43,8 @@ class TicketCreateAction
      * Validate and create record in database.
      *
      * @param  array  $data  model values
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @throws AuthorizationException
      */
     public function handle(array $data): Ticket
     {

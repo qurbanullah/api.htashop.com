@@ -21,7 +21,7 @@ class SearchRequest extends FormRequest
             'type' => 'required|string|in:product,service',
             'description' => 'nullable|string',
             'sort_order' => 'nullable|integer',
-        
+
         ];
     }
 }

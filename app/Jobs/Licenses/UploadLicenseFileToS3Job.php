@@ -69,11 +69,12 @@ class UploadLicenseFileToS3Job implements ShouldQueue
             if ($license) {
                 $license->refresh();
             }
-            if (!$license) {
+            if (! $license) {
                 Log::warning('License not found for S3 upload', [
                     'license_id' => $this->licenseId,
                     'file_type' => $this->fileType,
                 ]);
+
                 return;
             }
 
@@ -97,20 +98,22 @@ class UploadLicenseFileToS3Job implements ShouldQueue
             }
 
             // Tertiary fallback: fuzzy-match by basename in the expected directory
-            if (!$fullPath) {
+            if (! $fullPath) {
                 try {
                     $dir = dirname($this->localPath);
                     $base = pathinfo($this->localPath, PATHINFO_BASENAME);
                     $storageRoot = $disk->path('');
-                    $searchDir = rtrim($storageRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . ltrim($dir, DIRECTORY_SEPARATOR);
+                    $searchDir = rtrim($storageRoot, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.ltrim($dir, DIRECTORY_SEPARATOR);
 
                     if (is_dir($searchDir)) {
                         $files = scandir($searchDir);
                         foreach ($files as $f) {
-                            if ($f === '.' || $f === '..') continue;
+                            if ($f === '.' || $f === '..') {
+                                continue;
+                            }
                             // match by exact basename or file name starts with base filename (without timestamp)
                             if ($f === $base || strpos($f, pathinfo($base, PATHINFO_FILENAME)) === 0) {
-                                $fullPath = $searchDir . DIRECTORY_SEPARATOR . $f;
+                                $fullPath = $searchDir.DIRECTORY_SEPARATOR.$f;
                                 break;
                             }
                         }
@@ -124,7 +127,7 @@ class UploadLicenseFileToS3Job implements ShouldQueue
                 }
             }
 
-            if (!$fullPath || !file_exists($fullPath)) {
+            if (! $fullPath || ! file_exists($fullPath)) {
                 // If file missing, attempt re-dispatch with a delay before giving up
                 $maxRescheduleAttempts = 3;
                 $attempts = method_exists($this, 'attempts') ? $this->attempts() : 0;

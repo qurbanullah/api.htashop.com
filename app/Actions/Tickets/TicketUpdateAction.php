@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace App\Actions\Tickets;
 
 use App\Models\Ticket;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -43,7 +44,8 @@ class TicketUpdateAction
      *
      * @param  array  $input  model values
      * @param  int  $id  model id to be updated
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @throws AuthorizationException
      */
     public function handle(array $data, $id): Ticket
     {

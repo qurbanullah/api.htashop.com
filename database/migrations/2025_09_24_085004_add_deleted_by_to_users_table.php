@@ -51,7 +51,7 @@ return new class extends Migration
                 'restored_by',
                 'restored_by_type',
                 'restored_by_name',
-                'restored_by_email'
+                'restored_by_email',
             ]);
         });
     }

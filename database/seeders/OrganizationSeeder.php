@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Organization;
 use App\Models\Tenant;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -16,6 +15,7 @@ class OrganizationSeeder extends Seeder
 
         if ($tenants->isEmpty()) {
             $this->command->warn('⚠️  No tenants found. Run TenantSeeder before OrganizationSeeder.');
+
             return;
         }
 
@@ -44,7 +44,7 @@ class OrganizationSeeder extends Seeder
                     'code' => strtoupper(fake()->bothify('ORG-???-###')),
                     'email' => fake()->companyEmail(),
                     'phone' => fake()->phoneNumber(),
-                    'website' => 'https://' . fake()->domainName(),
+                    'website' => 'https://'.fake()->domainName(),
                     'is_active' => true,
                     'metadata' => [
                         'industry' => fake()->randomElement($industryLabels),
@@ -73,12 +73,12 @@ class OrganizationSeeder extends Seeder
                 Organization::create([
                     'tenant_id' => $tenantId,
                     'name' => $name,
-                    'slug' => Str::slug($name . '-' . ($i + 1)),
+                    'slug' => Str::slug($name.'-'.($i + 1)),
                     'type' => fake()->randomElement($organizationTypes),
                     'code' => strtoupper(fake()->bothify('ORG-???-###')),
                     'email' => fake()->companyEmail(),
                     'phone' => fake()->phoneNumber(),
-                    'website' => 'https://' . fake()->domainName(),
+                    'website' => 'https://'.fake()->domainName(),
                     'is_active' => true,
                     'metadata' => [
                         'industry' => fake()->randomElement($industryLabels),
@@ -87,6 +87,6 @@ class OrganizationSeeder extends Seeder
             }
         }
 
-        $this->command->info('✅ Organization seeding complete. Total organizations: ' . Organization::count());
+        $this->command->info('✅ Organization seeding complete. Total organizations: '.Organization::count());
     }
 }

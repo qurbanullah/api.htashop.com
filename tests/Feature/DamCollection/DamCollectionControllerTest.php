@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\DamCollection;
 
+use App\Http\Controllers\V1\Dam\DamCollectionController;
+
 test('the DamCollection controller class exists', function () {
-    expect(class_exists(\App\Http\Controllers\V1\Dam\DamCollectionController::class))->toBeTrue();
+    expect(class_exists(DamCollectionController::class))->toBeTrue();
 });

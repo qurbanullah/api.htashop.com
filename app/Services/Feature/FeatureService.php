@@ -2,16 +2,17 @@
 
 namespace App\Services\Feature;
 
-use App\Helpers\CacheHelper;
 use App\Actions\Features\AttachFeaturesAction;
 use App\Actions\Features\CreateFeatureAction;
 use App\Actions\Features\DetachFeaturesAction;
 use App\Actions\Features\GetFeaturesAction;
 use App\Actions\Features\GetPopularFeaturesAction;
 use App\Actions\Features\SyncFeaturesAction;
+use App\Helpers\CacheHelper;
 use App\Models\Feature;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+
 class FeatureService
 {
     public function __construct(
@@ -31,6 +32,7 @@ class FeatureService
         $result = $this->attachFeaturesAction->execute($featurable, $features, $type);
         $this->clearFeaturableCache($featurable);
         CacheHelper::clearTags(['popular_features', "popular_features:{$type}"]);
+
         return $result;
     }
 
@@ -51,6 +53,7 @@ class FeatureService
         $result = $this->syncFeaturesAction->execute($featurable, $features, $type);
         $this->clearFeaturableCache($featurable);
         CacheHelper::clearTags(['popular_features', "popular_features:{$type}"]);
+
         return $result;
     }
 
@@ -59,7 +62,7 @@ class FeatureService
      */
     public function getFeatures(Model $featurable): Collection
     {
-        $cacheKey = $this->getCachePrefix($featurable) . ':features';
+        $cacheKey = $this->getCachePrefix($featurable).':features';
         $prefix = $this->getCachePrefix($featurable);
 
         return CacheHelper::remember([$prefix], $cacheKey, now()->addMinutes(60), function () use ($featurable) {
@@ -74,7 +77,7 @@ class FeatureService
     {
         $cacheKey = "popular_features:{$type}:{$limit}";
 
-        return CacheHelper::remember(['popular_features', "popular_features:{$type}"], 
+        return CacheHelper::remember(['popular_features', "popular_features:{$type}"],
             $cacheKey,
             now()->addHours(6),
             function () use ($type, $limit) {
@@ -103,7 +106,7 @@ class FeatureService
     {
         $cacheKey = "feature:slug:{$type}:{$slug}";
 
-        return CacheHelper::remember(['features'], 
+        return CacheHelper::remember(['features'],
             $cacheKey,
             now()->addHours(12),
             function () use ($slug, $type) {
@@ -122,7 +125,7 @@ class FeatureService
         return Feature::where('type', $type)
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('description', 'like', "%{$query}%");
+                    ->orWhere('description', 'like', "%{$query}%");
             })
             ->limit($limit)
             ->get();
@@ -156,6 +159,6 @@ class FeatureService
      */
     protected function getCachePrefix(Model $featurable): string
     {
-        return 'features:' . class_basename($featurable) . ':' . $featurable->id;
+        return 'features:'.class_basename($featurable).':'.$featurable->id;
     }
 }

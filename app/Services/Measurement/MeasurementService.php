@@ -14,26 +14,26 @@ class MeasurementService
 {
     public function create(array $data): Measurement
     {
-        return (new MeasurementCreateAction())->handle($data);
+        return (new MeasurementCreateAction)->handle($data);
     }
 
     public function read(array $filters = []): LengthAwarePaginator
     {
-        return (new MeasurementReadAction())->handle($filters);
+        return (new MeasurementReadAction)->handle($filters);
     }
 
     public function searchByUuid(string $uuid): Measurement
     {
-        return (new MeasurementSearchByUuidAction())->handle($uuid);
+        return (new MeasurementSearchByUuidAction)->handle($uuid);
     }
 
     public function update(Measurement $measurement, array $data): Measurement
     {
-        return (new MeasurementUpdateAction())->handle($measurement, $data);
+        return (new MeasurementUpdateAction)->handle($measurement, $data);
     }
 
     public function delete(Measurement $measurement): bool
     {
-        return (new MeasurementDeleteAction())->handle($measurement);
+        return (new MeasurementDeleteAction)->handle($measurement);
     }
 }

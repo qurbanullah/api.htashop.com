@@ -13,7 +13,6 @@ declare(strict_types=1);
  * Unauthorized copying of this file, via any medium is strictly prohibited
  * Proprietary and confidential
  * Written by Qurban Ullah <qurbanullah@gmail.com>, 2024
- *
  * @license   CC BY-NC-ND 4.0 Deed https://creativecommons.org/licenses/by-nc-nd/4.0/
  *
  * @version   GIT: <git_id>
@@ -23,22 +22,22 @@ declare(strict_types=1);
 
 namespace App\Services\Packages;
 
-use App\Helpers\CacheHelper;
 use App\Actions\Packages\PackageCreateAction;
 use App\Actions\Packages\PackageDeleteAction;
 use App\Actions\Packages\PackageReadAction;
 use App\Actions\Packages\PackageSearchByIdAction;
 use App\Actions\Packages\PackageSortAction;
 use App\Actions\Packages\PackageUpdateAction;
+use App\Helpers\CacheHelper;
 use App\Models\Package;
 use Illuminate\Database\Eloquent\Collection;
+
 /**
  * CRUD operation class for Document Model.
  *
  * @category App\Services\Packages
  *
  * @author   Qurban Ullah <qurbanullah@gmail.com>
- *
  * @license  CC BY-NC-ND 4.0 Deed https://creativecommons.org/licenses/by-nc-nd/4.0/
  *
  * @link     https://github.com/qurbanullah
@@ -65,10 +64,10 @@ class PackageService
      */
     public function read(array $data = []): Collection
     {
-        $cacheKey = 'cached_packages_' . md5(serialize($data));
+        $cacheKey = 'cached_packages_'.md5(serialize($data));
 
-        if (! (!is_null(CacheHelper::get([], $cacheKey)))) {
-            return CacheHelper::remember([], 
+        if (! (! is_null(CacheHelper::get([], $cacheKey)))) {
+            return CacheHelper::remember([],
                 $cacheKey, 31536000, function () use ($data) {
                     return (new PackageReadAction)->handle($data);
                 }
@@ -112,10 +111,10 @@ class PackageService
      */
     public function searchById(int $id): Package
     {
-        $cacheKey = 'cached_package_' . $id;
+        $cacheKey = 'cached_package_'.$id;
 
-        if (! (!is_null(CacheHelper::get([], $cacheKey)))) {
-            return CacheHelper::remember([], 
+        if (! (! is_null(CacheHelper::get([], $cacheKey)))) {
+            return CacheHelper::remember([],
                 $cacheKey, 31536000,
                 function () use ($id) {
                     return (new PackageSearchByIdAction)->handle($id);
@@ -131,7 +130,7 @@ class PackageService
      *
      * @param  int  $modelId  model id to be sorted
      * @param  int  $newPosition  new position of the model
-     * @return \App\Models\Package
+     * @return Package
      */
     public function sort($modelId, $newPosition)
     {
@@ -144,14 +143,14 @@ class PackageService
     /**
      * Clear caching after update.
      *
-     * @param  \App\Models\Package  $package  data to update
+     * @param  Package  $package  data to update
      */
     private function _clearCaching(Package $package): void
     {
         // Clear package-specific caches
-        CacheHelper::forget([], 'cached_package_' . $package->id);
-        CacheHelper::forget([], 'cached_package' . $package->slug);
-        CacheHelper::forget([], 'form_key_' . $package->slug);
+        CacheHelper::forget([], 'cached_package_'.$package->id);
+        CacheHelper::forget([], 'cached_package'.$package->slug);
+        CacheHelper::forget([], 'form_key_'.$package->slug);
 
         // Clear all cached read queries
         $this->_clearReadCaches();
@@ -174,7 +173,7 @@ class PackageService
         ];
 
         foreach ($commonFilters as $filters) {
-            $cacheKey = 'cached_packages_' . md5(serialize(['filters' => $filters]));
+            $cacheKey = 'cached_packages_'.md5(serialize(['filters' => $filters]));
             CacheHelper::forget([], $cacheKey);
         }
     }

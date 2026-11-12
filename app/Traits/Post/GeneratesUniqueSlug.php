@@ -23,7 +23,7 @@ trait GeneratesUniqueSlug
         }
 
         // If base slug is already unique, return it
-        if (!$query->exists()) {
+        if (! $query->exists()) {
             return $slug;
         }
 
@@ -31,20 +31,20 @@ trait GeneratesUniqueSlug
         $maxAttempts = 10;
         for ($i = 0; $i < $maxAttempts; $i++) {
             $randomSuffix = Str::lower(Str::random(6));
-            $slug = $baseSlug . '-' . $randomSuffix;
+            $slug = $baseSlug.'-'.$randomSuffix;
 
             $checkQuery = Post::where('slug', $slug);
             if ($excludeId !== null) {
                 $checkQuery->where('id', '!=', $excludeId);
             }
 
-            if (!$checkQuery->exists()) {
+            if (! $checkQuery->exists()) {
                 return $slug;
             }
         }
 
         // Fallback: use timestamp + random if all attempts fail
-        return $baseSlug . '-' . time() . '-' . Str::lower(Str::random(4));
+        return $baseSlug.'-'.time().'-'.Str::lower(Str::random(4));
     }
 
     /**

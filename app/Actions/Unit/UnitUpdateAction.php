@@ -33,7 +33,7 @@ class UnitUpdateAction
         $suffix = 1;
 
         while (Unit::query()->where('measurement_id', $measurementId)->where('code', $candidate)->where('id', '!=', $unit->id)->exists()) {
-            $candidate = $base . '_' . $suffix;
+            $candidate = $base.'_'.$suffix;
             $suffix++;
         }
 

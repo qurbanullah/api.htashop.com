@@ -11,8 +11,7 @@ class SellerDashboardController extends Controller
 {
     public function __construct(
         protected SellerDashboardService $service,
-    ) {
-    }
+    ) {}
 
     public function index(): JsonResponse
     {

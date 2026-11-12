@@ -26,8 +26,8 @@ class StatementSeeder extends Seeder
                     'detail_required_if' => null,
                     'detail_label' => 'Declaration of Conflict of Interest',
                     'detail_placeholder' => 'Please declare your conflict of interest status. If no conflicts exist, state: "The authors declare no conflict of interest." If conflicts exist, describe them in detail...',
-                    'always_show_details' => true
-                ]
+                    'always_show_details' => true,
+                ],
             ],
             [
                 'key' => 'genai_usage',
@@ -42,8 +42,8 @@ class StatementSeeder extends Seeder
                     'detail_required_if' => null,
                     'detail_label' => 'Generative AI Usage Details',
                     'detail_placeholder' => 'If AI was not used, state: "No generative AI tools were used in the preparation of this manuscript." If AI was used, please specify which tools and describe their role in manuscript preparation...',
-                    'always_show_details' => true
-                ]
+                    'always_show_details' => true,
+                ],
             ],
             [
                 'key' => 'prior_publication',
@@ -58,8 +58,8 @@ class StatementSeeder extends Seeder
                     'detail_required_if' => null,
                     'detail_label' => 'Prior Publication Details',
                     'detail_placeholder' => 'If not previously published, state: "This manuscript is original and has not been published or submitted elsewhere." If previously published or under consideration, provide complete details including citations, DOIs, and URLs...',
-                    'always_show_details' => true
-                ]
+                    'always_show_details' => true,
+                ],
             ],
             [
                 'key' => 'funding_information',
@@ -74,8 +74,8 @@ class StatementSeeder extends Seeder
                     'detail_required_if' => null,
                     'detail_label' => 'Funding Sources and Details',
                     'detail_placeholder' => 'List all funding sources, funding agencies, grant numbers, and any acknowledgments of financial support. If no external funding was received, state: "This research received no external funding."...',
-                    'always_show_details' => true
-                ]
+                    'always_show_details' => true,
+                ],
             ],
             [
                 'key' => 'alternative_journals',
@@ -87,8 +87,8 @@ class StatementSeeder extends Seeder
                 'order' => 5,
                 'help_text' => 'Select "Yes" if you would like to receive alternative journal suggestions if your manuscript is not accepted.',
                 'metadata' => [
-                    'requires_details_if_yes' => false
-                ]
+                    'requires_details_if_yes' => false,
+                ],
             ],
             [
                 'key' => 'figure_permissions',
@@ -100,8 +100,8 @@ class StatementSeeder extends Seeder
                 'order' => 6,
                 'help_text' => 'Confirm that you have obtained permission from the author/publisher for all figures and tables used in this manuscript.',
                 'metadata' => [
-                    'requires_details_if_yes' => false
-                ]
+                    'requires_details_if_yes' => false,
+                ],
             ],
             [
                 'key' => 'data_availability',
@@ -119,15 +119,15 @@ class StatementSeeder extends Seeder
                     'third_party' => 'Data are available from third-party sources (please provide details)',
                     'restricted' => 'Data cannot be shared due to privacy/ethical/commercial restrictions (please explain)',
                     'not_applicable' => 'No new data were created or analyzed in this study',
-                    'custom' => 'Custom statement (please provide details)'
+                    'custom' => 'Custom statement (please provide details)',
                 ],
                 'metadata' => [
                     'detail_required_if' => null,
                     'detail_label' => 'Data Availability Details',
                     'detail_placeholder' => 'Provide repository links, accession numbers, access restrictions, or explanations as needed for your selected statement...',
-                    'always_show_details' => true
-                ]
-            ]
+                    'always_show_details' => true,
+                ],
+            ],
         ];
 
         foreach ($statements as $statement) {
@@ -137,6 +137,6 @@ class StatementSeeder extends Seeder
             );
         }
 
-        $this->command->info('Statement seeder completed successfully. Created/Updated ' . count($statements) . ' statements.');
+        $this->command->info('Statement seeder completed successfully. Created/Updated '.count($statements).' statements.');
     }
 }

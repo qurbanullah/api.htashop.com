@@ -2,7 +2,10 @@
 
 namespace Tests\Unit\Assignment;
 
+use App\Services\Assignment\AssignmentService;
+use App\Services\Features\FeatureModuleAssignmentService;
+
 test('the Assignment service classes exist', function () {
-    expect(class_exists(\App\Services\Assignment\AssignmentService::class))->toBeTrue();
-    expect(class_exists(\App\Services\Features\FeatureModuleAssignmentService::class))->toBeTrue();
+    expect(class_exists(AssignmentService::class))->toBeTrue();
+    expect(class_exists(FeatureModuleAssignmentService::class))->toBeTrue();
 });

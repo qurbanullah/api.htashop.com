@@ -3,13 +3,13 @@
 namespace Database\Factories;
 
 use App\Models\Catalog;
-use App\Models\Tenant;
 use App\Models\Organization;
+use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Catalog>
+ * @extends Factory<Catalog>
  */
 class CatalogFactory extends Factory
 {
@@ -30,7 +30,7 @@ class CatalogFactory extends Factory
 
         $organizationId = fn (array $attributes) => Organization::create([
             'tenant_id' => $attributes['tenant_id'],
-            'name' => fake()->company() . ' Org',
+            'name' => fake()->company().' Org',
             'slug' => fake()->slug(),
             'type' => 'vendor',
             'is_active' => true,
@@ -40,7 +40,7 @@ class CatalogFactory extends Factory
             'uuid' => (string) Str::uuid(),
             'tenant_id' => $tenantId,
             'organization_id' => $organizationId,
-            'name' => fake()->word() . ' Catalog',
+            'name' => fake()->word().' Catalog',
             'slug' => fake()->slug(),
             'description' => fake()->sentence(),
             'is_active' => true,

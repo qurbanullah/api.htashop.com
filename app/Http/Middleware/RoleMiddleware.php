@@ -11,26 +11,26 @@ class RoleMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (!$request->user()) {
+        if (! $request->user()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthenticated'
+                'message' => 'Unauthenticated',
             ], 401);
         }
 
         $userRoles = $request->user()->getRoleNames()->toArray();
 
         // Check if user has any of the required roles
-        if (!$request->user()->hasAnyRole($roles)) {
+        if (! $request->user()->hasAnyRole($roles)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Insufficient role permissions',
                 'required_roles' => $roles,
-                'user_roles' => $userRoles
+                'user_roles' => $userRoles,
             ], 403);
         }
 

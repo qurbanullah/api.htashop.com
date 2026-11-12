@@ -18,7 +18,7 @@ class IndexRequest extends FormRequest
             'per_page' => 'nullable|integer|min:1|max:200',
             'limit' => 'nullable|integer|min:1|max:1000',
             'latest' => 'nullable|boolean',
-        
+
         ];
     }
 }

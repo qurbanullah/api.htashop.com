@@ -47,7 +47,7 @@ class ContactMessageAdminController extends Controller
         try {
             $message = $this->contactMessageService->findVisible($id);
 
-            if (!$message) {
+            if (! $message) {
                 return ApiResponse::error('Contact message not found', null, 404);
             }
 
@@ -91,7 +91,7 @@ class ContactMessageAdminController extends Controller
         try {
             $message = $this->contactMessageService->findVisible($id);
 
-            if (!$message) {
+            if (! $message) {
                 return ApiResponse::error('Contact message not found', null, 404);
             }
 
@@ -117,12 +117,12 @@ class ContactMessageAdminController extends Controller
         try {
             $message = $this->contactMessageService->findVisible($id);
 
-            if (!$message) {
+            if (! $message) {
                 return ApiResponse::error('Contact message not found', null, 404);
             }
 
             $replyMessage = $request->input('reply_message');
-            $replySubject = $request->input('reply_subject', 'Re: ' . $message->subject);
+            $replySubject = $request->input('reply_subject', 'Re: '.$message->subject);
             $repliedBy = $request->user()->id;
 
             $this->contactMessageService->markAsReplied($message->id, $replyMessage, $repliedBy);
@@ -163,7 +163,7 @@ class ContactMessageAdminController extends Controller
         try {
             $message = $this->contactMessageService->findVisible($id);
 
-            if (!$message) {
+            if (! $message) {
                 return ApiResponse::error('Contact message not found', null, 404);
             }
 

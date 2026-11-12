@@ -8,6 +8,7 @@ use App\Actions\Eula\DeleteEulaAction;
 use App\Actions\Eula\GetActiveEulaAction;
 use App\Actions\Eula\UpdateEulaAction;
 use App\Helpers\CacheHelper;
+use App\Models\Consent;
 use App\Models\Eula;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -49,10 +50,10 @@ class EulaService
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('version', 'like', "%{$search}%")
-                  ->orWhereHas('software', function ($sq) use ($search) {
-                      $sq->where('name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('version', 'like', "%{$search}%")
+                    ->orWhereHas('software', function ($sq) use ($search) {
+                        $sq->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -183,7 +184,7 @@ class EulaService
             'active' => Eula::active()->count(),
             'draft' => Eula::where('status', 'draft')->count(),
             'inactive' => Eula::where('status', 'inactive')->count(),
-            'total_consents' => \App\Models\Consent::count(),
+            'total_consents' => Consent::count(),
         ];
     }
 

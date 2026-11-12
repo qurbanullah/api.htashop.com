@@ -13,15 +13,15 @@ return new class extends Migration
         // Historical filename retained so deployed environments keep a stable migration history.
         // The actual responsibility is to upgrade the shared labels table for tenant-scoped taxonomy.
         Schema::table('labels', function (Blueprint $table) {
-            if (!Schema::hasColumn('labels', 'uuid')) {
+            if (! Schema::hasColumn('labels', 'uuid')) {
                 $table->uuid('uuid')->nullable()->after('id');
             }
 
-            if (!Schema::hasColumn('labels', 'tenant_id')) {
+            if (! Schema::hasColumn('labels', 'tenant_id')) {
                 $table->foreignId('tenant_id')->nullable()->after('uuid')->constrained('tenants')->cascadeOnDelete();
             }
 
-            if (!Schema::hasColumn('labels', 'metadata')) {
+            if (! Schema::hasColumn('labels', 'metadata')) {
                 $table->json('metadata')->nullable()->after('sorting');
             }
         });

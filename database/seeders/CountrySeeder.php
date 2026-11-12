@@ -68,6 +68,6 @@ class CountrySeeder extends Seeder
             );
         }
 
-        $this->command->info('Seeded ' . count($countries) . ' countries.');
+        $this->command->info('Seeded '.count($countries).' countries.');
     }
 }

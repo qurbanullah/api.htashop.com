@@ -15,7 +15,7 @@ class SetLocale
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -40,12 +40,11 @@ class SetLocale
      * 4. Default language from database
      * 5. Fallback to 'en'
      *
-     * @param Request $request
      * @return string Language code
      */
     private function getPreferredLocale(Request $request): string
     {
-        if (!$this->hasLanguagesTable()) {
+        if (! $this->hasLanguagesTable()) {
             return config('app.locale', 'en');
         }
 
@@ -88,9 +87,6 @@ class SetLocale
      * Parse Accept-Language header to extract primary language code.
      *
      * Example: "en-US,en;q=0.9,ur;q=0.8" -> "en"
-     *
-     * @param string $header
-     * @return string|null
      */
     private function parseAcceptLanguageHeader(string $header): ?string
     {
@@ -118,13 +114,10 @@ class SetLocale
 
     /**
      * Check if locale is valid and active.
-     *
-     * @param string $locale
-     * @return bool
      */
     private function isValidLocale(string $locale): bool
     {
-        if (!$this->hasLanguagesTable()) {
+        if (! $this->hasLanguagesTable()) {
             return in_array($locale, [config('app.locale', 'en'), config('app.fallback_locale', 'en')], true);
         }
 

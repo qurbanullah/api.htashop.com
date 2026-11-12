@@ -16,25 +16,25 @@ class AdminMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
         // Check if user is authenticated
-        if (!$request->user()) {
+        if (! $request->user()) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unauthenticated'
+                'message' => 'Unauthenticated',
             ], 401);
         }
 
         // Check if user has admin or super-admin role
-        if (!$request->user()->hasAnyRole(['super-admin', 'admin'])) {
+        if (! $request->user()->hasAnyRole(['super-admin', 'admin'])) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Access denied. Admin privileges required.',
                 'required_roles' => ['super-admin', 'admin'],
-                'user_roles' => $request->user()->getRoleNames()->toArray()
+                'user_roles' => $request->user()->getRoleNames()->toArray(),
             ], 403);
         }
 

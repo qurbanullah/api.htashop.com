@@ -44,14 +44,11 @@ class FeatureModuleAssignmentService
      * Assign features to a license.
      * Only works if the package is 'custom' type.
      *
-     * @param License $license
-     * @param array $featureIds
-     * @return bool
      * @throws \Exception
      */
     public function assignFeaturesToLicense(License $license, array $featureIds): bool
     {
-        if (!$license->canHaveCustomFeatures()) {
+        if (! $license->canHaveCustomFeatures()) {
             throw new \Exception('Features can only be assigned to licenses with custom packages.');
         }
 
@@ -64,14 +61,11 @@ class FeatureModuleAssignmentService
      * Assign modules to a license.
      * Only works if the package is 'custom' type.
      *
-     * @param License $license
-     * @param array $moduleIds
-     * @return bool
      * @throws \Exception
      */
     public function assignModulesToLicense(License $license, array $moduleIds): bool
     {
-        if (!$license->canHaveCustomFeatures()) {
+        if (! $license->canHaveCustomFeatures()) {
             throw new \Exception('Modules can only be assigned to licenses with custom packages.');
         }
 
@@ -82,10 +76,6 @@ class FeatureModuleAssignmentService
 
     /**
      * Assign features to a package.
-     *
-     * @param Package $package
-     * @param array $featureIds
-     * @return bool
      */
     public function assignFeaturesToPackage(Package $package, array $featureIds): bool
     {
@@ -96,10 +86,6 @@ class FeatureModuleAssignmentService
 
     /**
      * Assign modules to a package.
-     *
-     * @param Package $package
-     * @param array $moduleIds
-     * @return bool
      */
     public function assignModulesToPackage(Package $package, array $moduleIds): bool
     {
@@ -110,9 +96,6 @@ class FeatureModuleAssignmentService
 
     /**
      * Get all available features.
-     *
-     * @param bool $activeOnly
-     * @return Collection
      */
     public function getAvailableFeatures(bool $activeOnly = true): Collection
     {
@@ -127,9 +110,6 @@ class FeatureModuleAssignmentService
 
     /**
      * Get all available modules.
-     *
-     * @param bool $activeOnly
-     * @return Collection
      */
     public function getAvailableModules(bool $activeOnly = true): Collection
     {
@@ -144,9 +124,6 @@ class FeatureModuleAssignmentService
 
     /**
      * Get features assigned to a license.
-     *
-     * @param License $license
-     * @return Collection
      */
     public function getLicenseFeatures(License $license): Collection
     {
@@ -155,9 +132,6 @@ class FeatureModuleAssignmentService
 
     /**
      * Get modules assigned to a license.
-     *
-     * @param License $license
-     * @return Collection
      */
     public function getLicenseModules(License $license): Collection
     {
@@ -166,9 +140,6 @@ class FeatureModuleAssignmentService
 
     /**
      * Get features assigned to a package.
-     *
-     * @param Package $package
-     * @return Collection
      */
     public function getPackageFeatures(Package $package): Collection
     {
@@ -177,9 +148,6 @@ class FeatureModuleAssignmentService
 
     /**
      * Get modules assigned to a package.
-     *
-     * @param Package $package
-     * @return Collection
      */
     public function getPackageModules(Package $package): Collection
     {
@@ -188,9 +156,6 @@ class FeatureModuleAssignmentService
 
     /**
      * Check if a license can have custom features/modules assigned.
-     *
-     * @param License $license
-     * @return bool
      */
     public function canLicenseHaveCustomFeatures(License $license): bool
     {
@@ -199,8 +164,6 @@ class FeatureModuleAssignmentService
 
     /**
      * Get licenses that use custom packages.
-     *
-     * @return Collection
      */
     public function getCustomPackageLicenses(): Collection
     {
@@ -211,8 +174,6 @@ class FeatureModuleAssignmentService
 
     /**
      * Get all custom packages.
-     *
-     * @return Collection
      */
     public function getCustomPackages(): Collection
     {
@@ -225,8 +186,6 @@ class FeatureModuleAssignmentService
 
     /**
      * Get statistics about feature/module assignments.
-     *
-     * @return array
      */
     public function getAssignmentStatistics(): array
     {

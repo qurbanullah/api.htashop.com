@@ -5,12 +5,13 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
     public function run(): void
     {
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $permissions = [
             // Product catalog
@@ -19,6 +20,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'edit products',
             'delete products',
             'publish products',
+            'import products',
 
             // Pricing & contracts
             'view pricing',
@@ -62,7 +64,7 @@ class RolesAndPermissionsSeeder extends Seeder
         // Admin — manage platform (no super-admin exclusive)
         $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'api']);
         $admin->syncPermissions([
-            'view products', 'create products', 'edit products', 'delete products', 'publish products',
+            'view products', 'create products', 'edit products', 'delete products', 'publish products', 'import products',
             'view pricing', 'manage pricing', 'view contracts', 'manage contracts',
             'view punchout sessions', 'manage punchout settings',
             'view orders', 'manage orders',
@@ -74,7 +76,7 @@ class RolesAndPermissionsSeeder extends Seeder
         // Vendor — manage own products, view orders
         $vendor = Role::firstOrCreate(['name' => 'vendor', 'guard_name' => 'api']);
         $vendor->syncPermissions([
-            'view products', 'create products', 'edit products',
+            'view products', 'create products', 'edit products', 'import products',
             'view pricing', 'manage pricing',
             'view orders',
         ]);

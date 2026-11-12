@@ -3,8 +3,8 @@
 namespace App\Services\Quotes;
 
 use App\Actions\Quotes\CreateQuoteRequestAction;
-use App\Actions\Quotes\SendQuoteResponseAction;
 use App\Actions\Quotes\GetQuoteRequestsAction;
+use App\Actions\Quotes\SendQuoteResponseAction;
 use App\Models\QuoteRequest;
 use App\Models\QuoteResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -12,7 +12,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class QuoteService
 {
     protected CreateQuoteRequestAction $createQuoteRequestAction;
+
     protected SendQuoteResponseAction $sendQuoteResponseAction;
+
     protected GetQuoteRequestsAction $getQuoteRequestsAction;
 
     public function __construct(
@@ -27,9 +29,6 @@ class QuoteService
 
     /**
      * Create a new quote request.
-     *
-     * @param array $data
-     * @return QuoteRequest
      */
     public function createQuoteRequest(array $data): QuoteRequest
     {
@@ -38,11 +37,6 @@ class QuoteService
 
     /**
      * Send a quote response to a customer.
-     *
-     * @param QuoteRequest $quoteRequest
-     * @param array $data
-     * @param int $sentBy
-     * @return QuoteResponse
      */
     public function sendQuoteResponse(QuoteRequest $quoteRequest, array $data, int $sentBy): QuoteResponse
     {
@@ -51,10 +45,6 @@ class QuoteService
 
     /**
      * Get paginated quote requests with filters.
-     *
-     * @param array $filters
-     * @param int $perPage
-     * @return LengthAwarePaginator
      */
     public function getQuoteRequests(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
@@ -63,9 +53,6 @@ class QuoteService
 
     /**
      * Get a single quote request by UUID.
-     *
-     * @param string $uuid
-     * @return QuoteRequest|null
      */
     public function getQuoteRequestByUuid(string $uuid): ?QuoteRequest
     {
@@ -76,10 +63,6 @@ class QuoteService
 
     /**
      * Update quote request status.
-     *
-     * @param QuoteRequest $quoteRequest
-     * @param string $status
-     * @return bool
      */
     public function updateStatus(QuoteRequest $quoteRequest, string $status): bool
     {
@@ -88,8 +71,6 @@ class QuoteService
 
     /**
      * Get quote statistics.
-     *
-     * @return array
      */
     public function getStatistics(): array
     {
@@ -102,7 +83,7 @@ class QuoteService
             'this_month' => QuoteRequest::whereMonth('created_at', now()->month)->count(),
             'this_week' => QuoteRequest::whereBetween('created_at', [
                 now()->startOfWeek(),
-                now()->endOfWeek()
+                now()->endOfWeek(),
             ])->count(),
         ];
     }

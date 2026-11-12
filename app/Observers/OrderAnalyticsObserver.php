@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Observers;
 
 use App\Enums\OrderStatus;
+use App\Http\Middleware\AssignRequestId;
 use App\Jobs\Analytics\RecordEvent;
 use App\Models\Order;
 use App\Support\Analytics\EventEnvelope;
-use App\Http\Middleware\AssignRequestId;
 use Illuminate\Support\Facades\Cache;
 
 /**

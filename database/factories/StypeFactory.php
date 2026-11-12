@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Stype>
+ * @extends Factory<Stype>
  */
 class StypeFactory extends Factory
 {
@@ -28,7 +28,7 @@ class StypeFactory extends Factory
         $softwareTypes = [
             'Bug Report', 'Feature Request', 'Technical Issue', 'License Issue', 'Installation Support',
             'Performance Issue', 'Security Concern', 'Documentation Request', 'Training Request', 'General Inquiry',
-            'Account Issue', 'Billing Question', 'API Support', 'Integration Help', 'Maintenance Request'
+            'Account Issue', 'Billing Question', 'API Support', 'Integration Help', 'Maintenance Request',
         ];
 
         $name = fake()->randomElement($softwareTypes);
@@ -39,7 +39,7 @@ class StypeFactory extends Factory
             'slug' => $slug,
             'summary' => $this->generateSummary($name),
             'description' => $this->generateDescription($name),
-            'image' => 'stypes/' . strtolower(str_replace(' ', '-', $name)) . '.png',
+            'image' => 'stypes/'.strtolower(str_replace(' ', '-', $name)).'.png',
             'is_active' => fake()->boolean(90), // 90% chance of being active
             'sorting' => fake()->numberBetween(1, 50),
         ];

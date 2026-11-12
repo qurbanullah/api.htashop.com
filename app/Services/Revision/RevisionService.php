@@ -17,8 +17,7 @@ class RevisionService
         protected RevisionReadAction $readAction,
         protected RevisionSearchByUuidAction $searchByUuidAction,
         protected RevisionRestoreAction $restoreAction,
-    ) {
-    }
+    ) {}
 
     public function create(Model $model, array $payload, array $options = []): Revision
     {

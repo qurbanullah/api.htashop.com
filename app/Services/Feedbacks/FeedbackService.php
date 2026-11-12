@@ -7,6 +7,10 @@ use App\Actions\Feedbacks\FeedbackApprovedFeaturesAction;
 use App\Actions\Feedbacks\FeedbackCreateAction;
 use App\Actions\Feedbacks\FeedbackGetCommentsAction;
 use App\Enums\FeedbackStatusEnum;
+use App\Filters\Feedbacks\FeedbackPriorityFilter;
+use App\Filters\Feedbacks\FeedbackSearchFilter;
+use App\Filters\Feedbacks\FeedbackStatusFilter;
+use App\Filters\Feedbacks\FeedbackTypeFilter;
 use App\Helpers\CacheHelper;
 use App\Jobs\Feedback\SendFeedbackCommentEmailJob;
 use App\Models\Comment;
@@ -19,6 +23,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Pipeline;
+use Illuminate\Support\Str;
 
 class FeedbackService
 {
@@ -28,7 +33,7 @@ class FeedbackService
     public function create(array $data): Feedback
     {
         // UUID is auto-generated in model boot method
-        $feedback = (new FeedbackCreateAction())->handle($data);
+        $feedback = (new FeedbackCreateAction)->handle($data);
 
         CacheHelper::clearTags(['support']);
 
@@ -43,10 +48,10 @@ class FeedbackService
         return Pipeline::send($this->visibleQuery())
             ->through(
                 [
-                    new \App\Filters\Feedbacks\FeedbackSearchFilter(data_get($data, 'filters.search')),
-                    new \App\Filters\Feedbacks\FeedbackTypeFilter(data_get($data, 'filters.type')),
-                    new \App\Filters\Feedbacks\FeedbackStatusFilter(data_get($data, 'filters.status')),
-                    new \App\Filters\Feedbacks\FeedbackPriorityFilter(data_get($data, 'filters.priority')),
+                    new FeedbackSearchFilter(data_get($data, 'filters.search')),
+                    new FeedbackTypeFilter(data_get($data, 'filters.type')),
+                    new FeedbackStatusFilter(data_get($data, 'filters.status')),
+                    new FeedbackPriorityFilter(data_get($data, 'filters.priority')),
                 ]
             )
             ->thenReturn()
@@ -59,7 +64,7 @@ class FeedbackService
      */
     public function getApprovedFeatures(array $data = []): LengthAwarePaginator
     {
-        return (new FeedbackApprovedFeaturesAction())->handle($data);
+        return (new FeedbackApprovedFeaturesAction)->handle($data);
     }
 
     /**
@@ -77,7 +82,7 @@ class FeedbackService
     {
         $feedback = $this->visibleQuery()->find($feedbackId);
 
-        if (!$feedback) {
+        if (! $feedback) {
             return false;
         }
 
@@ -97,7 +102,7 @@ class FeedbackService
     {
         $feedback = $this->visibleQuery()->find($feedbackId);
 
-        if (!$feedback) {
+        if (! $feedback) {
             return false;
         }
 
@@ -197,7 +202,7 @@ class FeedbackService
     {
         $feedback = $this->visibleQuery()->find($feedbackId);
 
-        if (!$feedback || $feedback->status !== FeedbackStatusEnum::NEW->value) {
+        if (! $feedback || $feedback->status !== FeedbackStatusEnum::NEW->value) {
             return false;
         }
 
@@ -215,7 +220,7 @@ class FeedbackService
     {
         $feedback = $this->visibleQuery()->find($feedbackId);
 
-        if (!$feedback) {
+        if (! $feedback) {
             return false;
         }
 
@@ -257,7 +262,7 @@ class FeedbackService
     public function getUserFeedbacks(?string $userEmail = null, array $filters = [], int $limit = 15): mixed
     {
         $email = $userEmail ?? (Auth::check() ? Auth::user()->email : null);
-        if (!$email) {
+        if (! $email) {
             return Feedback::query()->paginate($limit);
         }
 
@@ -273,16 +278,13 @@ class FeedbackService
      * Add comment/reply to feedback
      * Business Logic: Create comment, send email, clear cache
      *
-     * @param Feedback $feedback
-     * @param array $commentData
-     * @return Comment
      * @throws \Exception
      */
     public function addCommentToFeedback(Feedback $feedback, array $commentData): Comment
     {
         try {
             // Step 1: Create comment using Action (CRUD only)
-            $comment = (new FeedbackAddCommentAction())->handle($feedback, $commentData);
+            $comment = (new FeedbackAddCommentAction)->handle($feedback, $commentData);
 
             // Step 2: Dispatch email notification job (non-blocking)
             SendFeedbackCommentEmailJob::dispatch($feedback, $comment);
@@ -320,14 +322,10 @@ class FeedbackService
 
     /**
      * Get comments for feedback
-     *
-     * @param Feedback $feedback
-     * @param bool $includeInternal
-     * @return Collection
      */
     public function getFeedbackComments(Feedback $feedback, bool $includeInternal = true): Collection
     {
-        return (new FeedbackGetCommentsAction())->handle($feedback, $includeInternal);
+        return (new FeedbackGetCommentsAction)->handle($feedback, $includeInternal);
     }
 
     /**
@@ -337,7 +335,7 @@ class FeedbackService
     public function getComments(int $feedbackId): array
     {
         $feedback = Feedback::find($feedbackId);
-        if (!$feedback) {
+        if (! $feedback) {
             return [];
         }
 
@@ -359,8 +357,9 @@ class FeedbackService
     public function ensureUuid(Feedback $feedback): Feedback
     {
         if (empty($feedback->uuid)) {
-            $feedback->update(['uuid' => (string) \Illuminate\Support\Str::uuid()]);
+            $feedback->update(['uuid' => (string) Str::uuid()]);
         }
+
         return $feedback;
     }
 
@@ -397,7 +396,7 @@ class FeedbackService
      * Resolve tenant-scoped feedback statistics through the support cache.
      * Scope 0 (user with no active membership) never touches the cache.
      *
-     * @param string $kind general|by_type|by_priority
+     * @param  string  $kind  general|by_type|by_priority
      */
     private function cachedStatistics(string $kind, Closure $compute): array
     {
@@ -407,7 +406,7 @@ class FeedbackService
             return $compute();
         }
 
-        $scopeKey = $scope === null ? 'all' : 'tenant:' . $scope;
+        $scopeKey = $scope === null ? 'all' : 'tenant:'.$scope;
 
         return CacheHelper::remember(
             ['support'],

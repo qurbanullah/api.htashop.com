@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace App\Actions\Tickets;
 
 use App\Models\Ticket;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
@@ -42,7 +43,8 @@ class TicketDeleteAction
      * Delete a ticket record from database.
      *
      * @param  int  $id  model id
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @throws AuthorizationException
      */
     public function handle(int $id): bool
     {

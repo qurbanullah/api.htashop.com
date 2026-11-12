@@ -14,7 +14,7 @@ class BannerService
 {
     public function forContext(string $placement, ?int $categoryId = null, ?string $search = null): Collection
     {
-        $cacheKey = "banners:{$placement}:" . ($categoryId ?? 'all') . ':' . substr((string) $search, 0, 60);
+        $cacheKey = "banners:{$placement}:".($categoryId ?? 'all').':'.substr((string) $search, 0, 60);
 
         return CacheHelper::remember(
             ['banners'],

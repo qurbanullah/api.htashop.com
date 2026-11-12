@@ -16,8 +16,7 @@ class VariantRevisionController extends Controller
     public function __construct(
         protected VariantService $variantService,
         protected RevisionService $revisionService,
-    ) {
-    }
+    ) {}
 
     public function index(string $uuid, Request $request): JsonResponse
     {

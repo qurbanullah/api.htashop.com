@@ -27,7 +27,7 @@ class SeoIndexingObserver
 
     private function maybeSubmit(Product|Post $model, bool $isNew): void
     {
-        if (!config('indexnow.enabled') || trim((string) config('indexnow.key')) === '') {
+        if (! config('indexnow.enabled') || trim((string) config('indexnow.key')) === '') {
             return;
         }
 
@@ -50,17 +50,17 @@ class SeoIndexingObserver
     {
         $live = $product->status === 'active' && (bool) $product->is_active;
 
-        if (!$live) {
+        if (! $live) {
             return null;
         }
 
         // Only notify on creation or when the row becomes live again.
-        if (!$isNew && !$product->wasChanged('status') && !$product->wasChanged('is_active')) {
+        if (! $isNew && ! $product->wasChanged('status') && ! $product->wasChanged('is_active')) {
             return null;
         }
 
-        return config('app.frontend_url') . '/products/'
-            . $product->slug . '-' . substr((string) $product->uuid, 0, 8);
+        return config('app.frontend_url').'/products/'
+            .$product->slug.'-'.substr((string) $product->uuid, 0, 8);
     }
 
     private function postUrl(Post $post, bool $isNew): ?string

@@ -14,9 +14,7 @@ use Illuminate\Http\JsonResponse;
 
 class DefinitionController extends Controller
 {
-    public function __construct(protected DefinitionService $definitionService)
-    {
-    }
+    public function __construct(protected DefinitionService $definitionService) {}
 
     public function index(DefinitionIndexRequest $request): JsonResponse
     {

@@ -5,21 +5,20 @@ declare(strict_types=1);
 namespace App\Http\Controllers\V1\Post;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\V1\Post\ByCategoryRequest;
+use App\Http\Requests\V1\Post\IndexRequest;
+use App\Http\Responses\V1\ApiResponse;
+use App\Models\Category;
 use App\Models\Post;
-use App\Http\Requests\V1\Post\PostStoreRequest;
-use App\Http\Requests\V1\Post\PostUpdateRequest;
-use App\Http\Resources\V1\Post\PostResource;
 use App\Services\Post\PostService;
 use App\Services\Storage\S3UploadService;
-use App\Http\Responses\V1\ApiResponse;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 
 class PostApiController extends Controller
 {
     protected S3UploadService $s3Service;
+
     protected PostService $postService;
 
     public function __construct(S3UploadService $s3Service, PostService $postService)
@@ -28,36 +27,34 @@ class PostApiController extends Controller
         $this->postService = $postService;
     }
 
-    ## Paginated (per_page + page, plus all filters)
-// curl -G \
-//   'https://license.real3dtech.com/api/v1/post' \
-//   -H 'Accept: application/json' \
-//   --data-urlencode 'per_page=20' \
-//   --data-urlencode 'page=1' \
-//   --data-urlencode 'latest=1' \
-//   --data-urlencode 'start_date=2025-01-01' \
-//   --data-urlencode 'end_date=2025-10-30' \
-//   --data-urlencode 'tags=release,security' \
-//   --data-urlencode 'categories=announcements,updates'
+    // # Paginated (per_page + page, plus all filters)
+    // curl -G \
+    //   'https://license.real3dtech.com/api/v1/post' \
+    //   -H 'Accept: application/json' \
+    //   --data-urlencode 'per_page=20' \
+    //   --data-urlencode 'page=1' \
+    //   --data-urlencode 'latest=1' \
+    //   --data-urlencode 'start_date=2025-01-01' \
+    //   --data-urlencode 'end_date=2025-10-30' \
+    //   --data-urlencode 'tags=release,security' \
+    //   --data-urlencode 'categories=announcements,updates'
 
+    // ## Limit-based (returns a fixed number of items; pagination ignored)
+    // curl -G \
+    //   'https://license.real3dtech.com/api/v1/post' \
+    //   -H 'Accept: application/json' \
+    //   --data-urlencode 'limit=10' \
+    //   --data-urlencode 'latest=1' \
+    //   --data-urlencode 'start_date=2025-01-01' \
+    //   --data-urlencode 'end_date=2025-10-30' \
+    //   --data-urlencode 'tags=release,security' \
+    //   --data-urlencode 'categories=announcements,updates'
 
-// ## Limit-based (returns a fixed number of items; pagination ignored)
-// curl -G \
-//   'https://license.real3dtech.com/api/v1/post' \
-//   -H 'Accept: application/json' \
-//   --data-urlencode 'limit=10' \
-//   --data-urlencode 'latest=1' \
-//   --data-urlencode 'start_date=2025-01-01' \
-//   --data-urlencode 'end_date=2025-10-30' \
-//   --data-urlencode 'tags=release,security' \
-//   --data-urlencode 'categories=announcements,updates'
-
-// # Without filters
-//   curl -G \
-//   'https://license.real3dtech.com/api/v1/post' \
-//   -H 'Accept: application/json' \
-//   --data-urlencode 'limit=10'
-
+    // # Without filters
+    //   curl -G \
+    //   'https://license.real3dtech.com/api/v1/post' \
+    //   -H 'Accept: application/json' \
+    //   --data-urlencode 'limit=10'
 
     /**
      * List published post with optional filters.
@@ -71,9 +68,8 @@ class PostApiController extends Controller
      * - tags (comma separated)
      * - categories (comma separated)
      */
-    public function index(\App\Http\Requests\V1\Post\IndexRequest $request)
+    public function index(IndexRequest $request)
     {
-        
 
         $filters = [
             'search' => $request->input('search'),
@@ -124,14 +120,13 @@ class PostApiController extends Controller
     /**
      * Get post by primary category slug
      */
-    public function byCategory(\App\Http\Requests\V1\Post\ByCategoryRequest $request, string $categorySlug)
+    public function byCategory(ByCategoryRequest $request, string $categorySlug)
     {
-        
 
         // Find category by slug
-        $category = \App\Models\Category::where('slug', $categorySlug)->first();
+        $category = Category::where('slug', $categorySlug)->first();
 
-        if (!$category) {
+        if (! $category) {
             return response()->json(['message' => 'Category not found'], 404);
         }
 
@@ -191,7 +186,6 @@ class PostApiController extends Controller
      */
     protected function getByType(Request $request, string $type)
     {
-        
 
         $filters = [
             'type' => $type,
@@ -243,7 +237,6 @@ class PostApiController extends Controller
      */
     public function generateImageUrl(Request $request): JsonResponse
     {
-        
 
         $key = $request->input('key');
         $expiresIn = (int) $request->input('expires_in', 3600);
@@ -266,10 +259,10 @@ class PostApiController extends Controller
             }
         }
 
-        if (!$isAllowed) {
+        if (! $isAllowed) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid image path. Use /api/v1/assets/generate-url for non-post images.'
+                'message' => 'Invalid image path. Use /api/v1/assets/generate-url for non-post images.',
             ], 403);
         }
 
@@ -278,12 +271,12 @@ class PostApiController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => ['url' => $url]
+                'data' => ['url' => $url],
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to generate URL'
+                'message' => 'Failed to generate URL',
             ], 500);
         }
     }
@@ -311,17 +304,17 @@ class PostApiController extends Controller
         // Generate frontend URL based on type
         $frontendBase = config('app.frontend_url', 'https://htashop.com');
         $slug = $n->slug ?? $n->uuid;
-        $type = $n->type->value ?? (string)$n->type; // Get enum value or cast to string
+        $type = $n->type->value ?? (string) $n->type; // Get enum value or cast to string
         $categorySlug = $n->primaryCategory ? $n->primaryCategory->slug : 'general';
 
         if ($type === 'blog') {
-            $frontendUrl = rtrim($frontendBase, '/') . '/blogs/' . $slug;
+            $frontendUrl = rtrim($frontendBase, '/').'/blogs/'.$slug;
         } elseif ($type === 'news') {
-            $frontendUrl = rtrim($frontendBase, '/') . '/news/' . $slug;
+            $frontendUrl = rtrim($frontendBase, '/').'/news/'.$slug;
         } elseif ($type === 'event') {
-            $frontendUrl = rtrim($frontendBase, '/') . '/events/' . $slug;
+            $frontendUrl = rtrim($frontendBase, '/').'/events/'.$slug;
         } else {
-            $frontendUrl = rtrim($frontendBase, '/') . '/content/' . $slug;
+            $frontendUrl = rtrim($frontendBase, '/').'/content/'.$slug;
         }
 
         return [
@@ -371,16 +364,16 @@ class PostApiController extends Controller
         // Generate frontend URL based on type
         $frontendBase = config('app.frontend_url', 'https://htashop.com');
         $slug = $n->slug ?? $n->uuid;
-        $type = $n->type->value ?? (string)$n->type; // Get enum value or cast to string
+        $type = $n->type->value ?? (string) $n->type; // Get enum value or cast to string
 
         if ($type === 'blog') {
-            $frontendUrl = rtrim($frontendBase, '/') . '/blogs/' . $slug;
+            $frontendUrl = rtrim($frontendBase, '/').'/blogs/'.$slug;
         } elseif ($type === 'news') {
-            $frontendUrl = rtrim($frontendBase, '/') . '/news/' . $slug;
+            $frontendUrl = rtrim($frontendBase, '/').'/news/'.$slug;
         } elseif ($type === 'event') {
-            $frontendUrl = rtrim($frontendBase, '/') . '/events/' . $slug;
+            $frontendUrl = rtrim($frontendBase, '/').'/events/'.$slug;
         } else {
-            $frontendUrl = rtrim($frontendBase, '/') . '/content/' . $slug;
+            $frontendUrl = rtrim($frontendBase, '/').'/content/'.$slug;
         }
 
         return [
@@ -433,7 +426,7 @@ class PostApiController extends Controller
 
         $originalUrl = str_starts_with($original, 'http')
             ? $original
-            : $cdn . '/' . ltrim($original, '/');
+            : $cdn.'/'.ltrim($original, '/');
 
         $variants = data_get($n->metadata, 'featured_variants', []);
         $variants = is_array($variants) ? $variants : [];
@@ -441,7 +434,7 @@ class PostApiController extends Controller
         $urlFor = function (string $key): ?string {
             $cdn = config('app.cdn_url', 'https://cdn.htashop.com');
 
-            return str_starts_with($key, 'http') ? $key : $cdn . '/' . ltrim($key, '/');
+            return str_starts_with($key, 'http') ? $key : $cdn.'/'.ltrim($key, '/');
         };
 
         $map = ['original' => $originalUrl];

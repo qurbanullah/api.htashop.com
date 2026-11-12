@@ -17,7 +17,7 @@ class GenerateUrlRequest extends FormRequest
 
             'key' => 'required|string',
             'expires_in' => 'nullable|integer|min:60|max:3600',
-        
+
         ];
     }
 }

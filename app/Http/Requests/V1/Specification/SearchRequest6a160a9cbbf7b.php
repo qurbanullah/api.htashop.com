@@ -16,7 +16,7 @@ class SearchRequest6a160a9cbbf7b extends FormRequest
         return [
 
             'type' => 'string|in:product,service',
-        
+
         ];
     }
 }

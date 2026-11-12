@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace App\Actions\Tickets;
 
 use App\Models\Ticket;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -43,7 +44,8 @@ class TicketReadAction
      * Validate and create record in database.
      *
      * @param  array  $data  Data array
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     *
+     * @throws AuthorizationException
      */
     public function handle(array $data = []): Collection
     {
@@ -62,7 +64,7 @@ class TicketReadAction
 
         // Apply user-specific filters based on permissions
         $user = auth()->user();
-        if (!$user->hasRole(['super-admin', 'admin'])) {
+        if (! $user->hasRole(['super-admin', 'admin'])) {
             // Regular users can only see their own tickets.
             $where_filters[] = function ($query) use ($user) {
                 $query->where('user_id', $user->id);
@@ -74,6 +76,7 @@ class TicketReadAction
             foreach ($where_filters as $filter) {
                 $query->where($filter);
             }
+
             return tap($query->get())->target;
         });
     }

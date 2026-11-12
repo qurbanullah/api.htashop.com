@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Journal;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class JournalPolicy
 {
@@ -136,7 +135,7 @@ class JournalPolicy
             ->whereIn('journal_editorial_board.role', [
                 'editor_in_chief',
                 'associate_editor',
-                'managing_editor'
+                'managing_editor',
             ])
             ->where('is_active', true)
             ->exists();

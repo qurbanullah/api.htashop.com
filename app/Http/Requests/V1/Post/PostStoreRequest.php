@@ -74,14 +74,14 @@ class PostStoreRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         // Set default status if not provided
-        if (!$this->has('status')) {
+        if (! $this->has('status')) {
             $this->merge(['status' => 'draft']);
         }
 
         // Convert is_published_as_blog to boolean
         if ($this->has('is_published_as_blog')) {
             $this->merge([
-                'is_published_as_blog' => filter_var($this->is_published_as_blog, FILTER_VALIDATE_BOOLEAN)
+                'is_published_as_blog' => filter_var($this->is_published_as_blog, FILTER_VALIDATE_BOOLEAN),
             ]);
         }
     }

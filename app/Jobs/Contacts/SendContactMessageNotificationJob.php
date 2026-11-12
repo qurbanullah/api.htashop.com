@@ -8,8 +8,8 @@ use App\Models\ContactMessage;
 use App\Services\Email\EmailLogService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SendContactMessageNotificationJob implements ShouldQueue
 {
@@ -27,7 +27,7 @@ class SendContactMessageNotificationJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $emailLogService = new EmailLogService();
+        $emailLogService = new EmailLogService;
         $configuredRecipient = trim((string) config('mail.contact_recipient_email', ''));
 
         // Get admin users, exclude the contact sender (cached)
@@ -67,7 +67,7 @@ class SendContactMessageNotificationJob implements ShouldQueue
         if (
             $configuredRecipient
             && strtolower($configuredRecipient) !== strtolower($this->contactMessage->email)
-            && !$adminUsers->pluck('email')->contains(fn ($email) => strtolower((string) $email) === strtolower((string) $configuredRecipient))
+            && ! $adminUsers->pluck('email')->contains(fn ($email) => strtolower((string) $email) === strtolower((string) $configuredRecipient))
         ) {
             $configuredEmailLog = $emailLogService->createLog(
                 $configuredRecipient,

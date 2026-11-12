@@ -2,18 +2,17 @@
 
 namespace App\Models;
 
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Comment extends Model
 {
-        use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'commentable_type',
@@ -96,6 +95,7 @@ class Comment extends Model
     public function markAsRead(): bool
     {
         $this->is_read = true;
+
         return $this->save();
     }
 
@@ -165,10 +165,9 @@ class Comment extends Model
     /**
      * Attach a context to this comment
      *
-     * @param Model $entity The entity to attach (Revision, Author, etc.)
-     * @param string $contextType The type of context (revision, author, section, etc.)
-     * @param array $metadata Optional metadata for the context
-     * @return Commentable
+     * @param  Model  $entity  The entity to attach (Revision, Author, etc.)
+     * @param  string  $contextType  The type of context (revision, author, section, etc.)
+     * @param  array  $metadata  Optional metadata for the context
      */
     public function attachContext($entity, string $contextType = 'revision', array $metadata = []): Commentable
     {
@@ -185,8 +184,8 @@ class Comment extends Model
     /**
      * Detach a context from this comment
      *
-     * @param Model $entity The entity to detach
-     * @param string $contextType The type of context
+     * @param  Model  $entity  The entity to detach
+     * @param  string  $contextType  The type of context
      * @return int Number of records deleted
      */
     public function detachContext($entity, string $contextType = 'revision'): int
@@ -202,8 +201,7 @@ class Comment extends Model
     /**
      * Sync revision contexts
      *
-     * @param array $revisionIds Array of revision IDs to sync
-     * @return void
+     * @param  array  $revisionIds  Array of revision IDs to sync
      */
     public function syncRevisions(array $revisionIds): void
     {
@@ -221,9 +219,6 @@ class Comment extends Model
 
     /**
      * Check if comment is associated with a specific revision
-     *
-     * @param int $revisionId
-     * @return bool
      */
     public function hasRevision(int $revisionId): bool
     {
@@ -232,8 +227,6 @@ class Comment extends Model
 
     /**
      * Get context badges for display
-     *
-     * @return array
      */
     public function getContextBadges(): array
     {

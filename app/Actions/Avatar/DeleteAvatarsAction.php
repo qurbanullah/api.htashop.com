@@ -16,7 +16,7 @@ class DeleteAvatarsAction
             ->get();
 
         foreach ($avatars as $avatar) {
-            if (!empty($avatar->path) && $disk->exists($avatar->path)) {
+            if (! empty($avatar->path) && $disk->exists($avatar->path)) {
                 $disk->delete($avatar->path);
             }
         }

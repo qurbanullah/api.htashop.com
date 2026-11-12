@@ -11,6 +11,7 @@ class GdprConsentService
     public function __construct(
         protected AuditLogger $auditLogger,
     ) {}
+
     /**
      * Record a GDPR consent choice (banner, settings, or account).
      */

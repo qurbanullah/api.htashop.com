@@ -2,20 +2,19 @@
 
 namespace App\Models;
 
-
+use App\Enums\TutorialStatusEnum;
+use App\Enums\TutorialTypeEnum;
 use App\Traits\Audit\Auditable;
 use App\Traits\Dam\Damable;
-use App\Enums\TutorialTypeEnum;
-use App\Enums\TutorialStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Support\Str;
 
 class Tutorial extends Model
 {
-        use HasFactory, Auditable, Damable;
+    use Auditable, Damable, HasFactory;
 
     protected $fillable = [
         'uuid',
@@ -147,12 +146,13 @@ class Tutorial extends Model
         if ($this->youtube_url) {
             return $this->youtube_url;
         }
+
         return $this->video_file;
     }
 
     public function hasVideo(): bool
     {
-        return !empty($this->youtube_url) || !empty($this->video_file);
+        return ! empty($this->youtube_url) || ! empty($this->video_file);
     }
 
     public function thumbnailAsset(): ?Dam

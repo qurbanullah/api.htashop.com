@@ -13,8 +13,7 @@ class ProductReviewController extends Controller
 {
     public function __construct(
         protected ProductReviewService $productReviewService,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request, string $key): JsonResponse
     {

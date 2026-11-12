@@ -3,16 +3,14 @@
 namespace App\Actions\Quotes;
 
 use App\Models\QuoteRequest;
-use Illuminate\Support\Facades\DB;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class CreateQuoteRequestAction
 {
     /**
      * Create a new quote request.
      *
-     * @param array $data
-     * @return QuoteRequest
      * @throws Exception
      */
     public function execute(array $data): QuoteRequest
@@ -57,7 +55,7 @@ class CreateQuoteRequestAction
             return $quoteRequest;
         } catch (Exception $e) {
             DB::rollBack();
-            throw new Exception("Failed to create quote request: " . $e->getMessage());
+            throw new Exception('Failed to create quote request: '.$e->getMessage());
         }
     }
 }

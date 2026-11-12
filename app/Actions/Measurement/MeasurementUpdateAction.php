@@ -28,7 +28,7 @@ class MeasurementUpdateAction
         $suffix = 1;
 
         while (Measurement::query()->where('tenant_id', $tenantId)->where('code', $candidate)->where('id', '!=', $measurement->id)->exists()) {
-            $candidate = $base . '_' . $suffix;
+            $candidate = $base.'_'.$suffix;
             $suffix++;
         }
 

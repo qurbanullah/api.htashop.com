@@ -3,14 +3,15 @@
 namespace App\Services\Profile;
 
 use App\Actions\Profile\CreateProfileAction;
-use App\Actions\Profile\UpdateProfileAction;
 use App\Actions\Profile\DeleteProfileAction;
+use App\Actions\Profile\UpdateProfileAction;
 use App\Models\Profile;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\UnauthorizedException;
+use Illuminate\Validation\ValidationException;
 
 class ProfileService
 {
@@ -22,10 +23,6 @@ class ProfileService
 
     /**
      * Get paginated list of profiles.
-     *
-     * @param  array  $filters
-     * @param  int  $perPage
-     * @return LengthAwarePaginator
      */
     public function listProfiles(array $filters = [], int $perPage = 20): LengthAwarePaginator
     {
@@ -34,12 +31,12 @@ class ProfileService
             ->where('is_active', true);
 
         // Filter by profile type
-        if (!empty($filters['profile_type'])) {
+        if (! empty($filters['profile_type'])) {
             $query->where('profile_type', $filters['profile_type']);
         }
 
         // Filter by country
-        if (!empty($filters['country'])) {
+        if (! empty($filters['country'])) {
             $query->where('country', $filters['country']);
         }
 
@@ -49,12 +46,12 @@ class ProfileService
         }
 
         // Filter by research area
-        if (!empty($filters['research_area'])) {
+        if (! empty($filters['research_area'])) {
             $query->whereJsonContains('research_areas', $filters['research_area']);
         }
 
         // Search by name or email
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
@@ -64,7 +61,7 @@ class ProfileService
         }
 
         // Only show public profiles unless user is authenticated
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             $query->where('is_public', true);
         }
 
@@ -74,9 +71,7 @@ class ProfileService
     /**
      * Get a single profile by ID.
      *
-     * @param  int  $profileId
-     * @return Profile
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function getProfile(int $profileId): Profile
     {
@@ -85,7 +80,7 @@ class ProfileService
         // Check authorization
         if (auth()->check()) {
             Gate::authorize('view', $profile);
-        } elseif (!$profile->is_public || !$profile->is_active) {
+        } elseif (! $profile->is_public || ! $profile->is_active) {
             abort(404, 'Profile not found.');
         }
 
@@ -94,9 +89,6 @@ class ProfileService
 
     /**
      * Get the authenticated user's profile.
-     *
-     * @param  User  $user
-     * @return Profile|null
      */
     public function getUserProfile(User $user): ?Profile
     {
@@ -109,11 +101,8 @@ class ProfileService
     /**
      * Create a new profile.
      *
-     * @param  User  $user
-     * @param  array  $data
-     * @return Profile
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws AuthorizationException
+     * @throws ValidationException
      */
     public function createProfile(User $user, array $data): Profile
     {
@@ -126,11 +115,8 @@ class ProfileService
     /**
      * Update an existing profile.
      *
-     * @param  int  $profileId
-     * @param  array  $data
-     * @return Profile
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws AuthorizationException
+     * @throws ValidationException
      */
     public function updateProfile(int $profileId, array $data): Profile
     {
@@ -145,10 +131,7 @@ class ProfileService
     /**
      * Delete a profile.
      *
-     * @param  int  $profileId
-     * @param  bool  $hardDelete
-     * @return bool
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function deleteProfile(int $profileId, bool $hardDelete = false): bool
     {
@@ -163,10 +146,7 @@ class ProfileService
     /**
      * Toggle profile visibility (public/private).
      *
-     * @param  int  $profileId
-     * @param  bool  $isPublic
-     * @return Profile
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function toggleVisibility(int $profileId, bool $isPublic): Profile
     {
@@ -183,11 +163,7 @@ class ProfileService
     /**
      * Update reviewer availability settings.
      *
-     * @param  int  $profileId
-     * @param  bool  $available
-     * @param  int|null  $maxActiveReviews
-     * @return Profile
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function updateReviewerAvailability(int $profileId, bool $available, ?int $maxActiveReviews = null): Profile
     {
@@ -210,10 +186,7 @@ class ProfileService
     /**
      * Verify a profile (admin/editor only).
      *
-     * @param  int  $profileId
-     * @param  User  $verifier
-     * @return Profile
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function verifyProfile(int $profileId, User $verifier): Profile
     {
@@ -229,10 +202,6 @@ class ProfileService
 
     /**
      * Get profiles available for review in specific areas.
-     *
-     * @param  array  $researchAreas
-     * @param  int  $limit
-     * @return Collection
      */
     public function getAvailableReviewers(array $researchAreas, int $limit = 50): Collection
     {
@@ -245,10 +214,6 @@ class ProfileService
 
     /**
      * Search profiles by expertise.
-     *
-     * @param  string  $keyword
-     * @param  int  $limit
-     * @return Collection
      */
     public function searchByExpertise(string $keyword, int $limit = 20): Collection
     {

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Attachment extends Model
 {
-        use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'attachable_type',
@@ -28,7 +27,7 @@ class Attachment extends Model
         'version',
         'sort_order',
         'metadata',
-        'uploaded_by'
+        'uploaded_by',
     ];
 
     protected $casts = [
@@ -36,13 +35,13 @@ class Attachment extends Model
         'size' => 'integer',
         'version' => 'integer',
         'sort_order' => 'integer',
-        'metadata' => 'array'
+        'metadata' => 'array',
     ];
 
     protected $attributes = [
         'is_confidential' => false,
         'version' => 1,
-        'sort_order' => 0
+        'sort_order' => 0,
     ];
 
     /**
@@ -89,6 +88,6 @@ class Attachment extends Model
             $bytes /= 1024;
         }
 
-        return round($bytes, 2) . ' ' . $units[$i];
+        return round($bytes, 2).' '.$units[$i];
     }
 }

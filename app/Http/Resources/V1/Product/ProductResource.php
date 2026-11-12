@@ -35,6 +35,7 @@ class ProductResource extends JsonResource
             'status' => $this->status,
             'summary' => $this->summary,
             'description' => $this->description,
+            'cost_price' => $this->cost_price !== null ? (float) $this->cost_price : null,
             'is_active' => $this->is_active,
             'image_url' => $this->resolveImageUrl(),
             'videos' => $this->whenLoaded('videos', fn () => $this->resolveVideos()),

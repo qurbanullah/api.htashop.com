@@ -18,6 +18,7 @@ class OrderSeeder extends Seeder
 
         if (! $tenant) {
             $this->command->info('No tenant found, skipping order seeding.');
+
             return;
         }
 
@@ -42,7 +43,7 @@ class OrderSeeder extends Seeder
         for ($i = 0; $i < $total; $i++) {
             $customer = $customers[$i % count($customers)];
             $status = $statuses[$i % count($statuses)];
-            $orderNumber = 'ORD-2608-' . str_pad((string) ($i + 1), 4, '0', STR_PAD_LEFT);
+            $orderNumber = 'ORD-2608-'.str_pad((string) ($i + 1), 4, '0', STR_PAD_LEFT);
 
             $order = Order::firstOrCreate(
                 ['order_number' => $orderNumber],
@@ -112,6 +113,7 @@ class OrderSeeder extends Seeder
         // 60% of the time, pick from the most popular bucket.
         if (random_int(1, 10) <= 6) {
             $lastIndex = max(0, (int) floor($count / 3) - 1);
+
             return $productIds[random_int(0, $lastIndex)];
         }
 

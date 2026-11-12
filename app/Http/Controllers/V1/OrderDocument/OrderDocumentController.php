@@ -5,7 +5,6 @@ namespace App\Http\Controllers\V1\OrderDocument;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\Document\DocumentResource;
 use App\Http\Responses\V1\ApiResponse;
-use App\Models\Order;
 use App\Services\Order\OrderService;
 use App\Services\Pdf\PdfService;
 use Illuminate\Http\JsonResponse;
@@ -16,8 +15,7 @@ class OrderDocumentController extends Controller
     public function __construct(
         protected OrderService $orderService,
         protected PdfService $pdfService,
-    ) {
-    }
+    ) {}
 
     public function index(string $orderUuid): JsonResponse
     {

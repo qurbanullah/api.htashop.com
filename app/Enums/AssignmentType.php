@@ -14,7 +14,7 @@ enum AssignmentType: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::REVIEW => 'Peer Review',
             self::EDITORIAL => 'Editorial Review',
             self::TECHNICAL_CHECK => 'Technical Check',
@@ -27,7 +27,7 @@ enum AssignmentType: string
 
     public function description(): string
     {
-        return match($this) {
+        return match ($this) {
             self::REVIEW => 'Peer review assignment to subject matter experts',
             self::EDITORIAL => 'Editorial board review and decision making',
             self::TECHNICAL_CHECK => 'Technical formatting and compliance check',

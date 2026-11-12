@@ -11,11 +11,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('units', function (Blueprint $table) {
-            if (!Schema::hasColumn('units', 'uuid')) {
+            if (! Schema::hasColumn('units', 'uuid')) {
                 $table->uuid('uuid')->nullable()->after('id');
             }
 
-            if (!Schema::hasColumn('units', 'tenant_id')) {
+            if (! Schema::hasColumn('units', 'tenant_id')) {
                 $table->foreignId('tenant_id')->nullable()->after('uuid')->constrained('tenants')->cascadeOnDelete();
             }
         });

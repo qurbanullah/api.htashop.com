@@ -5,6 +5,7 @@ namespace App\Actions\Dam;
 use App\Models\Dam;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+
 class CreateDamAction
 {
     public function handle(array $data): Dam

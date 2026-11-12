@@ -3,12 +3,17 @@
 namespace App\Http\Controllers\V1\Comment;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\V1\Comment\Index\IndexRequest;
+use App\Http\Requests\V1\Comment\Reply\ReplyRequest;
+use App\Http\Requests\V1\Comment\Store\StoreRequest;
 use App\Http\Resources\CommentResource;
+use App\Models\Comment;
+use App\Models\Manuscript;
+use App\Models\Reviewer;
 use App\Services\Comment\CommentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\Validator;
 
 class CommentController extends Controller
 {
@@ -19,19 +24,18 @@ class CommentController extends Controller
     /**
      * Get all comments for a specific entity
      */
-    public function index(\App\Http\Requests\V1\Comment\Index\IndexRequest $request): AnonymousResourceCollection|JsonResponse
+    public function index(IndexRequest $request): AnonymousResourceCollection|JsonResponse
     {
-        
 
         // Get commentable entity
         $commentableType = $request->commentable_type;
-        $commentableClass = match($commentableType) {
-            'manuscript' => \App\Models\Manuscript::class,
-            'reviewer' => \App\Models\Reviewer::class,
+        $commentableClass = match ($commentableType) {
+            'manuscript' => Manuscript::class,
+            'reviewer' => Reviewer::class,
             default => null,
         };
 
-        if (!$commentableClass) {
+        if (! $commentableClass) {
             return response()->json([
                 'message' => 'Invalid commentable type',
             ], 400);
@@ -39,7 +43,7 @@ class CommentController extends Controller
 
         $commentable = $commentableClass::find($request->commentable_id);
 
-        if (!$commentable) {
+        if (! $commentable) {
             return response()->json([
                 'message' => 'Commentable entity not found',
             ], 404);
@@ -65,6 +69,7 @@ class CommentController extends Controller
     {
         try {
             $comment = $this->commentService->getComment($id, request()->user());
+
             return new CommentResource($comment);
         } catch (\Exception $e) {
             return response()->json([
@@ -77,20 +82,19 @@ class CommentController extends Controller
     /**
      * Create a new comment
      */
-    public function store(\App\Http\Requests\V1\Comment\Store\StoreRequest $request): JsonResponse
+    public function store(StoreRequest $request): JsonResponse
     {
-        
 
         try {
             // Get commentable entity
             $commentableType = $request->commentable_type;
-            $commentableClass = match($commentableType) {
-                'manuscript' => \App\Models\Manuscript::class,
-                'reviewer' => \App\Models\Reviewer::class,
+            $commentableClass = match ($commentableType) {
+                'manuscript' => Manuscript::class,
+                'reviewer' => Reviewer::class,
                 default => null,
             };
 
-            if (!$commentableClass) {
+            if (! $commentableClass) {
                 return response()->json([
                     'message' => 'Invalid commentable type',
                 ], 400);
@@ -124,12 +128,11 @@ class CommentController extends Controller
     /**
      * Reply to a comment
      */
-    public function reply(\App\Http\Requests\V1\Comment\Reply\ReplyRequest $request, int $parentId): JsonResponse
+    public function reply(ReplyRequest $request, int $parentId): JsonResponse
     {
-        
 
         try {
-            $parentComment = \App\Models\Comment::findOrFail($parentId);
+            $parentComment = Comment::findOrFail($parentId);
 
             $comment = $this->commentService->replyToComment(
                 $parentComment,
@@ -158,10 +161,9 @@ class CommentController extends Controller
      */
     public function update(Request $request, int $id): JsonResponse
     {
-        
 
         try {
-            $commentModel = \App\Models\Comment::findOrFail($id);
+            $commentModel = Comment::findOrFail($id);
 
             $comment = $this->commentService->updateComment(
                 $commentModel,
@@ -187,7 +189,7 @@ class CommentController extends Controller
     public function destroy(Request $request, int $id): JsonResponse
     {
         try {
-            $comment = \App\Models\Comment::findOrFail($id);
+            $comment = Comment::findOrFail($id);
             $this->commentService->deleteComment($comment, $request->user());
 
             return response()->json([
@@ -207,7 +209,7 @@ class CommentController extends Controller
     public function markAsRead(Request $request, int $id): JsonResponse
     {
         try {
-            $comment = \App\Models\Comment::findOrFail($id);
+            $comment = Comment::findOrFail($id);
             $this->commentService->markAsRead($comment, $request->user());
 
             return response()->json([
@@ -226,18 +228,17 @@ class CommentController extends Controller
      */
     public function markAllAsRead(Request $request): JsonResponse
     {
-        
 
         try {
             // Get commentable entity
             $commentableType = $request->commentable_type;
-            $commentableClass = match($commentableType) {
-                'manuscript' => \App\Models\Manuscript::class,
-                'reviewer' => \App\Models\Reviewer::class,
+            $commentableClass = match ($commentableType) {
+                'manuscript' => Manuscript::class,
+                'reviewer' => Reviewer::class,
                 default => null,
             };
 
-            if (!$commentableClass) {
+            if (! $commentableClass) {
                 return response()->json([
                     'message' => 'Invalid commentable type',
                 ], 400);
@@ -264,18 +265,17 @@ class CommentController extends Controller
      */
     public function unreadCount(Request $request): JsonResponse
     {
-        
 
         try {
             // Get commentable entity
             $commentableType = $request->commentable_type;
-            $commentableClass = match($commentableType) {
-                'manuscript' => \App\Models\Manuscript::class,
-                'reviewer' => \App\Models\Reviewer::class,
+            $commentableClass = match ($commentableType) {
+                'manuscript' => Manuscript::class,
+                'reviewer' => Reviewer::class,
                 default => null,
             };
 
-            if (!$commentableClass) {
+            if (! $commentableClass) {
                 return response()->json([
                     'message' => 'Invalid commentable type',
                 ], 400);

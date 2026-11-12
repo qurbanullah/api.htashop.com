@@ -5,9 +5,10 @@ namespace App\Mail\Feedback;
 use App\Models\Feedback;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Mail\Mailables\Address;
 use Illuminate\Queue\SerializesModels;
 
 class FeedbackSubmittedMail extends Mailable
@@ -31,7 +32,7 @@ class FeedbackSubmittedMail extends Mailable
                 config('mail.from.address'),
                 config('mail.from.name')
             ),
-            subject: 'Feedback Received: ' . $this->feedback->subject,
+            subject: 'Feedback Received: '.$this->feedback->subject,
         );
     }
 
@@ -51,7 +52,7 @@ class FeedbackSubmittedMail extends Mailable
     /**
      * Get the attachments for the message.
      *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {

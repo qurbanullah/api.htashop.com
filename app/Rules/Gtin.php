@@ -55,6 +55,18 @@ class Gtin implements ValidationRule
         return self::TYPES[strlen($gtin)] ?? null;
     }
 
+    /** True for a blank value or a well-formed, correctly-checked GTIN. */
+    public static function isValid(?string $value): bool
+    {
+        if ($value === null || $value === '') {
+            return true;
+        }
+
+        return preg_match('/^\d+$/', $value) === 1
+            && array_key_exists(strlen($value), self::TYPES)
+            && self::hasValidCheckDigit($value);
+    }
+
     public static function hasValidCheckDigit(string $gtin): bool
     {
         $digits = array_map('intval', str_split($gtin));

@@ -10,9 +10,8 @@ class DetachTagsAction
     /**
      * Detach tags from a taggable model
      *
-     * @param Model $taggable The model to detach tags from
-     * @param array|Collection|null $tags Tag IDs to detach (null = detach all)
-     * @return void
+     * @param  Model  $taggable  The model to detach tags from
+     * @param  array|Collection|null  $tags  Tag IDs to detach (null = detach all)
      */
     public function execute(Model $taggable, array|Collection|null $tags = null): void
     {

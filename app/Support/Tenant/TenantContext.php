@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Auth;
 class TenantContext
 {
     public const DOMAIN_HEADER = 'X-Tenant-Domain';
+
     public const SLUG_HEADER = 'X-Tenant-Slug';
 
     /**
@@ -67,7 +68,7 @@ class TenantContext
     {
         $user ??= Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             return null;
         }
 
@@ -96,7 +97,7 @@ class TenantContext
 
         return CacheHelper::remember(
             ['tenants'],
-            'tenant:domain:' . md5($normalized),
+            'tenant:domain:'.md5($normalized),
             3600,
             fn () => Tenant::query()
                 ->where('domain', $normalized)
@@ -117,7 +118,7 @@ class TenantContext
 
         return CacheHelper::remember(
             ['tenants'],
-            'tenant:slug:' . $normalized,
+            'tenant:slug:'.$normalized,
             3600,
             fn () => Tenant::query()
                 ->where('slug', $normalized)

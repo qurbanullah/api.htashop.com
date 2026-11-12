@@ -39,9 +39,6 @@ class TicketUserStatsAction
 {
     /**
      * Get user-specific ticket statistics in a single optimized query
-     *
-     * @param int $userId
-     * @return array
      */
     public function handle(int $userId): array
     {
@@ -66,7 +63,7 @@ class TicketUserStatsAction
             ->first();
 
         // Handle case where user has no tickets or results are null
-        if (!$results) {
+        if (! $results) {
             return [
                 'totalTickets' => 0,
                 'statusStats' => [

@@ -3,18 +3,17 @@
 namespace App\Http\Controllers\V1\Email;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\V1\Email\IndexRequest;
 use App\Models\Email;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
+use Illuminate\Http\Request;
 
 class EmailController extends Controller
 {
     /**
      * Get all email addresses for the authenticated user
      */
-    public function index(\App\Http\Requests\V1\Email\IndexRequest $request): JsonResponse
+    public function index(IndexRequest $request): JsonResponse
     {
         $user = $request->user();
 
@@ -35,8 +34,6 @@ class EmailController extends Controller
     public function store(Request $request): JsonResponse
     {
         $user = $request->user();
-
-        
 
         try {
             $email = $user->addEmail(

@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\V1\Forum;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\V1\Forum\ForumTopicResource;
 use App\Http\Resources\V1\Forum\ForumPostResource;
-use App\Models\ForumPost;
+use App\Http\Resources\V1\Forum\ForumTopicResource;
 use App\Services\Forum\ForumPostService;
 use App\Services\Forum\ForumTopicService;
 use Illuminate\Http\JsonResponse;
@@ -38,7 +37,7 @@ class PublicForumController extends Controller
     {
         $topic = $this->topicService->findBySlug($slug);
 
-        if (!$topic) {
+        if (! $topic) {
             return response()->json([
                 'success' => false,
                 'message' => 'Topic not found.',
@@ -86,7 +85,7 @@ class PublicForumController extends Controller
     {
         $post = $this->postService->findBySlug($slug);
 
-        if (!$post || $post->status->value !== 'published') {
+        if (! $post || $post->status->value !== 'published') {
             return response()->json([
                 'success' => false,
                 'message' => 'Post not found.',

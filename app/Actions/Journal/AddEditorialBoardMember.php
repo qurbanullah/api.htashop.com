@@ -24,14 +24,14 @@ class AddEditorialBoardMember
                     'is_active' => $data['is_active'] ?? true,
                     'bio' => $data['bio'] ?? $existingMember->bio,
                     'expertise' => $data['expertise'] ?? $existingMember->expertise,
-                    'metadata' => array_merge($existingMember->metadata ?? [], $data['metadata'] ?? [])
+                    'metadata' => array_merge($existingMember->metadata ?? [], $data['metadata'] ?? []),
                 ]);
 
                 Log::info('Editorial board member updated', [
                     'journal_id' => $journal->id,
                     'user_id' => $data['user_id'],
                     'role' => $data['role'],
-                    'updated_by' => $currentUser->id
+                    'updated_by' => $currentUser->id,
                 ]);
             } else {
                 // Create new member
@@ -42,14 +42,14 @@ class AddEditorialBoardMember
                     'joined_at' => now(),
                     'bio' => $data['bio'] ?? null,
                     'expertise' => $data['expertise'] ?? [],
-                    'metadata' => $data['metadata'] ?? []
+                    'metadata' => $data['metadata'] ?? [],
                 ]);
 
                 Log::info('Editorial board member added', [
                     'journal_id' => $journal->id,
                     'user_id' => $data['user_id'],
                     'role' => $data['role'],
-                    'added_by' => $currentUser->id
+                    'added_by' => $currentUser->id,
                 ]);
             }
         });

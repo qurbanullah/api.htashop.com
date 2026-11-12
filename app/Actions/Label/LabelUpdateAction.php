@@ -40,7 +40,7 @@ class LabelUpdateAction
         }
 
         while ($query->exists()) {
-            $candidate = $base . '_' . $suffix;
+            $candidate = $base.'_'.$suffix;
             $suffix++;
             $query = Label::query()->where('slug', $candidate)->where('id', '!=', $label->id);
             if (is_null($tenantId)) {

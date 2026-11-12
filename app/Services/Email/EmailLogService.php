@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace App\Services\Email;
 
 use App\Models\EmailLog;
-use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Service for logging email sending attempts and tracking delivery status
@@ -16,17 +17,6 @@ class EmailLogService
 {
     /**
      * Create a new email log entry
-     *
-     * @param string $recipientEmail
-     * @param string $recipientName
-     * @param Mailable $mailable
-     * @param string|null $contextType
-     * @param int|null $contextId
-     * @param array $contextData
-     * @param int|null $userId
-     * @param int|null $triggeredByUserId
-     * @param array $metadata
-     * @return EmailLog
      */
     public function createLog(
         string $recipientEmail,
@@ -74,9 +64,6 @@ class EmailLogService
 
     /**
      * Mark an email log as sent successfully
-     *
-     * @param EmailLog $emailLog
-     * @return void
      */
     public function markAsSent(EmailLog $emailLog): void
     {
@@ -98,10 +85,6 @@ class EmailLogService
 
     /**
      * Mark an email log as failed
-     *
-     * @param EmailLog $emailLog
-     * @param \Throwable $exception
-     * @return void
      */
     public function markAsFailed(EmailLog $emailLog, \Throwable $exception): void
     {
@@ -133,14 +116,6 @@ class EmailLogService
     /**
      * Log and send an email with tracking
      *
-     * @param string $recipientEmail
-     * @param string|null $recipientName
-     * @param Mailable $mailable
-     * @param string|null $contextType
-     * @param int|null $contextId
-     * @param array $contextData
-     * @param int|null $userId
-     * @param int|null $triggeredByUserId
      * @return array ['success' => bool, 'emailLog' => EmailLog]
      */
     public function sendAndLog(
@@ -167,7 +142,7 @@ class EmailLogService
 
         try {
             // Send the email
-            \Illuminate\Support\Facades\Mail::to($recipientEmail)->send($mailable);
+            Mail::to($recipientEmail)->send($mailable);
 
             // Mark as sent
             $this->markAsSent($emailLog);
@@ -191,9 +166,7 @@ class EmailLogService
     /**
      * Get email logs for a specific context
      *
-     * @param string $contextType
-     * @param int $contextId
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return Collection
      */
     public function getLogsByContext(string $contextType, int $contextId)
     {
@@ -205,8 +178,7 @@ class EmailLogService
     /**
      * Get recent failed emails
      *
-     * @param int $limit
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return Collection
      */
     public function getRecentFailedEmails(int $limit = 50)
     {
@@ -218,15 +190,12 @@ class EmailLogService
 
     /**
      * Extract subject from mailable
-     *
-     * @param Mailable $mailable
-     * @return string
      */
     private function extractSubject(Mailable $mailable): string
     {
         try {
             // Try to access the subject property
-            if (property_exists($mailable, 'subject') && !empty($mailable->subject)) {
+            if (property_exists($mailable, 'subject') && ! empty($mailable->subject)) {
                 return $mailable->subject;
             }
 

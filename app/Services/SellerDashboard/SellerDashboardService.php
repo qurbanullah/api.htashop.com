@@ -8,8 +8,7 @@ class SellerDashboardService
 {
     public function __construct(
         protected SellerDashboardReadAction $readAction,
-    ) {
-    }
+    ) {}
 
     public function summary(): array
     {

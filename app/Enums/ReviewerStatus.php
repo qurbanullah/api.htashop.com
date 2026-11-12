@@ -22,7 +22,7 @@ enum ReviewerStatus: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING => 'Pending',
             self::IN_PROGRESS => 'In Progress',
             self::COMPLETED => 'Completed',
@@ -35,7 +35,7 @@ enum ReviewerStatus: string
      */
     public function description(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING => 'Invitation sent, awaiting response',
             self::IN_PROGRESS => 'Reviewer has accepted and is working on the review',
             self::COMPLETED => 'Review has been submitted',
@@ -48,7 +48,7 @@ enum ReviewerStatus: string
      */
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING => 'yellow',
             self::IN_PROGRESS => 'blue',
             self::COMPLETED => 'green',

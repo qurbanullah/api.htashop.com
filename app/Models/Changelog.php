@@ -22,10 +22,10 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Str;
 
 /**
  * Changelog Model class.
@@ -39,7 +39,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class Changelog extends Model
 {
-        use HasFactory;
+    use HasFactory;
 
     /**
      * The database used by the model.
@@ -89,7 +89,7 @@ class Changelog extends Model
      */
     public function getMarkdownContentAttribute(): string
     {
-        return \Illuminate\Support\Str::markdown($this->content ?? '');
+        return Str::markdown($this->content ?? '');
     }
 
     /**

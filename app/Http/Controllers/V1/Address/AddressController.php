@@ -4,9 +4,10 @@ namespace App\Http\Controllers\V1\Address;
 
 use App\Actions\Address\AddressCreateAction;
 use App\Actions\Address\AddressDeleteAction;
-use App\Actions\Address\AddressUpdateAction;
 use App\Actions\Address\AddressSetPrimaryAction;
+use App\Actions\Address\AddressUpdateAction;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\V1\Address\AddressResource;
 use App\Http\Responses\V1\ApiResponse;
 use App\Models\Address;
 use App\Models\Organization;
@@ -22,8 +23,7 @@ class AddressController extends Controller
         protected AddressUpdateAction $updateAction,
         protected AddressDeleteAction $deleteAction,
         protected AddressSetPrimaryAction $setPrimaryAction,
-    ) {
-    }
+    ) {}
 
     /**
      * List addresses for the authenticated user (or their organization).
@@ -39,7 +39,7 @@ class AddressController extends Controller
             ->get();
 
         return ApiResponse::success(
-            \App\Http\Resources\V1\Address\AddressResource::collection($addresses),
+            AddressResource::collection($addresses),
             'Addresses retrieved successfully',
         );
     }
@@ -52,7 +52,7 @@ class AddressController extends Controller
         $address = $this->createAction->handle($owner, $data);
 
         return ApiResponse::success(
-            new \App\Http\Resources\V1\Address\AddressResource($address->load('country')),
+            new AddressResource($address->load('country')),
             'Address created successfully',
             201,
         );
@@ -66,7 +66,7 @@ class AddressController extends Controller
         $address = $this->updateAction->handle($address, $this->validated($request, $address->addressable, true));
 
         return ApiResponse::success(
-            new \App\Http\Resources\V1\Address\AddressResource($address->load('country')),
+            new AddressResource($address->load('country')),
             'Address updated successfully',
         );
     }
@@ -89,7 +89,7 @@ class AddressController extends Controller
         $this->setPrimaryAction->handle($address);
 
         return ApiResponse::success(
-            new \App\Http\Resources\V1\Address\AddressResource($address->fresh('country')),
+            new AddressResource($address->fresh('country')),
             'Primary address updated successfully',
         );
     }

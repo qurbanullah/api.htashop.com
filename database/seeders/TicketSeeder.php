@@ -2,12 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Enums\StatusEnum;
+use App\Enums\StypeEnum;
 use App\Models\Message;
 use App\Models\Ticket;
 use App\Models\User;
-use App\Enums\StatusEnum;
-use App\Enums\StypeEnum;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -47,6 +46,7 @@ class TicketSeeder extends Seeder
 
         if (empty($userIds)) {
             $this->command->error('No users found! Please run UserSeeder first.');
+
             return;
         }
 
@@ -162,7 +162,7 @@ class TicketSeeder extends Seeder
             }
         }
 
-        $this->command->info("Successfully created {$createdTickets} tickets distributed across " . count($userIds) . " users!");
+        $this->command->info("Successfully created {$createdTickets} tickets distributed across ".count($userIds).' users!');
     }
 
     /**
@@ -175,6 +175,7 @@ class TicketSeeder extends Seeder
 
         if (empty($userIds)) {
             $this->command->error('No users found! Cannot create messages.');
+
             return;
         }
 
@@ -190,6 +191,7 @@ class TicketSeeder extends Seeder
         $existingMessagesCount = Message::count();
         if ($existingMessagesCount > 0) {
             $this->command->info("Found {$existingMessagesCount} existing messages, skipping message creation.");
+
             return;
         }
 
@@ -225,11 +227,11 @@ class TicketSeeder extends Seeder
 
                 if ($isSupportResponse) {
                     // Get a random admin/support user
-                    $supportUsers = User::whereHas('roles', function($query) {
+                    $supportUsers = User::whereHas('roles', function ($query) {
                         $query->whereIn('name', ['admin', 'super-admin']);
                     })->pluck('id')->toArray();
 
-                    $messageUserId = !empty($supportUsers) ? fake()->randomElement($supportUsers) : $ticket->user_id;
+                    $messageUserId = ! empty($supportUsers) ? fake()->randomElement($supportUsers) : $ticket->user_id;
                 } else {
                     // Message from the ticket reporter or other users
                     $messageUserId = fake()->boolean(80) ? $ticket->user_id : fake()->randomElement($userIds);
@@ -270,26 +272,26 @@ class TicketSeeder extends Seeder
     private function generateInitialMessage(): string
     {
         $initialMessages = [
-            "I need help with license activation. The system shows an error when I try to activate my license key.",
+            'I need help with license activation. The system shows an error when I try to activate my license key.',
             "I'm unable to access the admin panel after the recent update. Getting a 403 forbidden error.",
-            "The file upload feature is not working properly. Files get stuck at 50% upload progress.",
+            'The file upload feature is not working properly. Files get stuck at 50% upload progress.',
             "I'm experiencing slow performance when loading the dashboard. It takes over 30 seconds to load.",
             "There's an issue with email notifications. I'm not receiving any notification emails.",
             "The search functionality returns incorrect results. It's showing outdated data.",
             "I can't generate reports. The system shows 'Export failed' error message.",
-            "The user management section is not saving changes. Settings revert after refresh.",
+            'The user management section is not saving changes. Settings revert after refresh.',
             "I'm getting frequent timeout errors when processing large datasets.",
-            "The mobile app crashes when trying to sync data with the server.",
+            'The mobile app crashes when trying to sync data with the server.',
             "I can't update my profile information. The save button doesn't respond.",
-            "The API integration is failing with authentication errors.",
-            "Database backup functionality is not working. No backup files are being created.",
+            'The API integration is failing with authentication errors.',
+            'Database backup functionality is not working. No backup files are being created.',
             "The payment processing module shows 'Transaction failed' for all attempts.",
             "I'm unable to download generated invoices. Links return 404 errors.",
-            "The two-factor authentication setup is not working properly.",
-            "Calendar integration is not syncing events correctly.",
-            "The bulk import feature fails with large CSV files.",
-            "Password reset emails are not being delivered to users.",
-            "The reporting dashboard shows incorrect data visualization.",
+            'The two-factor authentication setup is not working properly.',
+            'Calendar integration is not syncing events correctly.',
+            'The bulk import feature fails with large CSV files.',
+            'Password reset emails are not being delivered to users.',
+            'The reporting dashboard shows incorrect data visualization.',
         ];
 
         return fake()->randomElement($initialMessages);
@@ -303,19 +305,19 @@ class TicketSeeder extends Seeder
         $supportResponses = [
             "Thank you for contacting us. We're looking into this issue and will get back to you shortly.",
             "We've received your report and have escalated it to our technical team for investigation.",
-            "Could you please provide your license key and system information so we can better assist you?",
+            'Could you please provide your license key and system information so we can better assist you?',
             "We've identified the issue in our logs. A fix will be deployed in the next update.",
-            "Please try clearing your browser cache and attempt the operation again.",
+            'Please try clearing your browser cache and attempt the operation again.',
             "We've resolved this issue on our end. Please check if it's working now.",
-            "This appears to be related to server maintenance. The issue should be resolved now.",
+            'This appears to be related to server maintenance. The issue should be resolved now.',
             "We'll need to schedule a quick call to troubleshoot this further. What times work for you?",
             "I've checked your account and everything appears to be configured correctly. Let's try a different approach.",
             "This is a known issue that we're working on. I'll keep you updated on our progress.",
-            "Could you please try accessing the system from a different device or network?",
+            'Could you please try accessing the system from a different device or network?',
             "I've reset your account permissions. Please log out and back in to see if this resolves the issue.",
             "We've updated your license. You should now be able to access all the features.",
             "I'm escalating this to our senior technical team for further investigation.",
-            "Based on your description, this seems to be a browser compatibility issue. Please try using Chrome or Firefox.",
+            'Based on your description, this seems to be a browser compatibility issue. Please try using Chrome or Firefox.',
         ];
 
         return fake()->randomElement($supportResponses);
@@ -328,25 +330,25 @@ class TicketSeeder extends Seeder
     {
         $followUpMessages = [
             "I've tried the suggested solution but the issue persists.",
-            "Additional information: This happens on both Chrome and Firefox browsers.",
-            "The problem occurs only during peak hours between 9 AM and 5 PM.",
-            "I can reproduce this by following these steps: 1) Login, 2) Navigate to settings, 3) Click save.",
-            "This is affecting our daily operations. Any updates on the resolution?",
+            'Additional information: This happens on both Chrome and Firefox browsers.',
+            'The problem occurs only during peak hours between 9 AM and 5 PM.',
+            'I can reproduce this by following these steps: 1) Login, 2) Navigate to settings, 3) Click save.',
+            'This is affecting our daily operations. Any updates on the resolution?',
             "Thank you for the quick response! I'll try that and get back to you.",
-            "The issue seems to be resolved now. Thank you for your help!",
+            'The issue seems to be resolved now. Thank you for your help!',
             "I'm still experiencing the same problem. Could you please look into it further?",
-            "Is there an estimated time for when this will be fixed?",
+            'Is there an estimated time for when this will be fixed?',
             "I've followed all the troubleshooting steps but nothing has worked so far.",
-            "Could you please provide alternative solutions while this is being fixed?",
+            'Could you please provide alternative solutions while this is being fixed?',
             "I've attached screenshots that show the error message I'm receiving.",
-            "This started happening right after the system update last week.",
-            "Other users in my organization are reporting the same issue.",
+            'This started happening right after the system update last week.',
+            'Other users in my organization are reporting the same issue.',
             "The error message I'm getting is: 'Connection timeout - please try again later'.",
-            "I can provide remote access if you need to investigate this directly.",
-            "The issue is intermittent - it works sometimes and fails other times.",
-            "Could this be related to our firewall or network configuration?",
+            'I can provide remote access if you need to investigate this directly.',
+            'The issue is intermittent - it works sometimes and fails other times.',
+            'Could this be related to our firewall or network configuration?',
             "I've checked the logs and found several error entries related to this issue.",
-            "Any update on this? This is becoming quite urgent for our business operations.",
+            'Any update on this? This is becoming quite urgent for our business operations.',
         ];
 
         return fake()->randomElement($followUpMessages);
@@ -384,7 +386,7 @@ class TicketSeeder extends Seeder
             ->groupBy('status')
             ->get();
 
-        $this->command->info("Status Distribution:");
+        $this->command->info('Status Distribution:');
         foreach ($statusStats as $stat) {
             $this->command->info("  {$stat->status}: {$stat->count}");
         }

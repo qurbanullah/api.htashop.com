@@ -4,13 +4,14 @@ namespace App\Rules;
 
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Translation\PotentiallyTranslatedString;
 
 class BusinessEmail implements ValidationRule
 {
     /**
      * Run the validation rule.
      *
-     * @param  \Closure(string, ?string=): \Illuminate\Translation\PotentiallyTranslatedString  $fail
+     * @param  Closure(string, ?string=): PotentiallyTranslatedString  $fail
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
@@ -22,7 +23,7 @@ class BusinessEmail implements ValidationRule
             'zoho.com', 'live.com', 'msn.com', 'mail.ru', '163.com', 'qq.com',
             'sina.com', 'sohu.com', '126.com', 'yeah.net', 'foxmail.com',
             'temp-mail.org', '10minutemail.com', 'guerrillamail.com',
-            'mailinator.com', 'tempmail.org'
+            'mailinator.com', 'tempmail.org',
         ];
 
         if (empty($value)) {

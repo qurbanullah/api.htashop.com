@@ -2,6 +2,8 @@
 
 namespace Tests\Unit\ForumComment;
 
+use App\Http\Controllers\V1\Forum\PublicForumCommentController;
+
 test('the ForumComment controller class exists', function () {
-    expect(class_exists(\App\Http\Controllers\V1\Forum\PublicForumCommentController::class))->toBeTrue();
+    expect(class_exists(PublicForumCommentController::class))->toBeTrue();
 });

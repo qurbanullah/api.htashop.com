@@ -22,6 +22,8 @@ declare(strict_types=1);
 
 namespace App\Actions\Types\LicenseTypes;
 
+use App\Filters\FilterByIsActive;
+use App\Filters\FilterByName;
 use App\Models\Ltype;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Pipeline;
@@ -48,8 +50,8 @@ class LtypeReadAction
         return Pipeline::send(Ltype::query())
             ->through(
                 [
-                    new \App\Filters\FilterByIsActive(data_get($data, 'filters', ['is_active' => true])),
-                    new \App\Filters\FilterByName(data_get($data, 'filters', ['name' => ''])),
+                    new FilterByIsActive(data_get($data, 'filters', ['is_active' => true])),
+                    new FilterByName(data_get($data, 'filters', ['name' => ''])),
                 ]
             )
             ->thenReturn()

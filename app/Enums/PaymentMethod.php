@@ -5,9 +5,13 @@ namespace App\Enums;
 class PaymentMethod
 {
     public const COD = 'cod';
+
     public const JAZZCASH = 'jazzcash';
+
     public const EASYPAISA = 'easypaisa';
+
     public const UPAISA = 'upaisa';
+
     public const SAFEPAY = 'safepay';
 
     public const ALL = [

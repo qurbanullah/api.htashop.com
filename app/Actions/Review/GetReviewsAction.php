@@ -10,10 +10,8 @@ class GetReviewsAction
     /**
      * Get paginated reviews for a reviewable model
      *
-     * @param Model $reviewable The model being reviewed (Product, Vendor, etc.)
-     * @param int $perPage
-     * @param int|null $rating Filter by rating
-     * @return LengthAwarePaginator
+     * @param  Model  $reviewable  The model being reviewed (Product, Vendor, etc.)
+     * @param  int|null  $rating  Filter by rating
      */
     public function execute(Model $reviewable, int $perPage = 15, ?int $rating = null): LengthAwarePaginator
     {

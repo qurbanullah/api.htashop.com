@@ -11,8 +11,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Job to send email notification when a comment is added to feedback
@@ -49,7 +49,7 @@ class SendFeedbackCommentEmailJob implements ShouldQueue
     public function handle(): void
     {
         try {
-            $emailLogService = new EmailLogService();
+            $emailLogService = new EmailLogService;
 
             // Prepare the mailable
             $mailable = new FeedbackCommentMail($this->feedback, $this->comment);

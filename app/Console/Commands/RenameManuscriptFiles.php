@@ -65,7 +65,7 @@ class RenameManuscriptFiles extends Command
                     $newFileName = "{$manuscript->manuscript_number}.{$extension}";
 
                     if ($manuscriptFile->file_name !== $newFileName) {
-                        if (!$dryRun) {
+                        if (! $dryRun) {
                             $manuscriptFile->file_name = $newFileName;
                             $manuscriptFile->name = $manuscript->manuscript_number;
                             $manuscriptFile->save();
@@ -88,7 +88,7 @@ class RenameManuscriptFiles extends Command
                         $newFileName = "{$manuscript->manuscript_number}_R{$versionNumber}.{$extension}";
 
                         if ($media->file_name !== $newFileName) {
-                            if (!$dryRun) {
+                            if (! $dryRun) {
                                 $media->file_name = $newFileName;
                                 $media->name = "{$manuscript->manuscript_number} - Revision {$versionNumber}";
                                 $media->save();
@@ -106,7 +106,7 @@ class RenameManuscriptFiles extends Command
                 $this->error("  ✗ Error processing manuscript {$manuscript->id}: {$e->getMessage()}");
                 Log::error('Failed to rename manuscript files', [
                     'manuscript_id' => $manuscript->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
                 $errorCount++;
             }

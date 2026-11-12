@@ -2,11 +2,12 @@
 
 namespace App\Services\Journal;
 
-use App\Models\Journal;
-use App\Models\User;
+use App\Actions\Journal\AddEditorialBoardMember;
 use App\Actions\Journal\CreateJournal;
 use App\Actions\Journal\UpdateJournal;
-use App\Actions\Journal\AddEditorialBoardMember;
+use App\Enums\ManuscriptStatus;
+use App\Models\Journal;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -60,7 +61,7 @@ class JournalService
                 $query->with(['submittingAuthor', 'authors'])
                     ->latest('submission_date')
                     ->limit(10);
-            }
+            },
         ])->findOrFail($journalId);
     }
 
@@ -99,7 +100,7 @@ class JournalService
 
         $member->update([
             'is_active' => false,
-            'left_at' => now()
+            'left_at' => now(),
         ]);
     }
 
@@ -111,13 +112,13 @@ class JournalService
         return [
             'total_manuscripts' => $journal->manuscripts()->count(),
             'published_manuscripts' => $journal->manuscripts()
-                ->where('status', \App\Enums\ManuscriptStatus::PUBLISHED)
+                ->where('status', ManuscriptStatus::PUBLISHED)
                 ->count(),
             'under_review' => $journal->manuscripts()
-                ->where('status', \App\Enums\ManuscriptStatus::UNDER_REVIEW)
+                ->where('status', ManuscriptStatus::UNDER_REVIEW)
                 ->count(),
             'pending_review' => $journal->manuscripts()
-                ->where('status', \App\Enums\ManuscriptStatus::SUBMITTED)
+                ->where('status', ManuscriptStatus::SUBMITTED)
                 ->count(),
             'editorial_board_size' => $journal->editorialBoard()
                 ->where('is_active', true)
@@ -128,10 +129,10 @@ class JournalService
                     ->count(),
                 'this_year' => $journal->manuscripts()
                     ->where('submission_date', '>=', now()->startOfYear())
-                    ->count()
+                    ->count(),
             ],
             'acceptance_rate' => $this->calculateAcceptanceRate($journal),
-            'average_review_time' => $this->calculateAverageReviewTime($journal)
+            'average_review_time' => $this->calculateAverageReviewTime($journal),
         ];
     }
 
@@ -152,9 +153,9 @@ class JournalService
     {
         $totalDecided = $journal->manuscripts()
             ->whereIn('status', [
-                \App\Enums\ManuscriptStatus::ACCEPTED,
-                \App\Enums\ManuscriptStatus::REJECTED,
-                \App\Enums\ManuscriptStatus::PUBLISHED
+                ManuscriptStatus::ACCEPTED,
+                ManuscriptStatus::REJECTED,
+                ManuscriptStatus::PUBLISHED,
             ])
             ->count();
 
@@ -164,8 +165,8 @@ class JournalService
 
         $accepted = $journal->manuscripts()
             ->whereIn('status', [
-                \App\Enums\ManuscriptStatus::ACCEPTED,
-                \App\Enums\ManuscriptStatus::PUBLISHED
+                ManuscriptStatus::ACCEPTED,
+                ManuscriptStatus::PUBLISHED,
             ])
             ->count();
 
@@ -184,7 +185,7 @@ class JournalService
      */
     public function deleteJournal(Journal $journal, User $user): bool
     {
-        if (!$user->can('delete', $journal)) {
+        if (! $user->can('delete', $journal)) {
             throw new \Exception('You do not have permission to delete this journal.');
         }
 
@@ -260,7 +261,7 @@ class JournalService
                 $q->where('publisher', 'like', "%{$filters['publisher']}%");
             });
 
-    // Order by title so UI option lists return predictable alphabetical titles.
-    return $searchQuery->orderBy('title')->get();
+        // Order by title so UI option lists return predictable alphabetical titles.
+        return $searchQuery->orderBy('title')->get();
     }
 }

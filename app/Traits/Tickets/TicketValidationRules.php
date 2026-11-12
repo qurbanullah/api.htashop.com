@@ -27,6 +27,7 @@ use App\Enums\ReproducibilityEnum;
 use App\Enums\SeverityEnum;
 use App\Enums\StatusEnum;
 use App\Enums\StypeEnum;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rules\Enum;
 
 /**
@@ -44,7 +45,7 @@ trait TicketValidationRules
     /**
      * Run the validation rule.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function formRules(): array
     {

@@ -10,9 +10,8 @@ class ToggleHelpfulVoteAction
     /**
      * Toggle helpful vote for a review
      *
-     * @param Review $review
-     * @param User $user
      * @return array ['voted' => bool, 'helpful_count' => int]
+     *
      * @throws \Exception
      */
     public function execute(Review $review, User $user): array

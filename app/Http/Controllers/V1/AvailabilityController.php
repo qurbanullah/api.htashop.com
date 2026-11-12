@@ -28,8 +28,8 @@ class AvailabilityController extends Controller
             $tenantExists = Tenant::where('slug', $slug)->exists();
             $orgExists = Organization::where('slug', $slug)->exists();
             $result['slug'] = [
-                'available' => !$tenantExists && !$orgExists,
-                'message' => (!$tenantExists && !$orgExists)
+                'available' => ! $tenantExists && ! $orgExists,
+                'message' => (! $tenantExists && ! $orgExists)
                     ? 'This URL is available!'
                     : 'This URL is already taken.',
             ];
@@ -39,8 +39,8 @@ class AvailabilityController extends Controller
             $exists = Tenant::where('name', $validated['store_name'])->exists()
                 || Organization::where('name', $validated['store_name'])->exists();
             $result['store_name'] = [
-                'available' => !$exists,
-                'message' => !$exists
+                'available' => ! $exists,
+                'message' => ! $exists
                     ? 'This name is available!'
                     : 'This name is already taken.',
             ];

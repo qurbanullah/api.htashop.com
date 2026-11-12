@@ -24,7 +24,7 @@ class BrandController extends Controller
             ->when($manufacturerId, fn ($query) => $query->where('manufacturer_id', $manufacturerId))
             ->when($isAdmin, fn ($query) => $query->adminView($request->string('approval_status')->toString() ?: null))
             ->when(! $isAdmin, fn ($query) => $query->vendorVisible($user))
-            ->when($request->filled('search'), fn ($query) => $query->where('name', 'like', '%' . $request->string('search') . '%'))
+            ->when($request->filled('search'), fn ($query) => $query->where('name', 'like', '%'.$request->string('search').'%'))
             ->when(! $request->boolean('include_inactive'), fn ($query) => $query->where('is_active', true))
             ->with('manufacturer')
             ->orderByDesc('is_approved')
@@ -107,7 +107,7 @@ class BrandController extends Controller
             ->where('slug', $candidate)
             ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
             ->exists()) {
-            $candidate = $base . '-' . $suffix;
+            $candidate = $base.'-'.$suffix;
             $suffix++;
         }
 

@@ -1,6 +1,6 @@
 <?php
 
-if (!extension_loaded('pdo_sqlite') || !extension_loaded('sqlite3')) {
+if (! extension_loaded('pdo_sqlite') || ! extension_loaded('sqlite3')) {
     fwrite(STDERR, "SQLite extensions are required for tests. Refusing to run tests without pdo_sqlite and sqlite3.\n");
     exit(1);
 }
@@ -44,4 +44,4 @@ $_SERVER['PULSE_ENABLED'] = 'false';
 $_SERVER['TELESCOPE_ENABLED'] = 'false';
 $_SERVER['NIGHTWATCH_ENABLED'] = 'false';
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__.'/../vendor/autoload.php';

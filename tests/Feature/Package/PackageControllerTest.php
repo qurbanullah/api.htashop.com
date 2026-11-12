@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Package;
 
+use App\Http\Controllers\V1\Package\PackageController;
+
 test('the Package controller class exists', function () {
-    expect(class_exists(\App\Http\Controllers\V1\Package\PackageController::class))->toBeTrue();
+    expect(class_exists(PackageController::class))->toBeTrue();
 });

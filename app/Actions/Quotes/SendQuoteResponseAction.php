@@ -2,22 +2,18 @@
 
 namespace App\Actions\Quotes;
 
+use App\Mail\QuoteResponseMail;
 use App\Models\QuoteRequest;
 use App\Models\QuoteResponse;
-use App\Mail\QuoteResponseMail;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use Exception;
 
 class SendQuoteResponseAction
 {
     /**
      * Send a quote response to the customer.
      *
-     * @param QuoteRequest $quoteRequest
-     * @param array $data
-     * @param int $sentBy
-     * @return QuoteResponse
      * @throws Exception
      */
     public function execute(QuoteRequest $quoteRequest, array $data, int $sentBy): QuoteResponse
@@ -56,7 +52,7 @@ class SendQuoteResponseAction
             return $quoteResponse;
         } catch (Exception $e) {
             DB::rollBack();
-            throw new Exception("Failed to send quote response: " . $e->getMessage());
+            throw new Exception('Failed to send quote response: '.$e->getMessage());
         }
     }
 }

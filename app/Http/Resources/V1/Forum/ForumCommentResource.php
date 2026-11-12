@@ -24,7 +24,7 @@ class ForumCommentResource extends JsonResource
                 $this->relationLoaded('author') && $this->author,
                 fn () => [
                     'id' => $this->author->id,
-                    'name' => $this->author->name ?? trim(($this->author->first_name ?? '') . ' ' . ($this->author->last_name ?? '')),
+                    'name' => $this->author->name ?? trim(($this->author->first_name ?? '').' '.($this->author->last_name ?? '')),
                     'avatar_url' => $this->author->avatar_small ?? null,
                 ]
             ),

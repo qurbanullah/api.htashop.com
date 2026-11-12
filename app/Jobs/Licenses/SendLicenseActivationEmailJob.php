@@ -24,8 +24,8 @@ namespace App\Jobs\Licenses;
 
 use App\Helpers\AdminHelper;
 use App\Mail\LicenseActivatedMail;
-use App\Models\User;
 use App\Models\License;
+use App\Models\User;
 use App\Services\Email\EmailLogService;
 use App\Services\Storage\S3UploadService;
 use Illuminate\Bus\Queueable;
@@ -33,8 +33,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -93,7 +93,7 @@ class SendLicenseActivationEmailJob implements ShouldQueue
                 $disk = Storage::disk('private');
 
                 // License file
-                if (!empty($this->license->license_file) && empty($this->license->license_file_s3_key)) {
+                if (! empty($this->license->license_file) && empty($this->license->license_file_s3_key)) {
                     $localPath = $this->license->license_file;
                     $fullPath = null;
                     if ($disk->exists($localPath)) {
@@ -108,15 +108,17 @@ class SendLicenseActivationEmailJob implements ShouldQueue
                         }
                     }
 
-                    if (!$fullPath) {
+                    if (! $fullPath) {
                         $dir = dirname($localPath);
                         $storageRoot = $disk->path('');
-                        $searchDir = rtrim($storageRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . ltrim($dir, DIRECTORY_SEPARATOR);
+                        $searchDir = rtrim($storageRoot, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.ltrim($dir, DIRECTORY_SEPARATOR);
                         if (is_dir($searchDir)) {
                             foreach (scandir($searchDir) as $f) {
-                                if ($f === '.' || $f === '..') continue;
+                                if ($f === '.' || $f === '..') {
+                                    continue;
+                                }
                                 if (strpos($f, pathinfo($localPath, PATHINFO_FILENAME)) === 0) {
-                                    $fullPath = $searchDir . DIRECTORY_SEPARATOR . $f;
+                                    $fullPath = $searchDir.DIRECTORY_SEPARATOR.$f;
                                     break;
                                 }
                             }
@@ -131,7 +133,7 @@ class SendLicenseActivationEmailJob implements ShouldQueue
                 }
 
                 // Data file
-                if (!empty($this->license->data_file) && empty($this->license->data_file_s3_key)) {
+                if (! empty($this->license->data_file) && empty($this->license->data_file_s3_key)) {
                     $localPath = $this->license->data_file;
                     $fullPath = null;
                     if ($disk->exists($localPath)) {
@@ -146,15 +148,17 @@ class SendLicenseActivationEmailJob implements ShouldQueue
                         }
                     }
 
-                    if (!$fullPath) {
+                    if (! $fullPath) {
                         $dir = dirname($localPath);
                         $storageRoot = $disk->path('');
-                        $searchDir = rtrim($storageRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . ltrim($dir, DIRECTORY_SEPARATOR);
+                        $searchDir = rtrim($storageRoot, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.ltrim($dir, DIRECTORY_SEPARATOR);
                         if (is_dir($searchDir)) {
                             foreach (scandir($searchDir) as $f) {
-                                if ($f === '.' || $f === '..') continue;
+                                if ($f === '.' || $f === '..') {
+                                    continue;
+                                }
                                 if (strpos($f, pathinfo($localPath, PATHINFO_FILENAME)) === 0) {
-                                    $fullPath = $searchDir . DIRECTORY_SEPARATOR . $f;
+                                    $fullPath = $searchDir.DIRECTORY_SEPARATOR.$f;
                                     break;
                                 }
                             }
@@ -171,13 +175,13 @@ class SendLicenseActivationEmailJob implements ShouldQueue
                 Log::warning('Synchronous S3 upload before email failed', ['license_id' => $this->license->id, 'error' => $e->getMessage()]);
             }
 
-            $emailLogService = new EmailLogService();
+            $emailLogService = new EmailLogService;
             $statusText = $this->isActivated ? 'activated' : 'deactivated';
 
             // Determine approver and requester
             $requestedBy = $this->license->user;
             $approvedBy = null;
-            if (!empty($this->triggeredByUserId)) {
+            if (! empty($this->triggeredByUserId)) {
                 $approvedBy = User::find($this->triggeredByUserId);
             }
 
@@ -260,7 +264,7 @@ class SendLicenseActivationEmailJob implements ShouldQueue
 
             Log::info('License request notification emails sent to admins', [
                 'license_id' => $this->license->id,
-                'admin_count' => $admins->count()
+                'admin_count' => $admins->count(),
             ]);
 
         } catch (\Exception $e) {

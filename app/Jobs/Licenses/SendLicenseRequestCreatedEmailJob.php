@@ -23,6 +23,7 @@ class SendLicenseRequestCreatedEmailJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public License $license;
+
     public ?int $triggeredByUserId = null;
 
     /**
@@ -53,12 +54,12 @@ class SendLicenseRequestCreatedEmailJob implements ShouldQueue
             // Load necessary relationships
             $this->license->load(['user', 'software', 'version', 'package', 'ltype']);
 
-            $emailLogService = new EmailLogService();
+            $emailLogService = new EmailLogService;
 
             // Determine requester and approver (approver may be null for request creation)
             $requestedBy = $this->license->user;
             $approvedBy = null;
-            if (!empty($this->triggeredByUserId)) {
+            if (! empty($this->triggeredByUserId)) {
                 $approvedBy = User::find($this->triggeredByUserId);
             }
 
@@ -83,7 +84,7 @@ class SendLicenseRequestCreatedEmailJob implements ShouldQueue
 
                 Log::info('License request confirmation email sent to user', [
                     'license_id' => $this->license->id,
-                    'user_email' => $this->license->user->email
+                    'user_email' => $this->license->user->email,
                 ]);
             } catch (\Exception $e) {
                 $emailLogService->markAsFailed($userEmailLog, $e);
@@ -128,7 +129,7 @@ class SendLicenseRequestCreatedEmailJob implements ShouldQueue
 
             Log::info('License request notification emails sent to admins', [
                 'license_id' => $this->license->id,
-                'admin_count' => $admins->count()
+                'admin_count' => $admins->count(),
             ]);
 
             // Send email to sales managers
@@ -147,7 +148,7 @@ class SendLicenseRequestCreatedEmailJob implements ShouldQueue
             Log::error('Failed to send license request notification emails', [
                 'license_id' => $this->license->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             // Re-throw the exception to trigger job failure and retry
@@ -163,7 +164,7 @@ class SendLicenseRequestCreatedEmailJob implements ShouldQueue
         Log::error('License request email job failed permanently', [
             'license_id' => $this->license->id,
             'error' => $exception->getMessage(),
-            'trace' => $exception->getTraceAsString()
+            'trace' => $exception->getTraceAsString(),
         ]);
     }
 }

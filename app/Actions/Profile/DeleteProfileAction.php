@@ -12,7 +12,6 @@ class DeleteProfileAction
      *
      * @param  Profile  $profile  The profile to delete
      * @param  bool  $hardDelete  Whether to permanently delete or soft delete
-     * @return bool
      */
     public function execute(Profile $profile, bool $hardDelete = false): bool
     {

@@ -20,7 +20,7 @@ class ForumCommentService
                 'author:id,name,first_name,last_name',
                 'visibleReplies' => function ($q) {
                     $q->with('author:id,name,first_name,last_name')
-                      ->orderBy('created_at', 'asc');
+                        ->orderBy('created_at', 'asc');
                 },
             ])
             ->withCount(['visibleReplies', 'likes'])
@@ -40,19 +40,19 @@ class ForumCommentService
             ])
             ->withCount(['replies', 'likes', 'reports']);
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['post_id'])) {
+        if (! empty($filters['post_id'])) {
             $query->where('post_id', $filters['post_id']);
         }
 
-        if (!empty($filters['user_id'])) {
+        if (! empty($filters['user_id'])) {
             $query->where('user_id', $filters['user_id']);
         }
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where('body', 'like', "%{$search}%");
         }
@@ -106,11 +106,13 @@ class ForumCommentService
         if ($existing) {
             $existing->delete();
             $comment->refreshLikeCount();
+
             return ['liked' => false, 'like_count' => $comment->fresh()->like_count];
         }
 
         $comment->likes()->create(['user_id' => $user->id]);
         $comment->refreshLikeCount();
+
         return ['liked' => true, 'like_count' => $comment->fresh()->like_count];
     }
 
@@ -118,6 +120,7 @@ class ForumCommentService
     {
         $comment->update(['status' => ForumCommentStatusEnum::HIDDEN->value]);
         $comment->post->refreshCommentCount();
+
         return $comment->fresh();
     }
 
@@ -125,6 +128,7 @@ class ForumCommentService
     {
         $comment->update(['status' => ForumCommentStatusEnum::VISIBLE->value]);
         $comment->post->refreshCommentCount();
+
         return $comment->fresh();
     }
 }

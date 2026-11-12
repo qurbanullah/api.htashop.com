@@ -14,19 +14,19 @@ use Illuminate\Http\Request;
 
 class PriceController extends Controller
 {
-    public function __construct(protected PriceService $priceService)
-    {
-    }
+    public function __construct(protected PriceService $priceService) {}
 
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Price::class);
+
         return ApiResponse::success(PriceResource::collection($this->priceService->read($request->all())), 'Prices retrieved successfully');
     }
 
     public function store(PriceStoreRequest $request): JsonResponse
     {
         $this->authorize('create', Price::class);
+
         return ApiResponse::success(new PriceResource($this->priceService->create($request->validated())), 'Price created successfully', 201);
     }
 
@@ -34,6 +34,7 @@ class PriceController extends Controller
     {
         $price = $this->priceService->searchById($id);
         $this->authorize('view', $price);
+
         return ApiResponse::success(new PriceResource($price), 'Price retrieved successfully');
     }
 
@@ -41,6 +42,7 @@ class PriceController extends Controller
     {
         $price = $this->priceService->searchById($id);
         $this->authorize('update', $price);
+
         return ApiResponse::success(new PriceResource($this->priceService->update($price, $request->validated())), 'Price updated successfully');
     }
 
@@ -49,6 +51,7 @@ class PriceController extends Controller
         $price = $this->priceService->searchById($id);
         $this->authorize('delete', $price);
         $this->priceService->delete($price);
+
         return ApiResponse::success(null, 'Price deleted successfully');
     }
 }

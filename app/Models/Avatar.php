@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
-
+use App\Actions\Avatar\CreateAvatarsFromUploadAction;
+use App\Actions\Avatar\DeleteAvatarsAction;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
 
 class Avatar extends Model
 {
@@ -20,7 +19,6 @@ class Avatar extends Model
      *   createFromUpload()  → App\Actions\Avatar\CreateAvatarsFromUploadAction
      *   deleteAllForAvatareable() → App\Actions\Avatar\DeleteAvatarsAction
      */
-
     protected $fillable = [
         'avatareable_id',
         'avatareable_type',
@@ -90,7 +88,7 @@ class Avatar extends Model
      */
     public static function deleteAllForAvatareable(int|string $modelId, string $modelType): bool
     {
-        app(\App\Actions\Avatar\DeleteAvatarsAction::class)->handle($modelId, $modelType);
+        app(DeleteAvatarsAction::class)->handle($modelId, $modelType);
 
         return true;
     }
@@ -98,16 +96,16 @@ class Avatar extends Model
     /**
      * Create avatar records from uploaded variant paths (replaces existing).
      *
-     * @param array<string, string> $variantPaths
+     * @param  array<string, string>  $variantPaths
      */
     public static function createFromUpload(
-        \Illuminate\Database\Eloquent\Model $model,
+        Model $model,
         array $variantPaths,
         string $filename,
         string $mimeType = 'image/jpeg',
         ?array $metadata = null
     ): bool {
-        app(\App\Actions\Avatar\CreateAvatarsFromUploadAction::class)->handle(
+        app(CreateAvatarsFromUploadAction::class)->handle(
             $model,
             $variantPaths,
             $filename,

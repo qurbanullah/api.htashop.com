@@ -19,7 +19,7 @@ enum ManuscriptStatus: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::DRAFT => 'Draft',
             self::SUBMITTED => 'Submitted',
             self::UNDER_REVIEW => 'Under Review',
@@ -37,7 +37,7 @@ enum ManuscriptStatus: string
 
     public function canTransitionTo(self $status): bool
     {
-        return match($this) {
+        return match ($this) {
             self::DRAFT => in_array($status, [self::SUBMITTED, self::WITHDRAWN]),
             self::SUBMITTED => in_array($status, [self::UNDER_REVIEW, self::REJECTED, self::WITHDRAWN]),
             self::UNDER_REVIEW => in_array($status, [self::REVISION_REQUESTED, self::ACCEPTED, self::REJECTED]),

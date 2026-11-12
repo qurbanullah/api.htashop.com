@@ -14,9 +14,7 @@ use Illuminate\Http\Request;
 
 class MeasurementController extends Controller
 {
-    public function __construct(protected MeasurementService $measurementService)
-    {
-    }
+    public function __construct(protected MeasurementService $measurementService) {}
 
     public function index(Request $request): JsonResponse
     {

@@ -5,6 +5,7 @@ namespace App\Services\Order;
 use App\Models\Organization;
 use App\Models\Sequence;
 use App\Models\Tenant;
+use Illuminate\Database\UniqueConstraintViolationException;
 
 /**
  * Generates human-readable order numbers.
@@ -23,7 +24,7 @@ class OrderNumberService
     {
         $year = (int) now()->format('Y');
         $abbr = $this->abbreviation($tenant, $organization);
-        $prefix = "ORD-{$abbr}-" . now()->format('ymd');
+        $prefix = "ORD-{$abbr}-".now()->format('ymd');
 
         /** @var Sequence|null $sequence */
         $sequence = Sequence::query()
@@ -42,7 +43,7 @@ class OrderNumberService
                     'prefix' => $prefix,
                     'last_number' => 0,
                 ]);
-            } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+            } catch (UniqueConstraintViolationException $e) {
                 // Concurrent creation: re-fetch the row created by the other
                 // request and take its lock before incrementing.
                 $sequence = Sequence::query()
@@ -56,7 +57,7 @@ class OrderNumberService
 
         $sequence->increment('last_number');
 
-        return $prefix . '-' . str_pad((string) $sequence->last_number, 6, '0', STR_PAD_LEFT);
+        return $prefix.'-'.str_pad((string) $sequence->last_number, 6, '0', STR_PAD_LEFT);
     }
 
     /**

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-
 use App\Enums\ForumPostStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +13,7 @@ use Illuminate\Support\Str;
 
 class ForumPost extends Model
 {
-        use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'uuid',
@@ -57,7 +56,7 @@ class ForumPost extends Model
                 $post->slug = Str::slug($post->title);
                 $count = static::withTrashed()->where('slug', $post->slug)->count();
                 if ($count > 0) {
-                    $post->slug .= '-' . ($count + 1);
+                    $post->slug .= '-'.($count + 1);
                 }
             }
         });
@@ -109,15 +108,16 @@ class ForumPost extends Model
     {
         return $query->where(function ($q) use ($search) {
             $q->where('title', 'like', "%{$search}%")
-              ->orWhere('body', 'like', "%{$search}%");
+                ->orWhere('body', 'like', "%{$search}%");
         });
     }
 
     public function isLikedBy(?User $user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
+
         return $this->likes()->where('user_id', $user->id)->exists();
     }
 

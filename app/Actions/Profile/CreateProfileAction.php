@@ -16,7 +16,7 @@ class CreateProfileAction
      *
      * @param  User  $user  The user creating the profile
      * @param  array  $data  Profile data
-     * @return Profile
+     *
      * @throws ValidationException
      */
     public function execute(User $user, array $data): Profile
@@ -43,7 +43,7 @@ class CreateProfileAction
             unset($validated['reviewer_journals']);
 
             // Create the profile
-            $profile = new Profile();
+            $profile = new Profile;
             $profile->profilable_type = User::class;
             $profile->profilable_id = $user->id;
             $profile->fill($validated);
@@ -61,9 +61,6 @@ class CreateProfileAction
     /**
      * Validate the profile data.
      *
-     * @param  User  $user
-     * @param  array  $data
-     * @return array
      * @throws ValidationException
      */
     protected function validate(User $user, array $data): array

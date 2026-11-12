@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\V1\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\V1\Auth\CheckAccount\CheckAccountRequest;
+use App\Http\Requests\V1\Auth\SendResetLinkRequest;
 use App\Http\Responses\V1\ApiResponse;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
@@ -13,7 +15,7 @@ use Illuminate\Support\Facades\Password;
 
 class PasswordResetController extends Controller
 {
-    public function checkAccount(\App\Http\Requests\V1\Auth\CheckAccount\CheckAccountRequest $request): JsonResponse
+    public function checkAccount(CheckAccountRequest $request): JsonResponse
     {
         $user = User::where('email', $request->email)->first();
 
@@ -30,7 +32,7 @@ class PasswordResetController extends Controller
         ], 'No account found with this email address.');
     }
 
-    public function sendResetLink(\App\Http\Requests\V1\Auth\SendResetLinkRequest $request): JsonResponse
+    public function sendResetLink(SendResetLinkRequest $request): JsonResponse
     {
         $user = User::where('email', $request->email)->first();
 

@@ -3,17 +3,18 @@
 namespace App\Actions\Post;
 
 use App\Models\Post;
+use Carbon\Carbon;
 
 class SchedulePostAction
 {
-    public function execute(Post $post, \Carbon\Carbon $scheduledAt): Post
+    public function execute(Post $post, Carbon $scheduledAt): Post
     {
-        if (!$post->canBeSent()) {
+        if (! $post->canBeSent()) {
             $this->throwDetailedValidationError($post);
         }
 
         if ($scheduledAt->isPast()) {
-            throw new \Exception("Cannot schedule post for a past date. Provided date: {$scheduledAt->format('Y-m-d H:i:s')}, Current time: " . now()->format('Y-m-d H:i:s'));
+            throw new \Exception("Cannot schedule post for a past date. Provided date: {$scheduledAt->format('Y-m-d H:i:s')}, Current time: ".now()->format('Y-m-d H:i:s'));
         }
 
         $post->update([
@@ -32,18 +33,18 @@ class SchedulePostAction
         $errors = [];
 
         // Check status
-        if (!in_array($post->status, ['draft', 'scheduled'])) {
+        if (! in_array($post->status, ['draft', 'scheduled'])) {
             $errors[] = "Status is '{$post->status}' (must be 'draft' or 'scheduled')";
         }
 
         // Check content
         if (empty($post->content)) {
-            $errors[] = "Content is empty (post must have content)";
+            $errors[] = 'Content is empty (post must have content)';
         }
 
         // Check title
         if (empty($post->title)) {
-            $errors[] = "Title is missing";
+            $errors[] = 'Title is missing';
         }
 
         // Additional helpful information
@@ -52,13 +53,13 @@ class SchedulePostAction
             "Post UUID: {$post->uuid}",
             "Current Status: {$post->status}",
             "Created: {$post->created_at->format('Y-m-d H:i:s')}",
-            "Updated: {$post->updated_at->format('Y-m-d H:i:s')}"
+            "Updated: {$post->updated_at->format('Y-m-d H:i:s')}",
         ];
 
-        $errorMessage = "Post cannot be scheduled. Issues found:\n" .
-                       "• " . implode("\n• ", $errors) . "\n\n" .
-                       "Post Details:\n" .
-                       "• " . implode("\n• ", $additionalInfo);
+        $errorMessage = "Post cannot be scheduled. Issues found:\n".
+                       '• '.implode("\n• ", $errors)."\n\n".
+                       "Post Details:\n".
+                       '• '.implode("\n• ", $additionalInfo);
 
         throw new \Exception($errorMessage);
     }

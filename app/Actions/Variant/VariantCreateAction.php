@@ -12,8 +12,7 @@ class VariantCreateAction
 {
     public function __construct(
         protected SkuGeneratorAction $skuGenerator,
-    ) {
-    }
+    ) {}
 
     public function handle(array $data): Variant
     {
@@ -66,7 +65,7 @@ class VariantCreateAction
         $suffix = 1;
 
         while (Variant::query()->where('product_id', $productId)->where('slug', $candidate)->exists()) {
-            $candidate = $base . '-' . $suffix;
+            $candidate = $base.'-'.$suffix;
             $suffix++;
         }
 

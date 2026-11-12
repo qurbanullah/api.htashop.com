@@ -39,8 +39,6 @@ class TicketAllStatsAction
 {
     /**
      * Get all ticket statistics in a single optimized query
-     *
-     * @return array
      */
     public function handle(): array
     {

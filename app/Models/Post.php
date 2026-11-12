@@ -2,21 +2,18 @@
 
 namespace App\Models;
 
-
-use App\Traits\Audit\Auditable;
-use App\Enums\PostTypeEnum;
 use App\Enums\PostStatusEnum;
+use App\Enums\PostTypeEnum;
+use App\Traits\Audit\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use App\Models\Tag;
+use Illuminate\Support\Str;
 
 class Post extends Model
 {
-        use HasFactory, Auditable;
+    use Auditable, HasFactory;
 
     protected $fillable = [
         'uuid',
@@ -126,7 +123,7 @@ class Post extends Model
     public function scopeReadyToSend($query)
     {
         return $query->where('status', 'scheduled')
-                    ->where('scheduled_at', '<=', now());
+            ->where('scheduled_at', '<=', now());
     }
 
     public function scopeOfType($query, PostTypeEnum|string $type)
@@ -134,6 +131,7 @@ class Post extends Model
         if ($type instanceof PostTypeEnum) {
             return $query->where('type', $type->value);
         }
+
         return $query->where('type', $type);
     }
 
@@ -154,7 +152,7 @@ class Post extends Model
             return $this->featured_image;
         }
 
-        return config('app.cdn_url', 'https://cdn.htashop.com') . '/' . ltrim($this->featured_image, '/');
+        return config('app.cdn_url', 'https://cdn.htashop.com').'/'.ltrim($this->featured_image, '/');
     }
 
     public function getOpenRateAttribute()
@@ -169,7 +167,7 @@ class Post extends Model
 
     public function getStatusBadgeAttribute()
     {
-        return match($this->status) {
+        return match ($this->status) {
             'draft' => ['color' => 'gray', 'text' => 'Draft'],
             'scheduled' => ['color' => 'blue', 'text' => 'Scheduled'],
             'published' => ['color' => 'green', 'text' => 'Published'],
@@ -207,7 +205,7 @@ class Post extends Model
 
     public function canBeSent()
     {
-        return in_array($this->statusValue(), ['draft', 'scheduled']) && !empty($this->content);
+        return in_array($this->statusValue(), ['draft', 'scheduled']) && ! empty($this->content);
     }
 
     public function canBePublished()
@@ -229,8 +227,6 @@ class Post extends Model
 
     /**
      * MorphToMany relation to tags (polymorphic)
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
      */
     public function tags(): MorphToMany
     {
@@ -239,8 +235,6 @@ class Post extends Model
 
     /**
      * MorphToMany relation to categories (polymorphic)
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
      */
     public function categories(): MorphToMany
     {

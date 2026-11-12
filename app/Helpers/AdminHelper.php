@@ -25,12 +25,10 @@ class AdminHelper
 
     /**
      * Get all admin and super-admin users with caching
-     *
-     * @return Collection
      */
     public static function getAdmins(): Collection
     {
-        $cacheKey = self::CACHE_PREFIX . ':all';
+        $cacheKey = self::CACHE_PREFIX.':all';
 
         return Cache::remember($cacheKey, self::CACHE_DURATION, function () {
             return User::role(['super-admin', 'admin'])
@@ -44,8 +42,7 @@ class AdminHelper
     /**
      * Get admins excluding a specific user
      *
-     * @param int $excludeUserId User ID to exclude
-     * @return Collection
+     * @param  int  $excludeUserId  User ID to exclude
      */
     public static function getAdminsExcludingUser(int $excludeUserId): Collection
     {
@@ -57,8 +54,7 @@ class AdminHelper
     /**
      * Get admins excluding a specific email address
      *
-     * @param string|null $excludeEmail Email address to exclude
-     * @return Collection
+     * @param  string|null  $excludeEmail  Email address to exclude
      */
     public static function getAdminsExcludingEmail(?string $excludeEmail): Collection
     {
@@ -73,12 +69,10 @@ class AdminHelper
 
     /**
      * Get admin emails only (for quick lookups)
-     *
-     * @return Collection
      */
     public static function getAdminEmails(): Collection
     {
-        $cacheKey = self::CACHE_PREFIX . ':emails';
+        $cacheKey = self::CACHE_PREFIX.':emails';
 
         return Cache::remember($cacheKey, self::CACHE_DURATION, function () {
             return User::role(['super-admin', 'admin'])
@@ -92,9 +86,6 @@ class AdminHelper
 
     /**
      * Check if an email belongs to an admin
-     *
-     * @param string $email
-     * @return bool
      */
     public static function isAdminEmail(string $email): bool
     {
@@ -105,34 +96,29 @@ class AdminHelper
 
     /**
      * Clear admin cache
-     *
-     * @return void
      */
     public static function clearCache(): void
     {
-        $cacheHelper = new CacheHelper();
-        $cacheHelper->clearPattern(self::CACHE_PREFIX . ':*');
+        $cacheHelper = new CacheHelper;
+        $cacheHelper->clearPattern(self::CACHE_PREFIX.':*');
     }
 
     /**
      * Refresh admin cache
-     *
-     * @return Collection
      */
     public static function refreshCache(): Collection
     {
         self::clearCache();
+
         return self::getAdmins();
     }
 
     /**
      * Get all support staff (support-assistant, manager, admin, super-admin) with caching
-     *
-     * @return Collection
      */
     public static function getSupportStaff(): Collection
     {
-        $cacheKey = self::CACHE_PREFIX . ':support_staff';
+        $cacheKey = self::CACHE_PREFIX.':support_staff';
 
         return Cache::remember($cacheKey, self::CACHE_DURATION, function () {
             return User::role(['super-admin', 'admin', 'manager', 'support-assistant'])
@@ -144,8 +130,7 @@ class AdminHelper
     /**
      * Get support staff excluding a specific user
      *
-     * @param int $excludeUserId User ID to exclude
-     * @return Collection
+     * @param  int  $excludeUserId  User ID to exclude
      */
     public static function getSupportStaffExcludingUser(int $excludeUserId): Collection
     {
@@ -157,8 +142,7 @@ class AdminHelper
     /**
      * Get support staff excluding a specific email address
      *
-     * @param string|null $excludeEmail Email address to exclude
-     * @return Collection
+     * @param  string|null  $excludeEmail  Email address to exclude
      */
     public static function getSupportStaffExcludingEmail(?string $excludeEmail): Collection
     {
@@ -173,12 +157,10 @@ class AdminHelper
 
     /**
      * Get all managers (manager, admin, super-admin) with caching
-     *
-     * @return Collection
      */
     public static function getManagers(): Collection
     {
-        $cacheKey = self::CACHE_PREFIX . ':managers';
+        $cacheKey = self::CACHE_PREFIX.':managers';
 
         return Cache::remember($cacheKey, self::CACHE_DURATION, function () {
             return User::role(['super-admin', 'admin', 'manager'])
@@ -190,8 +172,7 @@ class AdminHelper
     /**
      * Get managers excluding a specific user
      *
-     * @param int $excludeUserId User ID to exclude
-     * @return Collection
+     * @param  int  $excludeUserId  User ID to exclude
      */
     public static function getManagersExcludingUser(int $excludeUserId): Collection
     {
@@ -203,8 +184,7 @@ class AdminHelper
     /**
      * Get managers excluding a specific email address
      *
-     * @param string|null $excludeEmail Email address to exclude
-     * @return Collection
+     * @param  string|null  $excludeEmail  Email address to exclude
      */
     public static function getManagersExcludingEmail(?string $excludeEmail): Collection
     {
@@ -220,14 +200,13 @@ class AdminHelper
     /**
      * Get users by specific roles with caching
      *
-     * @param array $roles Array of role names
-     * @param int|null $excludeUserId User ID to exclude (optional)
-     * @param string|null $excludeEmail Email to exclude (optional)
-     * @return Collection
+     * @param  array  $roles  Array of role names
+     * @param  int|null  $excludeUserId  User ID to exclude (optional)
+     * @param  string|null  $excludeEmail  Email to exclude (optional)
      */
     public static function getUsersByRoles(array $roles, ?int $excludeUserId = null, ?string $excludeEmail = null): Collection
     {
-        $cacheKey = self::CACHE_PREFIX . ':roles:' . md5(implode(',', $roles));
+        $cacheKey = self::CACHE_PREFIX.':roles:'.md5(implode(',', $roles));
 
         $users = Cache::remember($cacheKey, self::CACHE_DURATION, function () use ($roles) {
             return User::role($roles)
@@ -242,7 +221,7 @@ class AdminHelper
             });
         }
 
-        if (!empty($excludeEmail)) {
+        if (! empty($excludeEmail)) {
             $users = $users->filter(function ($user) use ($excludeEmail) {
                 return strtolower($user->email) !== strtolower($excludeEmail);
             });

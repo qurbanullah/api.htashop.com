@@ -18,10 +18,10 @@ class AssignmentReadAction
             ->when(data_get($filters, 'tenant_id'), fn ($query, $tenantId) => $query->where('tenant_id', $tenantId))
             ->when(data_get($filters, 'organization_id'), fn ($query, $organizationId) => $query->where('organization_id', $organizationId))
             ->when(data_get($filters, 'role'), fn ($query, $role) => $query->where('role', $role))
-            ->when(!is_null(data_get($filters, 'is_primary')), fn ($query) => $query->where('is_primary', filter_var(data_get($filters, 'is_primary'), FILTER_VALIDATE_BOOL)))
+            ->when(! is_null(data_get($filters, 'is_primary')), fn ($query) => $query->where('is_primary', filter_var(data_get($filters, 'is_primary'), FILTER_VALIDATE_BOOL)))
             ->when($resolved, fn ($query) => $query->where('assignable_type', $resolved['type'])->where('assignable_id', $resolved['id']))
             ->when(data_get($filters, 'search'), function ($query, $search) {
-                $query->where('role', 'like', '%' . $search . '%');
+                $query->where('role', 'like', '%'.$search.'%');
             })
             ->orderByDesc('is_primary')
             ->orderBy('role')
@@ -30,7 +30,7 @@ class AssignmentReadAction
 
     private function resolveAssignable(?string $type, ?string $uuid): ?array
     {
-        if (!$type || !$uuid) {
+        if (! $type || ! $uuid) {
             return null;
         }
 
@@ -40,7 +40,7 @@ class AssignmentReadAction
             default => null,
         };
 
-        if (!$model) {
+        if (! $model) {
             return null;
         }
 

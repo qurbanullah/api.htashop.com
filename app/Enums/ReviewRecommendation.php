@@ -22,7 +22,7 @@ enum ReviewRecommendation: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::ACCEPT => 'Accept',
             self::MINOR_REVISIONS => 'Accept with Minor Revisions',
             self::MAJOR_REVISIONS => 'Major Revisions Required',
@@ -35,7 +35,7 @@ enum ReviewRecommendation: string
      */
     public function description(): string
     {
-        return match($this) {
+        return match ($this) {
             self::ACCEPT => 'The manuscript is ready for publication as is',
             self::MINOR_REVISIONS => 'The manuscript needs minor changes before publication',
             self::MAJOR_REVISIONS => 'The manuscript requires substantial revisions',
@@ -48,7 +48,7 @@ enum ReviewRecommendation: string
      */
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::ACCEPT => 'green',
             self::MINOR_REVISIONS => 'blue',
             self::MAJOR_REVISIONS => 'orange',

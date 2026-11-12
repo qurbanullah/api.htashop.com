@@ -13,6 +13,7 @@ class CurrencyController extends Controller
     public function index(): JsonResponse
     {
         $currencies = Currency::where('is_active', true)->orderBy('name')->get();
+
         return ApiResponse::success(CurrencyResource::collection($currencies), 'Currencies retrieved');
     }
 }

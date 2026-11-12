@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Str;
 
-/** @mixin \Illuminate\Database\Eloquent\Model */
+/** @mixin Model */
 trait Damable
 {
     /**
@@ -41,10 +41,10 @@ trait Damable
                 $collectionKeys = array_merge($collectionKeys, $asset->collections->pluck('key')->all());
             }
 
-                app(SyncDamAssetCollectionsAction::class)->handle(
-                    $asset,
-                    $this->resolveDamCollections(array_unique($collectionKeys), $collection)
-                );
+            app(SyncDamAssetCollectionsAction::class)->handle(
+                $asset,
+                $this->resolveDamCollections(array_unique($collectionKeys), $collection)
+            );
 
             return $asset;
         }

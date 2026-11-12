@@ -2,8 +2,10 @@
 
 namespace App\Http\Resources\V1\Forum;
 
+use App\Models\ForumPost;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Str;
 
 class ForumReportResource extends JsonResource
 {
@@ -33,26 +35,27 @@ class ForumReportResource extends JsonResource
                     'name' => $this->reviewer->name,
                 ]
             ),
-            'reportable_type' => $this->reportable_type === \App\Models\ForumPost::class ? 'post' : 'comment',
+            'reportable_type' => $this->reportable_type === ForumPost::class ? 'post' : 'comment',
             'reportable_id' => $this->reportable_id,
             'reportable' => $this->when(
                 $this->relationLoaded('reportable') && $this->reportable,
                 function () {
-                    if ($this->reportable instanceof \App\Models\ForumPost) {
+                    if ($this->reportable instanceof ForumPost) {
                         return [
                             'type' => 'post',
                             'id' => $this->reportable->id,
                             'uuid' => $this->reportable->uuid,
                             'title' => $this->reportable->title,
                             'slug' => $this->reportable->slug,
-                            'body_preview' => \Illuminate\Support\Str::limit(strip_tags($this->reportable->body), 200),
+                            'body_preview' => Str::limit(strip_tags($this->reportable->body), 200),
                         ];
                     }
+
                     return [
                         'type' => 'comment',
                         'id' => $this->reportable->id,
                         'uuid' => $this->reportable->uuid,
-                        'body_preview' => \Illuminate\Support\Str::limit(strip_tags($this->reportable->body), 200),
+                        'body_preview' => Str::limit(strip_tags($this->reportable->body), 200),
                         'post_id' => $this->reportable->post_id,
                     ];
                 }

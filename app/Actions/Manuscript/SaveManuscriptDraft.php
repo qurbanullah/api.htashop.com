@@ -2,15 +2,15 @@
 
 namespace App\Actions\Manuscript;
 
+use App\Enums\ManuscriptStatus;
 use App\Models\Journal;
 use App\Models\Manuscript;
 use App\Models\User;
 use App\Services\Menuscript\ManuscriptNumberService;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Hash;
-use App\Enums\ManuscriptStatus;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class SaveManuscriptDraft
 {
@@ -66,12 +66,12 @@ class SaveManuscriptDraft
                     'acknowledgments' => $data['acknowledgments'] ?? null,
                     'cover_letter' => $data['cover_letter'] ?? null,
                     'version' => 1,
-                    'metadata' => $data['metadata'] ?? []
+                    'metadata' => $data['metadata'] ?? [],
                 ]);
             }
 
             // Attach authors if provided
-            if (!empty($data['authors']) && is_array($data['authors'])) {
+            if (! empty($data['authors']) && is_array($data['authors'])) {
                 // Clear existing authors for draft
                 if ($existingManuscript) {
                     $manuscript->authors()->delete();
@@ -79,14 +79,14 @@ class SaveManuscriptDraft
 
                 foreach ($data['authors'] as $index => $a) {
                     $userId = null;
-                    if (!empty($a['user_id'])) {
+                    if (! empty($a['user_id'])) {
                         $userId = intval($a['user_id']);
-                    } elseif (!empty($a['email'])) {
+                    } elseif (! empty($a['email'])) {
                         $email = trim(strval($a['email']));
                         $user = User::where('email', $email)->first();
-                        if (!$user) {
+                        if (! $user) {
                             $user = User::create([
-                                'name' => trim((($a['first_name'] ?? '') . ' ' . ($a['last_name'] ?? ''))),
+                                'name' => trim((($a['first_name'] ?? '').' '.($a['last_name'] ?? ''))),
                                 'email' => $email,
                                 'password' => Hash::make(Str::random(24)),
                             ]);
@@ -105,12 +105,12 @@ class SaveManuscriptDraft
                         $author = $manuscript->authors()->create([
                             'user_id' => $userId,
                             'author_order' => isset($a['author_order']) ? intval($a['author_order']) : ($index + 1),
-                            'is_corresponding' => !empty($a['is_corresponding']) ? 1 : 0,
+                            'is_corresponding' => ! empty($a['is_corresponding']) ? 1 : 0,
                             'contribution' => $a['contribution'] ?? null,
                         ]);
 
                         // Save affiliation if provided
-                        if (!empty($a['affiliation'])) {
+                        if (! empty($a['affiliation'])) {
                             $author->affiliations()->create([
                                 'institution' => $a['affiliation'],
                                 'is_current' => true,
@@ -121,7 +121,7 @@ class SaveManuscriptDraft
             }
 
             // Attach reviewer suggestions if provided
-            if (!empty($data['reviewer_suggestions']) && is_array($data['reviewer_suggestions'])) {
+            if (! empty($data['reviewer_suggestions']) && is_array($data['reviewer_suggestions'])) {
                 // Clear existing suggestions for draft
                 if ($existingManuscript) {
                     $manuscript->reviewerSuggestions()->delete();
@@ -140,7 +140,7 @@ class SaveManuscriptDraft
             }
 
             // Attach statements if provided
-            if (!empty($data['statements']) && is_array($data['statements'])) {
+            if (! empty($data['statements']) && is_array($data['statements'])) {
                 // Clear existing statements for draft
                 if ($existingManuscript) {
                     $manuscript->statements()->detach();
@@ -156,7 +156,7 @@ class SaveManuscriptDraft
             }
 
             // Attach categories if provided
-            if (!empty($data['category_ids']) && is_array($data['category_ids'])) {
+            if (! empty($data['category_ids']) && is_array($data['category_ids'])) {
                 // Clear existing categories for draft
                 if ($existingManuscript) {
                     $manuscript->categories()->detach();
@@ -170,7 +170,7 @@ class SaveManuscriptDraft
                 $manuscriptNumber = $manuscript->manuscript_number;
 
                 // Attach manuscript file if provided
-                if (!empty($data['manuscript_file'])) {
+                if (! empty($data['manuscript_file'])) {
                     // Only add media if it's a new file (File object), not when keeping existing
                     if (is_object($data['manuscript_file']) && method_exists($data['manuscript_file'], 'getClientOriginalExtension')) {
                         // Delete old manuscript_file media if updating
@@ -179,7 +179,7 @@ class SaveManuscriptDraft
                         }
 
                         $extension = $data['manuscript_file']->getClientOriginalExtension();
-                        $fileName = $manuscriptNumber . '.' . $extension;
+                        $fileName = $manuscriptNumber.'.'.$extension;
 
                         $manuscript->addMedia($data['manuscript_file'])
                             ->usingFileName($fileName)
@@ -191,7 +191,7 @@ class SaveManuscriptDraft
                 }
 
                 // Attach cover letter if provided
-                if (!empty($data['cover_letter_file'])) {
+                if (! empty($data['cover_letter_file'])) {
                     if (is_object($data['cover_letter_file']) && method_exists($data['cover_letter_file'], 'getClientOriginalExtension')) {
                         // Delete old cover_letter media if updating
                         if ($existingManuscript) {
@@ -206,7 +206,7 @@ class SaveManuscriptDraft
                 }
 
                 // Attach graphical abstract if provided
-                if (!empty($data['graphical_abstract'])) {
+                if (! empty($data['graphical_abstract'])) {
                     if (is_object($data['graphical_abstract']) && method_exists($data['graphical_abstract'], 'getClientOriginalExtension')) {
                         // Delete old graphical_abstract media if updating
                         if ($existingManuscript) {
@@ -221,7 +221,7 @@ class SaveManuscriptDraft
                 }
 
                 // Attach video abstract if provided
-                if (!empty($data['video_abstract'])) {
+                if (! empty($data['video_abstract'])) {
                     if (is_object($data['video_abstract']) && method_exists($data['video_abstract'], 'getClientOriginalExtension')) {
                         // Delete old video_abstract media if updating
                         if ($existingManuscript) {
@@ -236,20 +236,20 @@ class SaveManuscriptDraft
                 }
 
                 // Attach supplementary files if provided
-                if (!empty($data['supplementary_files']) && is_array($data['supplementary_files'])) {
+                if (! empty($data['supplementary_files']) && is_array($data['supplementary_files'])) {
                     // Delete old supplementary files if updating
                     if ($existingManuscript) {
                         $manuscript->clearMediaCollection('supplementary_files');
                     }
 
                     foreach ($data['supplementary_files'] as $supFile) {
-                        if (!empty($supFile['file']) && is_object($supFile['file']) && method_exists($supFile['file'], 'getClientOriginalExtension')) {
+                        if (! empty($supFile['file']) && is_object($supFile['file']) && method_exists($supFile['file'], 'getClientOriginalExtension')) {
                             $media = $manuscript->addMedia($supFile['file'])
                                 ->preservingOriginal()
                                 ->toMediaCollection('supplementary_files', 'idrivee2');
 
                             // Store metadata (title and description)
-                            if (!empty($supFile['title']) || !empty($supFile['description'])) {
+                            if (! empty($supFile['title']) || ! empty($supFile['description'])) {
                                 $media->setCustomProperty('title', $supFile['title'] ?? null)
                                     ->setCustomProperty('description', $supFile['description'] ?? null)
                                     ->save();
@@ -257,27 +257,27 @@ class SaveManuscriptDraft
 
                             Log::debug('Supplementary file attached to draft', [
                                 'title' => $supFile['title'] ?? 'Untitled',
-                                'file_name' => $supFile['file']->getClientOriginalName()
+                                'file_name' => $supFile['file']->getClientOriginalName(),
                             ]);
                         }
                     }
                 }
 
                 // Attach copyright permissions if provided
-                if (!empty($data['copyright_permissions']) && is_array($data['copyright_permissions'])) {
+                if (! empty($data['copyright_permissions']) && is_array($data['copyright_permissions'])) {
                     // Delete old copyright permissions if updating
                     if ($existingManuscript) {
                         $manuscript->clearMediaCollection('copyright_permissions');
                     }
 
                     foreach ($data['copyright_permissions'] as $permFile) {
-                        if (!empty($permFile['file']) && is_object($permFile['file']) && method_exists($permFile['file'], 'getClientOriginalExtension')) {
+                        if (! empty($permFile['file']) && is_object($permFile['file']) && method_exists($permFile['file'], 'getClientOriginalExtension')) {
                             $media = $manuscript->addMedia($permFile['file'])
                                 ->preservingOriginal()
                                 ->toMediaCollection('copyright_permissions', 'idrivee2');
 
                             // Store metadata (description)
-                            if (!empty($permFile['description'])) {
+                            if (! empty($permFile['description'])) {
                                 $media->setCustomProperty('description', $permFile['description'])
                                     ->save();
                             }
@@ -288,12 +288,12 @@ class SaveManuscriptDraft
                 }
 
                 Log::debug('Media attachment completed for draft', [
-                    'manuscript_id' => $manuscript->id
+                    'manuscript_id' => $manuscript->id,
                 ]);
             } catch (\Exception $e) {
                 Log::error('Error attaching media to draft', [
                     'manuscript_id' => $manuscript->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
                 throw $e;
             }
@@ -303,7 +303,7 @@ class SaveManuscriptDraft
                 'journal_id' => $journal->id,
                 'is_update' => $existingManuscript ? true : false,
                 'title' => $manuscript->title,
-                'saved_by' => $submittingUser->id
+                'saved_by' => $submittingUser->id,
             ]);
 
             return $manuscript;

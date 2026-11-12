@@ -18,7 +18,7 @@ class DefinitionSeeder extends Seeder
 
         if ($tenants->isEmpty()) {
             $tenants = collect([Tenant::create([
-                'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                'uuid' => (string) Str::uuid(),
                 'name' => 'Default Tenant', 'slug' => 'default',
                 'domain' => 'localhost', 'is_active' => true, 'settings' => [],
             ])]);
@@ -40,7 +40,7 @@ class DefinitionSeeder extends Seeder
 
                 $definition = Definition::updateOrCreate(
                     ['tenant_id' => $tenant->id, 'code' => $defData['code'], 'kind' => $defData['kind']],
-                    array_merge($defData, ['tenant_id' => $tenant->id, 'uuid' => (string) \Illuminate\Support\Str::uuid()])
+                    array_merge($defData, ['tenant_id' => $tenant->id, 'uuid' => (string) Str::uuid()])
                 );
 
                 // Create target
@@ -113,7 +113,7 @@ class DefinitionSeeder extends Seeder
                 'kind' => 'attribute', 'code' => 'shoe_size', 'name' => 'Shoe Size',
                 'value_type' => 'select', 'display_type' => 'button',
                 'is_required' => true, 'is_filterable' => true, 'group_name' => 'Dimensions',
-                'options' => array_map(fn($n) => ['name' => (string)$n], range(5, 15)),
+                'options' => array_map(fn ($n) => ['name' => (string) $n], range(5, 15)),
             ],
 
             // ═══ MATERIAL ═══
@@ -165,7 +165,7 @@ class DefinitionSeeder extends Seeder
                 'kind' => 'attribute', 'code' => 'gauge', 'name' => 'Gauge / Thickness',
                 'value_type' => 'select', 'display_type' => 'button',
                 'is_required' => false, 'is_filterable' => true, 'group_name' => 'Dimensions',
-                'options' => array_map(fn($n) => ['name' => (string)$n . ' gauge'], [10,12,14,16,18,20,22,24,26,28,30]),
+                'options' => array_map(fn ($n) => ['name' => (string) $n.' gauge'], [10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]),
             ],
 
             // ═══ PIPE SIZE ═══
@@ -198,7 +198,7 @@ class DefinitionSeeder extends Seeder
                 'kind' => 'attribute', 'code' => 'pressure_rating', 'name' => 'Pressure Rating',
                 'value_type' => 'select', 'display_type' => 'dropdown',
                 'is_required' => false, 'is_filterable' => true, 'group_name' => 'Performance',
-                'options' => array_map(fn($p) => ['name' => $p], [
+                'options' => array_map(fn ($p) => ['name' => $p], [
                     '150 PSI', '300 PSI', '600 PSI', '900 PSI', '1500 PSI', '2500 PSI',
                 ]),
             ],
@@ -208,7 +208,7 @@ class DefinitionSeeder extends Seeder
                 'kind' => 'attribute', 'code' => 'voltage', 'name' => 'Voltage',
                 'value_type' => 'select', 'display_type' => 'dropdown',
                 'is_required' => false, 'is_filterable' => true, 'group_name' => 'Electrical',
-                'options' => array_map(fn($v) => ['name' => $v], [
+                'options' => array_map(fn ($v) => ['name' => $v], [
                     '12V', '24V', '48V', '110V', '120V', '220V', '240V', '380V', '480V',
                 ]),
             ],
@@ -227,7 +227,7 @@ class DefinitionSeeder extends Seeder
                 'kind' => 'attribute', 'code' => 'finish', 'name' => 'Finish',
                 'value_type' => 'select', 'display_type' => 'dropdown',
                 'is_required' => false, 'is_filterable' => true, 'group_name' => 'Appearance',
-                'options' => array_map(fn($f) => ['name' => $f], [
+                'options' => array_map(fn ($f) => ['name' => $f], [
                     'Matte', 'Glossy', 'Satin', 'Brushed', 'Polished',
                     'Galvanized', 'Anodized', 'Powder Coated', 'Painted', 'Raw',
                 ]),
@@ -247,7 +247,7 @@ class DefinitionSeeder extends Seeder
                 'kind' => 'attribute', 'code' => 'pack_size', 'name' => 'Pack Size',
                 'value_type' => 'select', 'display_type' => 'button',
                 'is_required' => false, 'is_filterable' => false, 'group_name' => 'Packaging',
-                'options' => array_map(fn($n) => ['name' => 'Pack of ' . $n], [1,2,5,10,25,50,100,500,1000]),
+                'options' => array_map(fn ($n) => ['name' => 'Pack of '.$n], [1, 2, 5, 10, 25, 50, 100, 500, 1000]),
             ],
 
             // ═══ STORAGE TYPE ═══
@@ -271,7 +271,7 @@ class DefinitionSeeder extends Seeder
                 'kind' => 'attribute', 'code' => 'storage', 'name' => 'Storage Capacity',
                 'value_type' => 'select', 'display_type' => 'button',
                 'is_required' => false, 'is_filterable' => true, 'group_name' => 'IT / Electronics',
-                'options' => array_map(fn($s) => ['name' => $s], [
+                'options' => array_map(fn ($s) => ['name' => $s], [
                     '64 GB', '128 GB', '256 GB', '512 GB',
                     '1 TB', '2 TB', '4 TB', '8 TB', '16 TB', '32 TB',
                 ]),
@@ -282,7 +282,7 @@ class DefinitionSeeder extends Seeder
                 'kind' => 'attribute', 'code' => 'memory', 'name' => 'Memory (RAM)',
                 'value_type' => 'select', 'display_type' => 'button',
                 'is_required' => false, 'is_filterable' => true, 'group_name' => 'IT / Electronics',
-                'options' => array_map(fn($m) => ['name' => $m], [
+                'options' => array_map(fn ($m) => ['name' => $m], [
                     '4 GB', '8 GB', '16 GB', '32 GB', '64 GB', '128 GB', '256 GB', '512 GB',
                 ]),
             ],
@@ -292,7 +292,7 @@ class DefinitionSeeder extends Seeder
                 'kind' => 'attribute', 'code' => 'ram_type', 'name' => 'RAM Type',
                 'value_type' => 'select', 'display_type' => 'dropdown',
                 'is_required' => false, 'is_filterable' => true, 'group_name' => 'IT / Electronics',
-                'options' => array_map(fn($r) => ['name' => $r], [
+                'options' => array_map(fn ($r) => ['name' => $r], [
                     'DDR3', 'DDR3L', 'DDR4', 'DDR5', 'LPDDR4', 'LPDDR5', 'LPDDR5X',
                 ]),
             ],
@@ -324,7 +324,7 @@ class DefinitionSeeder extends Seeder
                 'kind' => 'attribute', 'code' => 'gpu', 'name' => 'Graphics',
                 'value_type' => 'select', 'display_type' => 'dropdown',
                 'is_required' => false, 'is_filterable' => true, 'group_name' => 'IT / Electronics',
-                'options' => array_map(fn($g) => ['name' => $g], [
+                'options' => array_map(fn ($g) => ['name' => $g], [
                     'Integrated', 'NVIDIA GeForce RTX 3050', 'NVIDIA GeForce RTX 3060',
                     'NVIDIA GeForce RTX 3070', 'NVIDIA GeForce RTX 4060', 'NVIDIA GeForce RTX 4070',
                     'NVIDIA GeForce RTX 4080', 'NVIDIA GeForce RTX 4090',
@@ -337,7 +337,7 @@ class DefinitionSeeder extends Seeder
                 'kind' => 'attribute', 'code' => 'connectivity', 'name' => 'Connectivity',
                 'value_type' => 'select', 'display_type' => 'dropdown', 'is_multi' => true,
                 'is_required' => false, 'is_filterable' => true, 'group_name' => 'IT / Electronics',
-                'options' => array_map(fn($c) => ['name' => $c], [
+                'options' => array_map(fn ($c) => ['name' => $c], [
                     'Wi-Fi 6', 'Wi-Fi 6E', 'Wi-Fi 7', 'Bluetooth 5.0', 'Bluetooth 5.3',
                     'USB-C', 'USB 3.0', 'Thunderbolt 4', 'HDMI', 'DisplayPort', 'Ethernet',
                 ]),
@@ -348,7 +348,7 @@ class DefinitionSeeder extends Seeder
                 'kind' => 'attribute', 'code' => 'screen_size', 'name' => 'Screen Size',
                 'value_type' => 'select', 'display_type' => 'button',
                 'is_required' => false, 'is_filterable' => true, 'group_name' => 'IT / Electronics',
-                'options' => array_map(fn($s) => ['name' => $s . '"'], [
+                'options' => array_map(fn ($s) => ['name' => $s.'"'], [
                     13, 14, 15, 16, 17, 24, 27, 32, 34, 43, 49, 55, 65, 75, 85,
                 ]),
             ],

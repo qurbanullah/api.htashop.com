@@ -23,8 +23,7 @@ class ProductReviewService
         protected ReviewSummaryReadAction $summaryAction,
         protected ReviewCreateAction $createAction,
         protected ReviewVoteAction $voteAction,
-    ) {
-    }
+    ) {}
 
     public function list(string $key, int $perPage = 10): LengthAwarePaginator
     {
@@ -63,6 +62,6 @@ class ProductReviewService
 
     private function summaryCacheKey(int $productId): string
     {
-        return 'review:summary:' . Product::class . ':' . $productId;
+        return 'review:summary:'.Product::class.':'.$productId;
     }
 }

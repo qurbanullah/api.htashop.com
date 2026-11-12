@@ -40,7 +40,7 @@ class ProfilePolicy
             ->where('profilable_id', $user->id)
             ->first();
 
-        return !$existingProfile;
+        return ! $existingProfile;
     }
 
     /**

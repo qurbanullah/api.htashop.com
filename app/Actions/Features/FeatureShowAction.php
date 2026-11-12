@@ -22,6 +22,8 @@ declare(strict_types=1);
 
 namespace App\Actions\Features;
 
+use App\Filters\FilterByIsActive;
+use App\Filters\FilterByName;
 use App\Models\Feature;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Pipeline;
@@ -48,8 +50,8 @@ class FeatureShowAction
         return Pipeline::send(Feature::query())
             ->through(
                 [
-                    new \App\Filters\FilterByIsActive(data_get($data, 'filters')),
-                    new \App\Filters\FilterByName(data_get($data, 'filters')),
+                    new FilterByIsActive(data_get($data, 'filters')),
+                    new FilterByName(data_get($data, 'filters')),
                 ]
             )
             ->thenReturn()

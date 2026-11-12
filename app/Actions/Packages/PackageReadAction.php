@@ -22,6 +22,8 @@ declare(strict_types=1);
 
 namespace App\Actions\Packages;
 
+use App\Filters\FilterByIsActive;
+use App\Filters\FilterByName;
 use App\Models\Package;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Pipeline;
@@ -48,8 +50,8 @@ class PackageReadAction
         return Pipeline::send(Package::query())
             ->through(
                 [
-                    new \App\Filters\FilterByIsActive(data_get($data, 'filters', ['is_active' => true])),
-                    new \App\Filters\FilterByName(data_get($data, 'filters', ['name' => ''])),
+                    new FilterByIsActive(data_get($data, 'filters', ['is_active' => true])),
+                    new FilterByName(data_get($data, 'filters', ['name' => ''])),
                 ]
             )
             ->thenReturn()

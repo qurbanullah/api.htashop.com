@@ -14,19 +14,19 @@ use Illuminate\Http\Request;
 
 class CodeController extends Controller
 {
-    public function __construct(protected CodeService $codeService)
-    {
-    }
+    public function __construct(protected CodeService $codeService) {}
 
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Code::class);
+
         return ApiResponse::success(CodeResource::collection($this->codeService->read($request->all())), 'Codes retrieved successfully');
     }
 
     public function store(CodeStoreRequest $request): JsonResponse
     {
         $this->authorize('create', Code::class);
+
         return ApiResponse::success(new CodeResource($this->codeService->create($request->validated())), 'Code created successfully', 201);
     }
 
@@ -34,6 +34,7 @@ class CodeController extends Controller
     {
         $code = $this->codeService->searchById($id);
         $this->authorize('view', $code);
+
         return ApiResponse::success(new CodeResource($code), 'Code retrieved successfully');
     }
 
@@ -41,6 +42,7 @@ class CodeController extends Controller
     {
         $code = $this->codeService->searchById($id);
         $this->authorize('update', $code);
+
         return ApiResponse::success(new CodeResource($this->codeService->update($code, $request->validated())), 'Code updated successfully');
     }
 
@@ -49,6 +51,7 @@ class CodeController extends Controller
         $code = $this->codeService->searchById($id);
         $this->authorize('delete', $code);
         $this->codeService->delete($code);
+
         return ApiResponse::success(null, 'Code deleted successfully');
     }
 }

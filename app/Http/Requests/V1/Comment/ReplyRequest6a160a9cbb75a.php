@@ -17,7 +17,7 @@ class ReplyRequest6a160a9cbb75a extends FormRequest
 
             'commentable_type' => 'required|string',
             'commentable_id' => 'required|integer',
-        
+
         ];
     }
 }

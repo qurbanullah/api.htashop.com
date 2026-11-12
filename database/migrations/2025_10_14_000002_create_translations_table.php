@@ -31,7 +31,7 @@ return new class extends Migration
                 'language_id',
                 'translatable_type',
                 'translatable_id',
-                'field'
+                'field',
             ], 'translations_unique');
         });
     }

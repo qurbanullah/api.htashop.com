@@ -35,7 +35,7 @@ class SitemapService
         $content .= "Disallow: /checkout\n";
         $content .= "Disallow: /orders\n";
         $content .= "Disallow: /unsubscribe\n\n";
-        $content .= 'Sitemap: ' . $this->storefrontUrl() . "/sitemap.xml\n";
+        $content .= 'Sitemap: '.$this->storefrontUrl()."/sitemap.xml\n";
 
         return $content;
     }
@@ -44,13 +44,13 @@ class SitemapService
     {
         $base = $this->storefrontUrl();
 
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $xml .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
-        $xml .= $this->sitemapEntry($base . '/sitemap-products.xml');
-        $xml .= $this->sitemapEntry($base . '/sitemap-posts.xml');
-        $xml .= $this->sitemapEntry($base . '/sitemap-categories.xml');
-        $xml .= $this->sitemapEntry($base . '/sitemap-pages.xml');
-        $xml .= '</sitemapindex>' . "\n";
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+        $xml .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
+        $xml .= $this->sitemapEntry($base.'/sitemap-products.xml');
+        $xml .= $this->sitemapEntry($base.'/sitemap-posts.xml');
+        $xml .= $this->sitemapEntry($base.'/sitemap-categories.xml');
+        $xml .= $this->sitemapEntry($base.'/sitemap-pages.xml');
+        $xml .= '</sitemapindex>'."\n";
 
         return $xml;
     }
@@ -70,11 +70,11 @@ class SitemapService
             $xml = $this->openUrlset();
 
             foreach ($products as $product) {
-                $loc = $base . '/products/' . $product->slug . '-' . substr((string) $product->uuid, 0, 8);
+                $loc = $base.'/products/'.$product->slug.'-'.substr((string) $product->uuid, 0, 8);
                 $xml .= $this->urlEntry($loc, $this->lastmod($product->updated_at), 'daily', '0.8');
             }
 
-            return $xml . $this->closeUrlset();
+            return $xml.$this->closeUrlset();
         });
     }
 
@@ -112,7 +112,7 @@ class SitemapService
                 );
             }
 
-            return $xml . $this->closeUrlset();
+            return $xml.$this->closeUrlset();
         });
     }
 
@@ -130,14 +130,14 @@ class SitemapService
 
             foreach ($categories as $category) {
                 $xml .= $this->urlEntry(
-                    $base . '/products?category=' . $category->id,
+                    $base.'/products?category='.$category->id,
                     $this->lastmod($category->updated_at),
                     'weekly',
                     '0.6',
                 );
             }
 
-            return $xml . $this->closeUrlset();
+            return $xml.$this->closeUrlset();
         });
     }
 
@@ -165,10 +165,10 @@ class SitemapService
         $xml = $this->openUrlset();
 
         foreach ($pages as [$path, $freq, $priority, $lastmod]) {
-            $xml .= $this->urlEntry($base . $path, $lastmod, $freq, $priority);
+            $xml .= $this->urlEntry($base.$path, $lastmod, $freq, $priority);
         }
 
-        return $xml . $this->closeUrlset();
+        return $xml.$this->closeUrlset();
     }
 
     /**
@@ -209,30 +209,30 @@ class SitemapService
 
     private function openUrlset(): string
     {
-        return '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
-            . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+        return '<?xml version="1.0" encoding="UTF-8"?>'."\n"
+            .'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
     }
 
     private function closeUrlset(): string
     {
-        return '</urlset>' . "\n";
+        return '</urlset>'."\n";
     }
 
     private function urlEntry(string $loc, ?string $lastmod, string $changefreq, string $priority): string
     {
-        $entry = '  <url><loc>' . e($loc) . '</loc>';
+        $entry = '  <url><loc>'.e($loc).'</loc>';
         if ($lastmod) {
-            $entry .= '<lastmod>' . $lastmod . '</lastmod>';
+            $entry .= '<lastmod>'.$lastmod.'</lastmod>';
         }
-        $entry .= '<changefreq>' . $changefreq . '</changefreq>';
-        $entry .= '<priority>' . $priority . '</priority></url>' . "\n";
+        $entry .= '<changefreq>'.$changefreq.'</changefreq>';
+        $entry .= '<priority>'.$priority.'</priority></url>'."\n";
 
         return $entry;
     }
 
     private function sitemapEntry(string $loc): string
     {
-        return '  <sitemap><loc>' . e($loc) . '</loc></sitemap>' . "\n";
+        return '  <sitemap><loc>'.e($loc).'</loc></sitemap>'."\n";
     }
 
     private function lastmod(mixed $date): ?string

@@ -16,7 +16,7 @@ class CurrencySeeder extends Seeder
             );
         }
 
-        $this->command->info('Currencies seeded: ' . count($this->currencies()) . ' worldwide.');
+        $this->command->info('Currencies seeded: '.count($this->currencies()).' worldwide.');
     }
 
     private function currencies(): array

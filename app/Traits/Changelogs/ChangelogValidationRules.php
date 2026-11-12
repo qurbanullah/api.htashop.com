@@ -22,6 +22,8 @@ declare(strict_types=1);
 
 namespace App\Traits\Changelogs;
 
+use Illuminate\Contracts\Validation\ValidationRule;
+
 /**
  * Validation rules trait for Changelog Model.
  *
@@ -37,7 +39,7 @@ trait ChangelogValidationRules
     /**
      * Run the validation rule.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function changelogRules(): array
     {

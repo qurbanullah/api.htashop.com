@@ -27,6 +27,7 @@ class LabelUpdateRequest extends FormRequest
                 if (is_null($tenantId)) {
                     return $query->whereNull('tenant_id');
                 }
+
                 return $query->where('tenant_id', $tenantId);
             })],
             'display_name' => ['sometimes', 'string', 'max:255'],

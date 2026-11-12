@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Profile extends Model
 {
-        use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'profilable_type',
@@ -109,8 +108,11 @@ class Profile extends Model
      * Profile types
      */
     const TYPE_ACADEMIC = 'academic';
+
     const TYPE_INSTITUTIONAL = 'institutional';
+
     const TYPE_ORGANIZATIONAL = 'organizational';
+
     const TYPE_PERSONAL = 'personal';
 
     /**
@@ -170,7 +172,7 @@ class Profile extends Model
     public function scopeAvailableForReview($query)
     {
         return $query->where('available_for_review', true)
-                    ->where('is_active', true);
+            ->where('is_active', true);
     }
 
     /**
@@ -179,7 +181,7 @@ class Profile extends Model
     public function scopeAvailableForEditorial($query)
     {
         return $query->where('available_for_editorial', true)
-                    ->where('is_active', true);
+            ->where('is_active', true);
     }
 
     /**
@@ -196,7 +198,7 @@ class Profile extends Model
     public function scopePublic($query)
     {
         return $query->where('is_public', true)
-                    ->where('is_active', true);
+            ->where('is_active', true);
     }
 
     /**
@@ -215,8 +217,8 @@ class Profile extends Model
         return $query->where(function ($q) use ($expertise) {
             foreach ($expertise as $area) {
                 $q->orWhereJsonContains('research_areas', $area)
-                  ->orWhereJsonContains('review_expertise', $area)
-                  ->orWhereJsonContains('expertise_keywords', $area);
+                    ->orWhereJsonContains('review_expertise', $area)
+                    ->orWhereJsonContains('expertise_keywords', $area);
             }
         });
     }
@@ -228,11 +230,11 @@ class Profile extends Model
     {
         $name = $this->first_name;
         if ($this->middle_name) {
-            $name .= ' ' . $this->middle_name;
+            $name .= ' '.$this->middle_name;
         }
-        $name .= ' ' . $this->last_name;
+        $name .= ' '.$this->last_name;
 
-        return $this->title ? $this->title . ' ' . $name : $name;
+        return $this->title ? $this->title.' '.$name : $name;
     }
 
     /**
@@ -241,8 +243,8 @@ class Profile extends Model
     public function getFormalNameAttribute(): string
     {
         return $this->title
-            ? $this->title . ' ' . $this->first_name . ' ' . $this->last_name
-            : $this->first_name . ' ' . $this->last_name;
+            ? $this->title.' '.$this->first_name.' '.$this->last_name
+            : $this->first_name.' '.$this->last_name;
     }
 
     /**
@@ -250,14 +252,15 @@ class Profile extends Model
      */
     public function getDisplayAffiliationAttribute(): ?string
     {
-        if (!$this->primary_affiliation) {
+        if (! $this->primary_affiliation) {
             return $this->institution;
         }
 
         $affiliation = $this->primary_affiliation;
         if ($this->department) {
-            $affiliation = $this->department . ', ' . $affiliation;
+            $affiliation = $this->department.', '.$affiliation;
         }
+
         return $affiliation;
     }
 
@@ -266,7 +269,7 @@ class Profile extends Model
      */
     public function canReviewIn(string $area): bool
     {
-        if (!$this->available_for_review || !$this->is_active) {
+        if (! $this->available_for_review || ! $this->is_active) {
             return false;
         }
 
@@ -284,7 +287,7 @@ class Profile extends Model
      */
     public function getReviewAreas(): array
     {
-        if (!$this->available_for_review || !$this->is_active) {
+        if (! $this->available_for_review || ! $this->is_active) {
             return [];
         }
 
@@ -300,7 +303,7 @@ class Profile extends Model
      */
     public function hasEditorialExperience(): bool
     {
-        return !empty($this->editorial_experience) || $this->available_for_editorial;
+        return ! empty($this->editorial_experience) || $this->available_for_editorial;
     }
 
     /**

@@ -22,9 +22,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-
-use App\Models\Product;
-use App\Models\Variant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
@@ -41,7 +38,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  */
 class Feature extends Model
 {
-        use HasFactory;
+    use HasFactory;
 
     /**
      * The database used by the model.
@@ -109,10 +106,8 @@ class Feature extends Model
 
     /**
      * Get all of the licenses that are assigned this feature.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
      */
-    public function licenses() : MorphToMany
+    public function licenses(): MorphToMany
     {
         return $this->morphedByMany(License::class, 'featureable');
     }

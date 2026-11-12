@@ -21,7 +21,7 @@ class CheckConsentAction
 
         if ($consentableType && $consentableId) {
             $query->where('consentable_type', $consentableType)
-                  ->where('consentable_id', $consentableId);
+                ->where('consentable_id', $consentableId);
         }
 
         return $query->exists();
@@ -43,7 +43,7 @@ class CheckConsentAction
             ->orderBy('created_at', 'desc')
             ->first();
 
-        if (!$latestEula) {
+        if (! $latestEula) {
             return true; // No active EULA, so no consent required
         }
 

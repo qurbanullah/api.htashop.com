@@ -13,6 +13,7 @@ use App\Http\Resources\V1\Forum\ForumTopicResource;
 use App\Models\ForumComment;
 use App\Models\ForumPost;
 use App\Models\ForumReport;
+use App\Models\ForumTopic;
 use App\Services\Forum\ForumCommentService;
 use App\Services\Forum\ForumPostService;
 use App\Services\Forum\ForumReportService;
@@ -52,7 +53,7 @@ class AdminForumController extends Controller
     {
         $topic = $this->topicService->findByUuid($uuid);
 
-        if (!$topic) {
+        if (! $topic) {
             return response()->json([
                 'success' => false,
                 'message' => 'Topic not found.',
@@ -83,7 +84,7 @@ class AdminForumController extends Controller
     {
         $topic = $this->topicService->findByUuid($uuid);
 
-        if (!$topic) {
+        if (! $topic) {
             return response()->json([
                 'success' => false,
                 'message' => 'Topic not found.',
@@ -103,7 +104,7 @@ class AdminForumController extends Controller
     {
         $topic = $this->topicService->findByUuid($uuid);
 
-        if (!$topic) {
+        if (! $topic) {
             return response()->json([
                 'success' => false,
                 'message' => 'Topic not found.',
@@ -160,7 +161,7 @@ class AdminForumController extends Controller
     {
         $post = $this->postService->findByUuid($uuid);
 
-        if (!$post) {
+        if (! $post) {
             return response()->json([
                 'success' => false,
                 'message' => 'Post not found.',
@@ -300,8 +301,8 @@ class AdminForumController extends Controller
         $postStats = $this->postService->getStats();
         $reportStats = $this->reportService->getStats();
 
-        $topicCount = \App\Models\ForumTopic::count();
-        $activeTopicCount = \App\Models\ForumTopic::active()->count();
+        $topicCount = ForumTopic::count();
+        $activeTopicCount = ForumTopic::active()->count();
         $totalComments = ForumComment::count();
         $visibleComments = ForumComment::where('status', 'visible')->count();
 

@@ -8,14 +8,13 @@ use App\Helpers\AdminHelper;
 use App\Mail\Tickets\TicketCreated;
 use App\Mail\Tickets\TicketCreatedAdmin;
 use App\Models\Ticket;
-use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SendTicketCreatedEmail implements ShouldQueue
 {

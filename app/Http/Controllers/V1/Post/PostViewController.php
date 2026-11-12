@@ -63,11 +63,11 @@ class PostViewController extends Controller
     {
         $subscribers = User::whereHas('subscriptions', function ($query) {
             $query->where('type', 'post')
-                  ->where('is_subscribed', true);
+                ->where('is_subscribed', true);
         })->get(['email']);
 
         foreach ($subscribers as $user) {
-            if (hash('sha256', $post->uuid . $user->email . config('app.key')) === $token) {
+            if (hash('sha256', $post->uuid.$user->email.config('app.key')) === $token) {
                 return true;
             }
         }

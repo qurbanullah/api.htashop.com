@@ -2,19 +2,19 @@
 
 namespace App\Actions\Tags;
 
+use App\Models\Tag;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use App\Models\Tag;
 
 class AttachTagsAction
 {
     /**
      * Attach tags to a taggable model
      *
-     * @param Model $taggable The model to attach tags to (Product, Post, etc.)
-     * @param array|Collection $tags Array of tag names or IDs
-     * @param string $type Tag type (product, blog, etc.)
+     * @param  Model  $taggable  The model to attach tags to (Product, Post, etc.)
+     * @param  array|Collection  $tags  Array of tag names or IDs
+     * @param  string  $type  Tag type (product, blog, etc.)
      * @return Collection The attached tags
      */
     public function execute(Model $taggable, array|Collection $tags, string $type = 'product'): Collection

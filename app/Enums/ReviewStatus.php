@@ -22,7 +22,7 @@ enum ReviewStatus: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::DRAFT => 'Draft',
             self::SUBMITTED => 'Submitted',
             self::APPROVED => 'Approved',
@@ -35,7 +35,7 @@ enum ReviewStatus: string
      */
     public function description(): string
     {
-        return match($this) {
+        return match ($this) {
             self::DRAFT => 'Review is being written but not yet submitted',
             self::SUBMITTED => 'Review has been submitted and is pending editor approval',
             self::APPROVED => 'Review has been approved by editor',
@@ -48,7 +48,7 @@ enum ReviewStatus: string
      */
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::DRAFT => 'gray',
             self::SUBMITTED => 'blue',
             self::APPROVED => 'green',

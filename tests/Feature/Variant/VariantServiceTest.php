@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Variant;
 
+use App\Services\Variant\VariantService;
+
 test('the Variant service classes exist', function () {
-    expect(class_exists(\App\Services\Variant\VariantService::class))->toBeTrue();
+    expect(class_exists(VariantService::class))->toBeTrue();
 });

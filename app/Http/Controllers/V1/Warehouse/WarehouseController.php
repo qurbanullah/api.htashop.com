@@ -14,13 +14,12 @@ use Illuminate\Http\Request;
 
 class WarehouseController extends Controller
 {
-    public function __construct(protected WarehouseService $warehouseService)
-    {
-    }
+    public function __construct(protected WarehouseService $warehouseService) {}
 
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Warehouse::class);
+
         return ApiResponse::success(
             WarehouseResource::collection($this->warehouseService->read($request->all())),
             'Warehouses retrieved successfully'
@@ -31,6 +30,7 @@ class WarehouseController extends Controller
     {
         $this->authorize('create', Warehouse::class);
         $warehouse = $this->warehouseService->create($request->validated());
+
         return ApiResponse::success(new WarehouseResource($warehouse), 'Warehouse created successfully', 201);
     }
 
@@ -38,6 +38,7 @@ class WarehouseController extends Controller
     {
         $warehouse = $this->warehouseService->searchByUuid($uuid);
         $this->authorize('view', $warehouse);
+
         return ApiResponse::success(new WarehouseResource($warehouse), 'Warehouse retrieved successfully');
     }
 
@@ -46,6 +47,7 @@ class WarehouseController extends Controller
         $warehouse = $this->warehouseService->searchByUuid($uuid);
         $this->authorize('update', $warehouse);
         $warehouse = $this->warehouseService->update($warehouse, $request->validated());
+
         return ApiResponse::success(new WarehouseResource($warehouse), 'Warehouse updated successfully');
     }
 
@@ -54,6 +56,7 @@ class WarehouseController extends Controller
         $warehouse = $this->warehouseService->searchByUuid($uuid);
         $this->authorize('delete', $warehouse);
         $this->warehouseService->delete($warehouse);
+
         return ApiResponse::success(null, 'Warehouse deleted successfully');
     }
 }

@@ -7,6 +7,7 @@ namespace App\Mail\Tickets;
 use App\Models\Ticket;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -30,7 +31,7 @@ class TicketCreatedAdmin extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'New Support Ticket - ' . $this->ticket->title,
+            subject: 'New Support Ticket - '.$this->ticket->title,
         );
     }
 
@@ -40,15 +41,15 @@ class TicketCreatedAdmin extends Mailable
     public function content(): Content
     {
         $adminUrl = config('app.admin_url');
-        if (!str_starts_with($adminUrl, 'http')) {
-            $adminUrl = 'https://' . $adminUrl;
+        if (! str_starts_with($adminUrl, 'http')) {
+            $adminUrl = 'https://'.$adminUrl;
         }
 
         return new Content(
             view: 'emails.tickets.created-admin',
             with: [
                 'ticket' => $this->ticket,
-                'ticketUrl' => rtrim($adminUrl, '/') . '/tickets/' . $this->ticket->uuid,
+                'ticketUrl' => rtrim($adminUrl, '/').'/tickets/'.$this->ticket->uuid,
             ],
         );
     }
@@ -56,7 +57,7 @@ class TicketCreatedAdmin extends Mailable
     /**
      * Get the attachments for the message.
      *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {

@@ -39,7 +39,7 @@ class MeasurementPolicy
             return true;
         }
 
-        if (!$tenantId) {
+        if (! $tenantId) {
             return false;
         }
 

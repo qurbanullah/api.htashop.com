@@ -47,6 +47,7 @@ class TicketResource extends JsonResource
                     || $this->guest_email,
                 function () {
                     $reporter = $this->reporter ?? $this->reporterWithTrashed ?? null;
+
                     return $reporter ? [
                         'id' => $reporter->id,
                         'name' => $reporter->name,
@@ -65,6 +66,7 @@ class TicketResource extends JsonResource
 
             'assigned_user' => $this->when($this->assignedUser(), function () {
                 $assignedUser = $this->assignedUser();
+
                 return $assignedUser ? [
                     'id' => $assignedUser->id,
                     'name' => $assignedUser->name,
@@ -76,6 +78,7 @@ class TicketResource extends JsonResource
 
             'current_assignment' => $this->when($this->currentAssignment(), function () {
                 $assignment = $this->currentAssignment();
+
                 return $assignment ? [
                     'id' => $assignment->id,
                     'assigned_at' => $assignment->assigned_at?->toISOString(),
@@ -84,14 +87,14 @@ class TicketResource extends JsonResource
             }),
 
             'softwares' => $this->whenLoaded('softwares', function () {
-                return $this->softwares->map(fn($software) => [
+                return $this->softwares->map(fn ($software) => [
                     'id' => $software->id,
                     'name' => $software->name,
                 ]);
             }),
 
             'versions' => $this->whenLoaded('versions', function () {
-                return $this->versions->map(fn($version) => [
+                return $this->versions->map(fn ($version) => [
                     'id' => $version->id,
                     'name' => $version->name,
                     'version_number' => $version->version_number,
@@ -99,14 +102,14 @@ class TicketResource extends JsonResource
             }),
 
             'ltypes' => $this->whenLoaded('ltypes', function () {
-                return $this->ltypes->map(fn($ltype) => [
+                return $this->ltypes->map(fn ($ltype) => [
                     'id' => $ltype->id,
                     'name' => $ltype->name,
                 ]);
             }),
 
             'packages' => $this->whenLoaded('packages', function () {
-                return $this->packages->map(fn($package) => [
+                return $this->packages->map(fn ($package) => [
                     'id' => $package->id,
                     'name' => $package->name,
                 ]);
@@ -114,7 +117,7 @@ class TicketResource extends JsonResource
 
             'messages_count' => $this->when(
                 $this->relationLoaded('messages'),
-                fn() => $this->messages->count()
+                fn () => $this->messages->count()
             ),
 
             'messages' => $this->whenLoaded('messages', function () {

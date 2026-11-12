@@ -22,7 +22,7 @@ class ManufacturerController extends Controller
         $manufacturers = Manufacturer::query()
             ->when($isAdmin, fn ($query) => $query->adminView($request->string('approval_status')->toString() ?: null))
             ->when(! $isAdmin, fn ($query) => $query->vendorVisible($user))
-            ->when($request->filled('search'), fn ($query) => $query->where('name', 'like', '%' . $request->string('search') . '%'))
+            ->when($request->filled('search'), fn ($query) => $query->where('name', 'like', '%'.$request->string('search').'%'))
             ->when(! $request->boolean('include_inactive'), fn ($query) => $query->where('is_active', true))
             ->orderByDesc('is_approved')
             ->orderBy('name')
@@ -104,7 +104,7 @@ class ManufacturerController extends Controller
             ->where('slug', $candidate)
             ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
             ->exists()) {
-            $candidate = $base . '-' . $suffix;
+            $candidate = $base.'-'.$suffix;
             $suffix++;
         }
 

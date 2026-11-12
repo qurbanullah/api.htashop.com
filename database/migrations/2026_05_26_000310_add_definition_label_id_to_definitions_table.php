@@ -20,7 +20,5 @@ return new class extends Migration
         Schema::dropIfExists('definition_labels');
     }
 
-    public function down(): void
-    {
-    }
+    public function down(): void {}
 };

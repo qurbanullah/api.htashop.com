@@ -22,6 +22,8 @@ declare(strict_types=1);
 
 namespace App\Actions\Feedbacks;
 
+use App\Filters\FilterByFeedbackPriority;
+use App\Filters\FilterByFeedbackSearch;
 use App\Models\Feedback;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Pipeline;
@@ -52,8 +54,8 @@ class FeedbackApprovedFeaturesAction
         )
             ->through(
                 [
-                    new \App\Filters\FilterByFeedbackSearch(data_get($data, 'filters')),
-                    new \App\Filters\FilterByFeedbackPriority(data_get($data, 'filters')),
+                    new FilterByFeedbackSearch(data_get($data, 'filters')),
+                    new FilterByFeedbackPriority(data_get($data, 'filters')),
                 ]
             )
             ->thenReturn()

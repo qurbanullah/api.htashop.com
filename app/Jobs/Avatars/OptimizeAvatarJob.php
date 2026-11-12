@@ -27,10 +27,11 @@ class OptimizeAvatarJob implements ShouldQueue
     {
         try {
             $user = User::with('avatars')->find($this->userId);
-            if (!$user) {
+            if (! $user) {
                 Log::warning('User not found for avatar optimization', [
                     'user_id' => $this->userId,
                 ]);
+
                 return;
             }
 

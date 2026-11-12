@@ -16,8 +16,7 @@ class DamCollectionService
         protected DeleteDamCollectionAction $deleteDamCollectionAction,
         protected ListDamCollectionsAction $listDamCollectionsAction,
         protected UpdateDamCollectionAction $updateDamCollectionAction,
-    ) {
-    }
+    ) {}
 
     public function list(array $filters = []): Collection
     {

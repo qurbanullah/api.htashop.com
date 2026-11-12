@@ -22,7 +22,6 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-
 use App\Enums\PriorityEnum;
 use App\Enums\ReproducibilityEnum;
 use App\Enums\SeverityEnum;
@@ -48,7 +47,7 @@ use Illuminate\Support\Str;
  */
 class Ticket extends Model
 {
-        use HasFactory, Auditable;
+    use Auditable, HasFactory;
 
     /**
      * The database used by the model.
@@ -215,8 +214,6 @@ class Ticket extends Model
 
     /**
      * Get all software related to this ticket.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
      */
     public function softwares(): MorphToMany
     {
@@ -225,8 +222,6 @@ class Ticket extends Model
 
     /**
      * Get all versions related to this ticket.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
      */
     public function versions(): MorphToMany
     {
@@ -235,8 +230,6 @@ class Ticket extends Model
 
     /**
      * Get all license types related to this ticket.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
      */
     public function ltypes(): MorphToMany
     {
@@ -245,8 +238,6 @@ class Ticket extends Model
 
     /**
      * Get all packages related to this ticket.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
      */
     public function packages(): MorphToMany
     {
@@ -279,8 +270,6 @@ class Ticket extends Model
 
     /**
      * Check if the ticket is currently assigned to someone.
-     *
-     * @return bool
      */
     public function isAssigned(): bool
     {
@@ -290,7 +279,7 @@ class Ticket extends Model
     /**
      * Get the current active assignment for the ticket.
      *
-     * @return \App\Models\Assignment|null
+     * @return Assignment|null
      */
     public function currentAssignment()
     {
@@ -300,29 +289,29 @@ class Ticket extends Model
     /**
      * Get the user currently assigned to this ticket.
      *
-     * @return \App\Models\User|null
+     * @return User|null
      */
     public function assignedUser()
     {
         $assignment = $this->currentAssignment();
+
         return $assignment ? $assignment->assignedTo : null;
     }
 
     /**
      * Get the user currently assigned to this ticket (including soft deleted).
      *
-     * @return \App\Models\User|null
+     * @return User|null
      */
     public function assignedUserWithTrashed()
     {
         $assignment = $this->currentAssignment();
+
         return $assignment ? User::withTrashed()->find($assignment->assigned_to) : null;
     }
 
     /**
      * Get the formatted ticket number.
-     *
-     * @return string
      */
     public function getTicketNumberAttribute(): string
     {

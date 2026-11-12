@@ -3,7 +3,6 @@
 namespace App\Http\Resources\V1\Role;
 
 use App\Http\Resources\V1\Permission\PermissionResource;
-
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 

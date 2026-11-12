@@ -16,8 +16,7 @@ class CartService
         protected CartAddItemAction $addItemAction,
         protected CartUpdateItemAction $updateItemAction,
         protected CartRemoveItemAction $removeItemAction,
-    ) {
-    }
+    ) {}
 
     public function read(Request $request): array
     {

@@ -16,8 +16,7 @@ class VariantController extends Controller
 {
     public function __construct(
         protected VariantService $variantService,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): JsonResponse
     {

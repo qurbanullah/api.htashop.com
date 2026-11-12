@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Message>
+ * @extends Factory<Message>
  */
 class MessageFactory extends Factory
 {
@@ -40,42 +40,42 @@ class MessageFactory extends Factory
             // Initial problem descriptions
             [
                 "I'm experiencing issues with {feature}. {problem_description}",
-                "Having trouble with {feature}. {problem_description}",
-                "There seems to be a problem with {feature}. {problem_description}",
+                'Having trouble with {feature}. {problem_description}',
+                'There seems to be a problem with {feature}. {problem_description}',
                 "I've encountered an issue where {problem_description}",
-                "The {feature} is not working as expected. {problem_description}",
+                'The {feature} is not working as expected. {problem_description}',
             ],
             // Follow-up messages
             [
                 "I've tried {solution_attempt} but the issue persists.",
-                "Additional information: {additional_info}",
-                "This is affecting {impact_description}.",
-                "I can reproduce this by {reproduction_steps}.",
-                "This started happening {time_reference}.",
+                'Additional information: {additional_info}',
+                'This is affecting {impact_description}.',
+                'I can reproduce this by {reproduction_steps}.',
+                'This started happening {time_reference}.',
             ],
             // Status updates
             [
-                "Any updates on this issue?",
-                "Is there an estimated time for resolution?",
+                'Any updates on this issue?',
+                'Is there an estimated time for resolution?',
                 "I'm still experiencing this problem.",
-                "The issue seems to be resolved on my end.",
-                "Thank you for the quick response!",
+                'The issue seems to be resolved on my end.',
+                'Thank you for the quick response!',
             ],
             // Support responses
             [
                 "Thank you for reporting this issue. We're investigating it now.",
-                "Could you please provide more details about {detail_request}?",
+                'Could you please provide more details about {detail_request}?',
                 "We've identified the issue and are working on a fix.",
-                "This has been resolved in the latest update. Please try again.",
-                "Please try {suggested_solution} and let us know if this helps.",
+                'This has been resolved in the latest update. Please try again.',
+                'Please try {suggested_solution} and let us know if this helps.',
             ],
             // Technical details
             [
-                "Error message: {error_message}",
-                "Browser: {browser_info}",
-                "Operating System: {os_info}",
-                "Steps to reproduce: {reproduction_steps}",
-                "Expected behavior: {expected_behavior}",
+                'Error message: {error_message}',
+                'Browser: {browser_info}',
+                'Operating System: {os_info}',
+                'Steps to reproduce: {reproduction_steps}',
+                'Expected behavior: {expected_behavior}',
             ],
         ];
 
@@ -87,7 +87,7 @@ class MessageFactory extends Factory
             '{feature}' => fake()->randomElement([
                 'login system', 'dashboard', 'license activation', 'user management',
                 'file upload', 'notification system', 'search functionality', 'payment processing',
-                'API integration', 'email system', 'backup feature', 'reporting module'
+                'API integration', 'email system', 'backup feature', 'reporting module',
             ]),
             '{problem_description}' => fake()->randomElement([
                 'It shows an error message when I try to proceed',
@@ -97,13 +97,13 @@ class MessageFactory extends Factory
                 'It redirects to a blank page',
                 'The data is not saving properly',
                 'It shows a 500 internal server error',
-                'The interface is not responsive on mobile devices'
+                'The interface is not responsive on mobile devices',
             ]),
             '{solution_attempt}' => fake()->randomElement([
                 'clearing my browser cache', 'restarting the application',
                 'using a different browser', 'disabling browser extensions',
                 'refreshing the page multiple times', 'logging out and back in',
-                'checking my internet connection', 'updating my browser'
+                'checking my internet connection', 'updating my browser',
             ]),
             '{additional_info}' => fake()->randomElement([
                 'This happens on both Chrome and Firefox',
@@ -111,13 +111,13 @@ class MessageFactory extends Factory
                 'The problem occurs only during peak hours',
                 'This worked fine until the recent update',
                 'I can provide screenshots if needed',
-                'The issue is intermittent'
+                'The issue is intermittent',
             ]),
             '{impact_description}' => fake()->randomElement([
                 'our daily operations', 'multiple users in our team',
                 'our ability to process orders', 'customer satisfaction',
                 'our productivity', 'our client deliverables',
-                'our business continuity', 'our user experience'
+                'our business continuity', 'our user experience',
             ]),
             '{reproduction_steps}' => fake()->randomElement([
                 'going to the settings page and clicking save',
@@ -125,13 +125,13 @@ class MessageFactory extends Factory
                 'trying to access the admin panel',
                 'submitting a form with special characters',
                 'navigating from the dashboard to reports',
-                'attempting to download the monthly report'
+                'attempting to download the monthly report',
             ]),
             '{time_reference}' => fake()->randomElement([
                 'after the last update', 'since yesterday',
                 'this morning', 'over the weekend',
                 'since we upgraded our plan', 'after changing our password',
-                'when we switched to the new version', 'following the system maintenance'
+                'when we switched to the new version', 'following the system maintenance',
             ]),
             '{detail_request}' => fake()->randomElement([
                 'your browser version and operating system',
@@ -139,7 +139,7 @@ class MessageFactory extends Factory
                 'the steps you took before this happened',
                 'your account information',
                 'the time when this occurred',
-                'any recent changes to your setup'
+                'any recent changes to your setup',
             ]),
             '{suggested_solution}' => fake()->randomElement([
                 'clearing your browser cache and cookies',
@@ -147,7 +147,7 @@ class MessageFactory extends Factory
                 'updating your browser to the latest version',
                 'disabling any ad-blocking extensions',
                 'checking your firewall settings',
-                'switching to a different network connection'
+                'switching to a different network connection',
             ]),
             '{error_message}' => fake()->randomElement([
                 'ERR_CONNECTION_REFUSED',
@@ -157,14 +157,14 @@ class MessageFactory extends Factory
                 'File not found',
                 'Database connection failed',
                 'Request timeout',
-                'Invalid input format'
+                'Invalid input format',
             ]),
             '{browser_info}' => fake()->randomElement([
                 'Chrome 120.0.6099.109',
                 'Firefox 121.0',
                 'Safari 17.2.1',
                 'Edge 120.0.2210.61',
-                'Opera 106.0.4998.19'
+                'Opera 106.0.4998.19',
             ]),
             '{os_info}' => fake()->randomElement([
                 'Windows 11 Pro',
@@ -172,7 +172,7 @@ class MessageFactory extends Factory
                 'Ubuntu 22.04 LTS',
                 'iOS 17.2.1',
                 'Android 14',
-                'Windows 10 Home'
+                'Windows 10 Home',
             ]),
             '{expected_behavior}' => fake()->randomElement([
                 'The page should load without errors',
@@ -180,7 +180,7 @@ class MessageFactory extends Factory
                 'I should receive a confirmation message',
                 'The file should upload within 30 seconds',
                 'The form should validate the input correctly',
-                'The system should send a notification email'
+                'The system should send a notification email',
             ]),
         ];
 
@@ -234,16 +234,16 @@ class MessageFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $initialMessages = [
-                "I need help with license activation. The system shows an error when I try to activate my license key.",
+                'I need help with license activation. The system shows an error when I try to activate my license key.',
                 "I'm unable to access the admin panel after the recent update. Getting a 403 forbidden error.",
-                "The file upload feature is not working properly. Files get stuck at 50% upload progress.",
+                'The file upload feature is not working properly. Files get stuck at 50% upload progress.',
                 "I'm experiencing slow performance when loading the dashboard. It takes over 30 seconds to load.",
                 "There's an issue with email notifications. I'm not receiving any notification emails.",
                 "The search functionality returns incorrect results. It's showing outdated data.",
                 "I can't generate reports. The system shows 'Export failed' error message.",
-                "The user management section is not saving changes. Settings revert after refresh.",
+                'The user management section is not saving changes. Settings revert after refresh.',
                 "I'm getting frequent timeout errors when processing large datasets.",
-                "The mobile app crashes when trying to sync data with the server.",
+                'The mobile app crashes when trying to sync data with the server.',
             ];
 
             return [
@@ -261,11 +261,11 @@ class MessageFactory extends Factory
             $supportResponses = [
                 "Thank you for contacting us. We're looking into this issue and will get back to you shortly.",
                 "We've received your report and have escalated it to our technical team for investigation.",
-                "Could you please provide your license key and system information so we can better assist you?",
+                'Could you please provide your license key and system information so we can better assist you?',
                 "We've identified the issue in our logs. A fix will be deployed in the next update.",
-                "Please try clearing your browser cache and attempt the operation again.",
+                'Please try clearing your browser cache and attempt the operation again.',
                 "We've resolved this issue on our end. Please check if it's working now.",
-                "This appears to be related to server maintenance. The issue should be resolved now.",
+                'This appears to be related to server maintenance. The issue should be resolved now.',
                 "We'll need to schedule a quick call to troubleshoot this further. What times work for you?",
             ];
 

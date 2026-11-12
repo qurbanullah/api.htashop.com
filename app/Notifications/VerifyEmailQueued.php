@@ -27,7 +27,7 @@ class VerifyEmailQueued extends VerifyEmail implements ShouldQueue
      * Get the mail representation of the notification.
      *
      * @param  mixed  $notifiable
-     * @return \Illuminate\Notifications\Messages\MailMessage
+     * @return MailMessage
      */
     public function toMail($notifiable)
     {
@@ -36,7 +36,7 @@ class VerifyEmailQueued extends VerifyEmail implements ShouldQueue
         return (new MailMessage)
             ->mailer('noreply')
             ->from('no-reply@real3dtech.com', 'Real3DTech')
-            ->subject('Verify Your Email Address - ' . config('app.name'))
+            ->subject('Verify Your Email Address - '.config('app.name'))
             ->view('emails.verify-email', [
                 'user' => $notifiable,
                 'verificationUrl' => $verificationUrl,

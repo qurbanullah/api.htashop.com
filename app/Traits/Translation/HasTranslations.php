@@ -32,9 +32,9 @@ trait HasTranslations
     /**
      * Get translated value for a specific field.
      *
-     * @param string $field Field name to translate
-     * @param string|null $locale Language code (null = current locale)
-     * @param bool $fallback Whether to fallback to default language
+     * @param  string  $field  Field name to translate
+     * @param  string|null  $locale  Language code (null = current locale)
+     * @param  bool  $fallback  Whether to fallback to default language
      * @return string|null Translated value or original value
      */
     public function translate(string $field, ?string $locale = null, bool $fallback = true): ?string
@@ -57,7 +57,7 @@ trait HasTranslations
         $translation = Cache::remember($cacheKey, 3600, function () use ($field, $locale) {
             $language = Language::findByCode($locale);
 
-            if (!$language) {
+            if (! $language) {
                 return null;
             }
 
@@ -83,16 +83,16 @@ trait HasTranslations
     /**
      * Set translation for a specific field.
      *
-     * @param string $field Field name
-     * @param string $value Translated value
-     * @param string $locale Language code
+     * @param  string  $field  Field name
+     * @param  string  $value  Translated value
+     * @param  string  $locale  Language code
      * @return Translation|null Created translation
      */
     public function setTranslation(string $field, string $value, string $locale): ?Translation
     {
         $language = Language::findByCode($locale);
 
-        if (!$language) {
+        if (! $language) {
             return null;
         }
 
@@ -115,7 +115,7 @@ trait HasTranslations
     /**
      * Get all translations for current locale.
      *
-     * @param string|null $locale Language code
+     * @param  string|null  $locale  Language code
      * @return array<string, string> Translated fields
      */
     public function getTranslated(?string $locale = null): array
@@ -133,15 +133,14 @@ trait HasTranslations
     /**
      * Check if translation exists for a field.
      *
-     * @param string $field Field name
-     * @param string $locale Language code
-     * @return bool
+     * @param  string  $field  Field name
+     * @param  string  $locale  Language code
      */
     public function hasTranslation(string $field, string $locale): bool
     {
         $language = Language::findByCode($locale);
 
-        if (!$language) {
+        if (! $language) {
             return false;
         }
 
@@ -171,14 +170,14 @@ trait HasTranslations
     /**
      * Get translation coverage percentage for a locale.
      *
-     * @param string $locale Language code
+     * @param  string  $locale  Language code
      * @return float Percentage (0-100)
      */
     public function translationCoverage(string $locale): float
     {
         $language = Language::findByCode($locale);
 
-        if (!$language) {
+        if (! $language) {
             return 0.0;
         }
 

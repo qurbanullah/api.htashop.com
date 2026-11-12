@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Changelog;
 
+use App\Http\Controllers\V1\Changelog\ChangelogController;
+
 test('the Changelog controller class exists', function () {
-    expect(class_exists(\App\Http\Controllers\V1\Changelog\ChangelogController::class))->toBeTrue();
+    expect(class_exists(ChangelogController::class))->toBeTrue();
 });

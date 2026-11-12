@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-
 use App\Enums\ForumCommentStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +13,7 @@ use Illuminate\Support\Str;
 
 class ForumComment extends Model
 {
-        use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'uuid',
@@ -94,9 +93,10 @@ class ForumComment extends Model
 
     public function isLikedBy(?User $user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
+
         return $this->likes()->where('user_id', $user->id)->exists();
     }
 

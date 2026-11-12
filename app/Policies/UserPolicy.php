@@ -30,7 +30,7 @@ class UserPolicy
 
         // Editor can view non-admin users
         if ($user->hasRole('editor')) {
-            return !$model->hasAnyRole(['super-admin', 'admin']);
+            return ! $model->hasAnyRole(['super-admin', 'admin']);
         }
 
         // Users can view their own profile
@@ -57,7 +57,7 @@ class UserPolicy
 
         // Admin can update non-super-admin users
         if ($user->hasRole('admin')) {
-            return !$model->hasRole('super-admin');
+            return ! $model->hasRole('super-admin');
         }
 
         // Users can update their own profile (limited fields)
@@ -71,7 +71,7 @@ class UserPolicy
     {
         // Allow users to delete their own account (soft delete), but prevent super-admin self-deletion
         if ($user->id === $model->id) {
-            return !$user->hasRole('super-admin');
+            return ! $user->hasRole('super-admin');
         }
 
         // Super admin can delete anyone except themselves
@@ -81,7 +81,7 @@ class UserPolicy
 
         // Admin can delete non-super-admin users
         if ($user->hasRole('admin')) {
-            return !$model->hasRole('super-admin');
+            return ! $model->hasRole('super-admin');
         }
 
         return false;
@@ -99,7 +99,7 @@ class UserPolicy
 
         // Admin can restore non-super-admin users
         if ($user->hasRole('admin')) {
-            return !$model->hasRole('super-admin');
+            return ! $model->hasRole('super-admin');
         }
 
         return false;
@@ -132,12 +132,14 @@ class UserPolicy
         // Cannot assign roles to yourself
         if ($user->id === $model->id) {
             Log::info('assignRoles: Denied - user trying to edit own roles');
+
             return false;
         }
 
         // Super admin can assign any roles
         if ($user->hasRole('super-admin')) {
             Log::info('assignRoles: Allowed - user is super-admin');
+
             return true;
         }
 
@@ -146,12 +148,14 @@ class UserPolicy
             $targetIsSuperAdmin = $model->hasRole('super-admin');
             Log::info('assignRoles: Admin check', [
                 'target_is_super_admin' => $targetIsSuperAdmin,
-                'result' => !$targetIsSuperAdmin
+                'result' => ! $targetIsSuperAdmin,
             ]);
-            return !$targetIsSuperAdmin;
+
+            return ! $targetIsSuperAdmin;
         }
 
         Log::info('assignRoles: Denied - user does not have required role');
+
         return false;
     }
 

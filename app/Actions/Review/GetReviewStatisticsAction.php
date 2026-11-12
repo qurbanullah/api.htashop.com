@@ -9,8 +9,7 @@ class GetReviewStatisticsAction
     /**
      * Get review statistics for a reviewable model
      *
-     * @param Model $reviewable The model being reviewed (Product, Vendor, etc.)
-     * @return array
+     * @param  Model  $reviewable  The model being reviewed (Product, Vendor, etc.)
      */
     public function execute(Model $reviewable): array
     {

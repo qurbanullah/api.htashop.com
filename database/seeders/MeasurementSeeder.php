@@ -6,6 +6,7 @@ use App\Models\Measurement;
 use App\Models\Tenant;
 use App\Models\Unit;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class MeasurementSeeder extends Seeder
 {
@@ -16,7 +17,7 @@ class MeasurementSeeder extends Seeder
         if ($tenants->isEmpty()) {
             $tenants = collect([
                 Tenant::create([
-                    'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                    'uuid' => (string) Str::uuid(),
                     'name' => 'Default Tenant',
                     'slug' => 'default',
                     'domain' => 'localhost',
@@ -33,7 +34,7 @@ class MeasurementSeeder extends Seeder
                 $measurement = Measurement::firstOrCreate(
                     ['tenant_id' => $tenant->id, 'code' => $data['code']],
                     [
-                        'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                        'uuid' => (string) Str::uuid(),
                         'name' => $data['name'],
                         'description' => $data['description'],
                         'is_active' => true,
@@ -45,7 +46,7 @@ class MeasurementSeeder extends Seeder
                     Unit::firstOrCreate(
                         ['measurement_id' => $measurement->id, 'code' => $unitData['code']],
                         [
-                            'uuid' => (string) \Illuminate\Support\Str::uuid(),
+                            'uuid' => (string) Str::uuid(),
                             'tenant_id' => $tenant->id,
                             'name' => $unitData['name'],
                             'symbol' => $unitData['symbol'],
