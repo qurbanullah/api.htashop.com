@@ -449,7 +449,10 @@ class ProductImportService
         $this->syncShipping($product, (array) data_get($payload, 'shipping', []));
         $this->syncHighlights($import, $product, (array) data_get($payload, 'product.highlights', []));
 
-        $warnings = $this->syncImages($import, $product, (array) data_get($payload, 'images', []));
+        $warnings = array_merge(
+            (array) data_get($payload, 'warnings', []),
+            $this->syncImages($import, $product, (array) data_get($payload, 'images', [])),
+        );
 
         return [
             'status' => ProductImportRowStatus::IMPORTED,
@@ -963,7 +966,20 @@ class ProductImportService
             ]);
         }
 
-        $unitId = $this->resolveUnit((string) ($row['unit'] ?? ''));
+        $unitCode = trim((string) ($row['unit'] ?? ''));
+        $unitId = null;
+        $warnings = [];
+
+        if ($unitCode !== '') {
+            try {
+                $unitId = $this->resolveUnit($unitCode);
+            } catch (RowValidationException) {
+                // The unit is optional metadata: a missing measurement catalogue
+                // must not throw away an otherwise valid product.
+                $warnings[] = "Unit '{$unitCode}' does not exist, so it was not set on the product.";
+            }
+        }
+
         $metadata = array_filter([
             'price' => $price,
             'sale_price' => $salePrice,
@@ -977,6 +993,7 @@ class ProductImportService
         return [
             'external_id' => $externalId,
             'action' => $action,
+            'warnings' => $warnings,
             'product' => [
                 'tenant_id' => $import->tenant_id,
                 'organization_id' => $import->organization_id,

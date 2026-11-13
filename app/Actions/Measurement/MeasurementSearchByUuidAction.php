@@ -8,6 +8,9 @@ class MeasurementSearchByUuidAction
 {
     public function handle(string $uuid): Measurement
     {
-        return Measurement::query()->where('uuid', $uuid)->firstOrFail();
+        return Measurement::query()
+            ->with('baseUnit:id,code,symbol,name')
+            ->where('uuid', $uuid)
+            ->firstOrFail();
     }
 }

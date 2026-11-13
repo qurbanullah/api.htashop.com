@@ -13,6 +13,7 @@ class MeasurementUpdateAction
             'tenant_id' => data_get($data, 'tenant_id', $measurement->tenant_id),
             'name' => data_get($data, 'name', $measurement->name),
             'code' => $this->resolveCode($measurement, data_get($data, 'code'), data_get($data, 'name', $measurement->name), data_get($data, 'tenant_id', $measurement->tenant_id)),
+            'base_unit_id' => array_key_exists('base_unit_id', $data) ? data_get($data, 'base_unit_id') : $measurement->base_unit_id,
             'description' => array_key_exists('description', $data) ? data_get($data, 'description') : $measurement->description,
             'is_active' => data_get($data, 'is_active', $measurement->is_active),
             'metadata' => array_key_exists('metadata', $data) ? data_get($data, 'metadata') : $measurement->metadata,

@@ -10,6 +10,9 @@ use Illuminate\Support\Str;
 
 class MeasurementSeeder extends Seeder
 {
+    /** Canonical codes used to break ties between several factor-1 units. */
+    private const PREFERRED_BASE_UNITS = ['pc', 'm', 'kg', 's', 'K', 'A', 'V', 'W', 'Hz', 'l', 'B', 'pct'];
+
     public function run(): void
     {
         $tenants = Tenant::all();
@@ -57,10 +60,54 @@ class MeasurementSeeder extends Seeder
                         ]
                     );
                 }
+
+                $this->syncBaseUnit($measurement, $data['units']);
             }
         }
 
         $this->command->info('✅ Seeded measurements and units for all tenants');
+    }
+
+    /**
+     * Point the measurement at its base unit (factor 1, no offset) so conversions
+     * no longer rely on an implicit assumption. Re-running the seeder repairs
+     * measurements seeded before the column existed.
+     *
+     * @param  array<int, array{code: string, factor: float|int, offset?: float|int}>  $unitData
+     */
+    private function syncBaseUnit(Measurement $measurement, array $unitData): void
+    {
+        if ($unitData === []) {
+            return;
+        }
+
+        $linearCodes = [];
+
+        foreach ($unitData as $unit) {
+            if ((float) $unit['factor'] === 1.0 && (float) ($unit['offset'] ?? 0) === 0.0) {
+                $linearCodes[] = $unit['code'];
+            }
+        }
+
+        $code = null;
+
+        foreach (self::PREFERRED_BASE_UNITS as $preferred) {
+            if (in_array($preferred, $linearCodes, true)) {
+                $code = $preferred;
+                break;
+            }
+        }
+
+        $code ??= $linearCodes[0] ?? $unitData[0]['code'];
+
+        $baseUnitId = Unit::query()
+            ->where('measurement_id', $measurement->id)
+            ->where('code', $code)
+            ->value('id');
+
+        if ($baseUnitId !== null && (int) $measurement->base_unit_id !== (int) $baseUnitId) {
+            $measurement->update(['base_unit_id' => $baseUnitId]);
+        }
     }
 
     private function measurements(): array

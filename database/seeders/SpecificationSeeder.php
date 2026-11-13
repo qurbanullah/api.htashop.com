@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Specification;
+use App\Models\Unit;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -14,21 +15,35 @@ class SpecificationSeeder extends Seeder
         $sortOrder = 0;
         $count = 0;
 
+        // Units are tenant-scoped, so map each code to its lowest id.
+        $unitIdsByCode = Unit::query()
+            ->whereNotNull('code')
+            ->orderBy('id')
+            ->get(['id', 'code'])
+            ->groupBy('code')
+            ->map(fn ($units): int => (int) $units->first()->id);
+
         foreach ($catalog as $group => $specifications) {
             $sortOrder += 10;
 
             foreach ($specifications as $specification) {
                 [$name, $unit, $description] = $specification + [null, null];
 
+                $attributes = [
+                    'name' => $name,
+                    'group' => $group,
+                    'unit' => $unit,
+                    'description' => $description,
+                    'sort_order' => $sortOrder++,
+                ];
+
+                if ($unit !== null && $unitIdsByCode->has($unit)) {
+                    $attributes['unit_id'] = $unitIdsByCode->get($unit);
+                }
+
                 Specification::updateOrCreate(
                     ['slug' => Str::slug($name), 'type' => 'product'],
-                    [
-                        'name' => $name,
-                        'group' => $group,
-                        'unit' => $unit,
-                        'description' => $description,
-                        'sort_order' => $sortOrder++,
-                    ]
+                    $attributes
                 );
 
                 $count++;
@@ -81,8 +96,8 @@ class SpecificationSeeder extends Seeder
                 ['Volume', 'L', 'Nominal volume'],
                 ['Tank Capacity', 'L', 'Fluid tank capacity'],
                 ['Flow Rate', 'L_min', 'Volumetric flow rate'],
-                ['Storage Capacity', 'GB', 'Onboard storage'],
-                ['Memory', 'GB', 'Installed memory'],
+                ['Storage Capacity', 'gb', 'Onboard storage'],
+                ['Memory', 'gb', 'Installed memory'],
                 ['Battery Capacity', 'mah', 'Battery charge capacity'],
                 ['Package Quantity', 'pc', 'Units per package'],
             ],

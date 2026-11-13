@@ -19,6 +19,7 @@ class Measurement extends Model
         'tenant_id',
         'name',
         'code',
+        'base_unit_id',
         'description',
         'is_active',
         'metadata',
@@ -46,6 +47,17 @@ class Measurement extends Model
     public function units(): HasMany
     {
         return $this->hasMany(Unit::class, 'measurement_id');
+    }
+
+    /**
+     * The unit every other unit of this measurement is expressed in.
+     *
+     * `Unit::factor` is relative to this unit, so `normalized_number` is a value
+     * in `base_unit_id`.
+     */
+    public function baseUnit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class, 'base_unit_id');
     }
 
     public function definitions(): HasMany

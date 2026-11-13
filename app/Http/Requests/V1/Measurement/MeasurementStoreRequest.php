@@ -18,6 +18,7 @@ class MeasurementStoreRequest extends FormRequest
             'tenant_id' => ['required', 'integer', 'exists:tenants,id'],
             'name' => ['required', 'string', 'max:255'],
             'code' => ['nullable', 'string', 'max:255', Rule::unique('measurements', 'code')->where(fn ($query) => $query->where('tenant_id', $this->input('tenant_id')))],
+            'base_unit_id' => ['nullable', 'integer', Rule::exists('units', 'id')->where('tenant_id', $this->input('tenant_id'))],
             'description' => ['nullable', 'string'],
             'is_active' => ['nullable', 'boolean'],
             'metadata' => ['nullable', 'array'],

@@ -2,6 +2,7 @@
 
 namespace App\Support\Shipping;
 
+use App\Models\Measurement;
 use App\Models\Unit;
 
 /**
@@ -12,7 +13,9 @@ use App\Models\Unit;
  *     target = base / target.factor
  *
  * Weights normalise to kilograms and dimensions to centimetres, which is what
- * the rate engine and the storefront both consume.
+ * the rate engine and the storefront both consume. When the requested code is
+ * absent from the catalogue we fall back to the measurement's declared
+ * `base_unit_id`, so conversion still works for custom UoM sets.
  */
 class UnitConverter
 {
@@ -38,10 +41,7 @@ class UnitConverter
             return null;
         }
 
-        $target = Unit::query()
-            ->where('measurement_id', $unit->measurement_id)
-            ->where('code', $targetCode)
-            ->first();
+        $target = self::resolveTarget($unit, $targetCode);
 
         if (! $target instanceof Unit) {
             return null;
@@ -56,5 +56,33 @@ class UnitConverter
         $base = ((float) $value + (float) $unit->offset) * (float) $unit->factor;
 
         return round($base / $targetFactor, 3);
+    }
+
+    /**
+     * Prefer the requested code (canonical kg/cm), then the declared base unit.
+     */
+    private static function resolveTarget(Unit $unit, string $targetCode): ?Unit
+    {
+        $target = Unit::query()
+            ->where('measurement_id', $unit->measurement_id)
+            ->where('code', $targetCode)
+            ->first();
+
+        if ($target instanceof Unit) {
+            return $target;
+        }
+
+        $baseUnitId = Measurement::query()
+            ->whereKey($unit->measurement_id)
+            ->value('base_unit_id');
+
+        if ($baseUnitId === null) {
+            return null;
+        }
+
+        return Unit::query()
+            ->where('measurement_id', $unit->measurement_id)
+            ->whereKey($baseUnitId)
+            ->first();
     }
 }

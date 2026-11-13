@@ -10,6 +10,7 @@ class MeasurementReadAction
     public function handle(array $filters = []): LengthAwarePaginator
     {
         return Measurement::query()
+            ->with('baseUnit:id,code,symbol,name')
             ->when(data_get($filters, 'tenant_id'), fn ($query, $tenantId) => $query->where('tenant_id', $tenantId))
             ->when(! is_null(data_get($filters, 'is_active')), fn ($query) => $query->where('is_active', (bool) data_get($filters, 'is_active')))
             ->when(data_get($filters, 'search'), function ($query, $search) {

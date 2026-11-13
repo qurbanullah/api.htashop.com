@@ -23,11 +23,12 @@ class SpecificationController extends Controller
         $type = $request->string('type')->toString() ?: 'product';
 
         $specifications = Specification::query()
+            ->with('unitOfMeasure:id,code,symbol,name')
             ->where('type', $type)
             ->orderBy('group')
             ->orderBy('sort_order')
             ->orderBy('name')
-            ->get(['id', 'name', 'slug', 'group', 'unit', 'description']);
+            ->get(['id', 'name', 'slug', 'group', 'unit', 'unit_id', 'description']);
 
         return ApiResponse::success($specifications, 'Specifications retrieved successfully');
     }

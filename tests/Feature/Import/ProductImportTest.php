@@ -856,6 +856,26 @@ test('a blank highlights cell leaves existing highlights untouched', function ()
     expect($product->highlights()->count())->toBe(1);
 });
 
+test('an unknown unit is a warning and the product still imports', function () {
+    $import = importRows([
+        importRow(['unit' => 'widgets']),
+    ], $this->tenant, $this->organization, ['download_images' => false]);
+
+    expect($import->rows()->first()->status)->toBe(ProductImportRowStatus::VALID);
+
+    app(ProductImportService::class)->apply($import->refresh());
+    $import->refresh();
+
+    $product = Product::query()->where('seller_sku', 'HTA-ARDUINO-UNO')->firstOrFail();
+    $row = $import->rows()->firstOrFail();
+
+    expect($import->created_count)->toBe(1)
+        ->and($import->failed_count)->toBe(0)
+        ->and($row->warnings)->toHaveCount(1)
+        ->and($row->warnings[0])->toContain("Unit 'widgets' does not exist")
+        ->and(data_get($product->metadata, 'unit_id'))->toBeNull();
+});
+
 test('the import command validates and applies a file', function () {
     $path = Storage::disk('local')->path(importCsvPath([importRow(['brand' => ''])]));
 

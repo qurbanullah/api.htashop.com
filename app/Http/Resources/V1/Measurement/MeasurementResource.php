@@ -15,6 +15,16 @@ class MeasurementResource extends JsonResource
             'tenant_id' => $this->tenant_id,
             'name' => $this->name,
             'code' => $this->code,
+            'base_unit_id' => $this->base_unit_id,
+            'base_unit' => $this->when(
+                $this->relationLoaded('baseUnit') && $this->baseUnit !== null,
+                fn (): array => [
+                    'id' => $this->baseUnit->id,
+                    'code' => $this->baseUnit->code,
+                    'symbol' => $this->baseUnit->symbol,
+                    'name' => $this->baseUnit->name,
+                ],
+            ),
             'description' => $this->description,
             'is_active' => (bool) $this->is_active,
             'metadata' => $this->metadata,
