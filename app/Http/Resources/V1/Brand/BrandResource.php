@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\V1\Brand;
 
+use App\Http\Resources\V1\Industry\IndustryResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,6 +16,7 @@ class BrandResource extends JsonResource
             'manufacturer_id' => $this->manufacturer_id,
             'name' => $this->name,
             'slug' => $this->slug,
+            'country' => $this->country,
             'origin' => $this->origin,
             'is_approved' => $this->is_approved,
             'tenant_id' => $this->tenant_id,
@@ -27,6 +29,7 @@ class BrandResource extends JsonResource
             'description' => $this->description,
             'is_active' => $this->is_active,
             'manufacturer' => $this->whenLoaded('manufacturer'),
+            'industries' => IndustryResource::collection($this->whenLoaded('industries')),
         ];
     }
 }

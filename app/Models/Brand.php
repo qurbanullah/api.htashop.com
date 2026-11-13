@@ -6,6 +6,7 @@ use App\Traits\HasApprovalWorkflow;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
@@ -19,6 +20,7 @@ class Brand extends Model
         'manufacturer_id',
         'name',
         'slug',
+        'country',
         'origin',
         'is_approved',
         'tenant_id',
@@ -61,5 +63,10 @@ class Brand extends Model
     public function variants(): MorphToMany
     {
         return $this->morphedByMany(Variant::class, 'brandable');
+    }
+
+    public function industries(): BelongsToMany
+    {
+        return $this->belongsToMany(Industry::class, 'brand_industry')->withTimestamps();
     }
 }

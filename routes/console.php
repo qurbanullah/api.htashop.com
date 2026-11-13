@@ -75,3 +75,26 @@ Schedule::command('analytics:reconcile')
     ->hourly()
     ->withoutOverlapping(10)
     ->onOneServer();
+
+// Quote lifecycle: remind buyers a few days before their offer lapses, then
+// close revisions past validity and the request that owns them. The command is
+// idempotent (`expiry_notified_at` + status guards), so an hourly cadence is
+// safe even across replica restarts.
+Schedule::command('quotes:expire')
+    ->hourly()
+    ->withoutOverlapping(10)
+    ->onOneServer();
+
+// Safety net: replies are emailed even when the PDF service is down. Rebuild
+// any quotation document missing from storage so the buyer portal always has
+// the canonical PDF.
+Schedule::command('quotes:ensure-documents')
+    ->dailyAt('04:20')
+    ->withoutOverlapping(60)
+    ->onOneServer();
+
+// Weekly performance digest for administrators (Monday morning).
+Schedule::command('quotes:report-digest')
+    ->weeklyOn(1, '07:00')
+    ->withoutOverlapping(60)
+    ->onOneServer();

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\V1\Category;
 
+use App\Http\Resources\V1\Industry\IndustryResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -27,6 +28,7 @@ class CategoryResource extends JsonResource
             'image' => $this->image,
             'children_count' => $this->whenCounted('children'),
             'products_count' => $this->whenCounted('products'),
+            'industries' => IndustryResource::collection($this->whenLoaded('industries')),
             'children' => $this->whenLoaded('children', fn () => static::collection($this->children)),
         ];
     }

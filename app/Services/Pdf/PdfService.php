@@ -4,6 +4,8 @@ namespace App\Services\Pdf;
 
 use App\Models\Document;
 use App\Models\Order;
+use App\Models\QuoteRequest;
+use App\Models\QuoteResponse;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -58,6 +60,80 @@ class PdfService
                 'total_amount' => $order->total_amount,
             ],
         ]);
+    }
+
+    /**
+     * Existing stored PDF for a revision, if one has been generated.
+     */
+    public function findQuoteDocument(QuoteRequest $quoteRequest, QuoteResponse $quoteResponse): ?Document
+    {
+        return Document::query()
+            ->where([
+                'documentable_type' => QuoteRequest::class,
+                'documentable_id' => $quoteRequest->id,
+                'type' => 'quotation',
+                'filename' => $this->quoteFilename($quoteRequest, $quoteResponse),
+            ])
+            ->first();
+    }
+
+    /**
+     * Render the quotation for a given revision and store it in object storage.
+     * Re-generating the same revision overwrites the stored file instead of
+     * creating duplicate document rows.
+     */
+    public function generateForQuote(QuoteRequest $quoteRequest, QuoteResponse $quoteResponse): Document
+    {
+        $html = $this->renderQuote($quoteRequest, $quoteResponse);
+        $pdf = $this->convert($html);
+
+        $filename = $this->quoteFilename($quoteRequest, $quoteResponse);
+        $objectKey = sprintf('documents/quotes/%s/%s', $quoteRequest->uuid, $filename);
+
+        Storage::disk('idrivee2')->put($objectKey, $pdf, 'public');
+
+        return Document::query()->updateOrCreate(
+            [
+                'documentable_type' => QuoteRequest::class,
+                'documentable_id' => $quoteRequest->id,
+                'type' => 'quotation',
+                'filename' => $filename,
+            ],
+            [
+                'object_key' => $objectKey,
+                'mime' => 'application/pdf',
+                'metadata' => [
+                    'quote_number' => $quoteRequest->quote_number,
+                    'response_uuid' => $quoteResponse->uuid,
+                    'revision' => (int) $quoteResponse->revision,
+                    'currency' => $quoteResponse->currency,
+                    'total_amount' => $quoteResponse->total_amount,
+                ],
+            ],
+        );
+    }
+
+    private function quoteFilename(QuoteRequest $quoteRequest, QuoteResponse $quoteResponse): string
+    {
+        return sprintf(
+            'quotation-%s-r%d.pdf',
+            strtolower(str_replace([' ', '/', '\\'], '-', (string) ($quoteRequest->quote_number ?? 'quote'))),
+            (int) $quoteResponse->revision,
+        );
+    }
+
+    /**
+     * HTML for the quotation template — also used by tests and mail attachments.
+     */
+    public function renderQuote(QuoteRequest $quoteRequest, QuoteResponse $quoteResponse): string
+    {
+        $quoteResponse->loadMissing(['items', 'sender']);
+
+        return view('pdf.quote', [
+            'quoteRequest' => $quoteRequest,
+            'quoteResponse' => $quoteResponse,
+            'company' => config('quotes.company'),
+        ])->render();
     }
 
     /**

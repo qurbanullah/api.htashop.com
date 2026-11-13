@@ -27,6 +27,7 @@ class SubmitQuoteRequestRequest extends FormRequest
             'job_title' => 'required|string|max:255',
             'company_size' => 'nullable|string|max:100',
             'industry' => 'nullable|string|max:100',
+            'industry_id' => 'nullable|integer|exists:industries,id',
             // Location Information
             'country' => 'required|string|max:100',
             'state' => 'nullable|string|max:100',

@@ -48,6 +48,7 @@ use App\Http\Controllers\V1\Forum\PublicForumController;
 use App\Http\Controllers\V1\Gdpr\GdprConsentController;
 use App\Http\Controllers\V1\Highlight\HighlightController;
 use App\Http\Controllers\V1\Highlight\ProductHighlightController;
+use App\Http\Controllers\V1\Industry\IndustryController;
 use App\Http\Controllers\V1\Inventory\InventoryController;
 use App\Http\Controllers\V1\Knowledge\KnowledgeEntryAdminController;
 use App\Http\Controllers\V1\Label\LabelController;
@@ -70,7 +71,9 @@ use App\Http\Controllers\V1\Product\ProductShippingController;
 use App\Http\Controllers\V1\ProductReview\ProductReviewController;
 use App\Http\Controllers\V1\Profile\ProfileController;
 use App\Http\Controllers\V1\Purchasing\SupplierOrderController;
+use App\Http\Controllers\V1\Quote\ManageQuoteController;
 use App\Http\Controllers\V1\Quote\QuoteController;
+use App\Http\Controllers\V1\Quote\QuoteReportController;
 use App\Http\Controllers\V1\SalesChannel\SalesChannelController;
 use App\Http\Controllers\V1\Search\SearchController;
 use App\Http\Controllers\V1\SellerDashboard\SellerDashboardController;
@@ -147,6 +150,9 @@ Route::prefix('v1')->group(function () {
     Route::get('/countries', [CountryController::class, 'index']);
     Route::get('/cities', [CityController::class, 'index']);
 
+    // Public reference data (industries for quote / BOM forms)
+    Route::get('/industries', [IndustryController::class, 'index']);
+
     // Public banners (placement + context aware)
     Route::get('/banners', [BannerController::class, 'index']);
 
@@ -171,6 +177,12 @@ Route::prefix('v1')->group(function () {
         Route::get('/highlights/{highlight}', [HighlightController::class, 'show']);
         Route::put('/highlights/{highlight}', [HighlightController::class, 'update']);
         Route::delete('/highlights/{highlight}', [HighlightController::class, 'destroy']);
+
+        // Industry taxonomy
+        Route::get('/industries', [IndustryController::class, 'index']);
+        Route::post('/industries', [IndustryController::class, 'store']);
+        Route::put('/industries/{industry}', [IndustryController::class, 'update']);
+        Route::delete('/industries/{industry}', [IndustryController::class, 'destroy']);
 
         // Admin approval workflows (manufacturers & brands suggested by vendors)
         Route::post('/manufacturers/{uuid}/approve', [ManufacturerController::class, 'approve']);
@@ -204,6 +216,11 @@ Route::prefix('v1')->group(function () {
         Route::get('/bom-requests/statistics', [BomRequestAdminController::class, 'statistics']);
         Route::get('/bom-requests/{uuid}', [BomRequestAdminController::class, 'show']);
         Route::patch('/bom-requests/{uuid}/status', [BomRequestAdminController::class, 'updateStatus']);
+
+        // Admin quote reporting. Merchant-facing list/detail/reply endpoints
+        // live at `/quotes`; admins already see every row through them.
+        Route::get('/quotes/report', [QuoteReportController::class, 'report']);
+        Route::get('/quotes/accounts', [QuoteReportController::class, 'accounts']);
 
         // Supplier purchase list — open import-on-demand orders rolled up by SKU.
         Route::get('/supplier-orders', [SupplierOrderController::class, 'index']);
@@ -414,10 +431,26 @@ Route::prefix('v1')->group(function () {
     Route::post('/unsubscribe/{token}/resubscribe', [ApiUnsubscribeController::class, 'resubscribe'])
         ->middleware('throttle:10,1');
 
-    // Quote API routes
+    // Quote API routes (public). Tracking lives on its own path so the
+    // authenticated `/quotes/{uuid}` management route is not shadowed.
     Route::post('/quotes', [QuoteController::class, 'submitQuoteRequest'])->middleware('throttle:10,1');
-    Route::get('/quotes/{uuid}', [QuoteController::class, 'getQuoteRequest'])->middleware('throttle:60,1');
+    Route::get('/quotes/{uuid}/tracking', [QuoteController::class, 'getQuoteRequest'])->middleware('throttle:60,1');
+    Route::post('/quotes/{uuid}/accept', [QuoteController::class, 'accept'])
+        ->name('quotes.accept')
+        ->middleware(['signed', 'throttle:20,1']);
+    Route::post('/quotes/{uuid}/decline', [QuoteController::class, 'decline'])
+        ->name('quotes.decline')
+        ->middleware(['signed', 'throttle:20,1']);
     Route::post('/quotes/responses/{uuid}/track-view', [QuoteController::class, 'trackView']);
+
+    // Signed buyer portal — the email links here with an expiring signature so
+    // pricing and PDFs cannot be fetched from a leaked UUID alone.
+    Route::get('/quotes/{uuid}/portal', [QuoteController::class, 'portal'])
+        ->name('quotes.portal')
+        ->middleware(['signed', 'throttle:60,1']);
+    Route::get('/quotes/{uuid}/responses/{response}/pdf', [QuoteController::class, 'downloadPdf'])
+        ->name('quotes.pdf')
+        ->middleware(['signed', 'throttle:30,1']);
 
     // BOM / kit sourcing (public) — submit a bill of materials for a quote.
     Route::post('/bom-requests', [BomRequestController::class, 'store'])->middleware('throttle:10,1');
@@ -536,6 +569,22 @@ Route::prefix('v1')->group(function () {
         // Native push destinations — register on sign-in, detach on sign-out
         Route::post('/devices', [DeviceTokenController::class, 'store']);
         Route::delete('/devices', [DeviceTokenController::class, 'destroy']);
+
+        // Quote management (admin + merchant). `stats` and `assignees` are
+        // registered before `{uuid}` so the literals are not swallowed by the
+        // wildcard.
+        Route::get('/quotes', [ManageQuoteController::class, 'index']);
+        Route::get('/quotes/stats', [ManageQuoteController::class, 'stats']);
+        Route::get('/quotes/assignees', [ManageQuoteController::class, 'assignees']);
+        Route::get('/quotes/{uuid}', [ManageQuoteController::class, 'show']);
+        Route::put('/quotes/{uuid}/status', [ManageQuoteController::class, 'updateStatus']);
+        Route::post('/quotes/{uuid}/assign', [ManageQuoteController::class, 'assign']);
+        Route::post('/quotes/{uuid}/responses', [ManageQuoteController::class, 'storeResponse']);
+        Route::put('/quotes/{uuid}/responses/{response}', [ManageQuoteController::class, 'updateResponse']);
+        Route::post('/quotes/{uuid}/responses/{response}/send', [ManageQuoteController::class, 'sendDraft']);
+        Route::post('/quotes/{uuid}/responses/{response}/resend', [ManageQuoteController::class, 'resend']);
+        Route::post('/quotes/{uuid}/responses/{response}/pdf', [ManageQuoteController::class, 'quotationPdf']);
+        Route::post('/quotes/{uuid}/notes', [ManageQuoteController::class, 'storeNote']);
 
         // Order management (admin + merchant)
         Route::get('/orders', [OrderController::class, 'index']);

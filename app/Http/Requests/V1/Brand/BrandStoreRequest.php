@@ -17,6 +17,7 @@ class BrandStoreRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255'],
             'manufacturer_id' => ['nullable', 'integer', 'exists:manufacturers,id'],
+            'country' => ['nullable', 'string', 'max:255'],
             'logo' => ['nullable', 'string', 'max:500'],
             'website' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],

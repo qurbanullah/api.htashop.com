@@ -41,7 +41,10 @@ return [
     ],
 
     'pdf' => [
-        'url' => env('PDF_SERVICE_URL', 'http://pdf:3000'),
+        // Local compose exposes the Gotenberg service as `pdf`; Swarm exposes it
+        // as `gotenberg`. Accept both so invoice/quotation rendering works in
+        // every environment without editing the image.
+        'url' => env('PDF_SERVICE_URL', env('GOTENBERG_URL', 'http://pdf:3000')),
     ],
 
 ];

@@ -61,6 +61,7 @@ class DatabaseSeeder extends Seeder
             OrganizationSeeder::class,
             ManufacturerSeeder::class,
             BrandSeeder::class,
+            IndustrySeeder::class,
             ProductSeeder::class,
             RoboticsProductSeeder::class,
             ProductSalesChannelSeeder::class,

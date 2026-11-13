@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\V1\Manufacturer;
 
+use App\Http\Resources\V1\Industry\IndustryResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -28,6 +29,7 @@ class ManufacturerResource extends JsonResource
             'country' => $this->country,
             'description' => $this->description,
             'is_active' => $this->is_active,
+            'industries' => IndustryResource::collection($this->whenLoaded('industries')),
         ];
     }
 }

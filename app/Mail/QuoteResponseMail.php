@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Models\QuoteRequest;
 use App\Models\QuoteResponse;
+use App\Support\Quotes\QuotePortalLink;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -33,6 +34,7 @@ class QuoteResponseMail extends Mailable
             with: [
                 'quoteRequest' => $this->quoteRequest,
                 'quoteResponse' => $this->quoteResponse,
+                'portalUrl' => QuotePortalLink::for($this->quoteRequest, $this->quoteResponse),
             ],
         );
     }

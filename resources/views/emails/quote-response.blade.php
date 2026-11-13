@@ -65,6 +65,35 @@
             <p><strong>Valid for:</strong> {{ $quoteResponse->validity_days }} days</p>
         @endif
 
+        @if ($quoteResponse->incoterm || $quoteResponse->payment_terms || $quoteResponse->lead_time_days !== null)
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin: 16px 0;">
+                <p style="margin: 0 0 6px 0; font-weight: 600;">Commercial terms</p>
+                @if ($quoteResponse->incoterm)
+                    <p style="margin: 2px 0;">Incoterms 2020: {{ $quoteResponse->incoterm }}@if ($quoteResponse->incoterm_location) — {{ $quoteResponse->incoterm_location }}@endif</p>
+                @endif
+                @if ($quoteResponse->payment_terms)
+                    <p style="margin: 2px 0;">Payment: {{ \App\Enums\PaymentTerms::labelFor($quoteResponse->payment_terms) }}</p>
+                @endif
+                @if ($quoteResponse->lead_time_days !== null)
+                    <p style="margin: 2px 0;">Lead time: {{ $quoteResponse->lead_time_days }} days</p>
+                @endif
+            </div>
+        @endif
+
+        <p style="color: #475569;">
+            The full quotation, including line items and packing details, is attached as a PDF.
+        </p>
+
+        <p style="text-align: center; margin: 26px 0 12px 0;">
+            <a href="{{ $portalUrl }}"
+               style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600;">
+                Review and accept your quote
+            </a>
+        </p>
+        <p style="text-align: center; color: #94a3b8; font-size: 12px; margin-top: 0;">
+            This secure link is unique to your quotation. You can also download the PDF from that page.
+        </p>
+
         <p style="margin-bottom: 0;">Regards,<br><strong>{{ config('app.name') }}</strong></p>
     </div>
 

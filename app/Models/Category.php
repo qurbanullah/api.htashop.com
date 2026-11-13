@@ -6,6 +6,7 @@ use App\Traits\Translation\HasTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -130,7 +131,12 @@ class Category extends Model
 
     public function features(): MorphToMany
     {
-        return $this->morphedByMany(Feature::class, 'categorizable');
+        return $this->morphedByMany(Feature::class, 'categoryable');
+    }
+
+    public function industries(): BelongsToMany
+    {
+        return $this->belongsToMany(Industry::class, 'category_industry')->withTimestamps();
     }
 
     /**
