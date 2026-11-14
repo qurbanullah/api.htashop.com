@@ -257,7 +257,7 @@ function importRow(array $overrides = []): array
 test('a csv file is parsed into staged rows and applied to the catalogue', function () {
     $import = importRows([importRow()], $this->tenant, $this->organization);
 
-    expect($import->status)->toBe(ProductImportStatus::VALIDATING)
+    expect($import->status)->toBe(ProductImportStatus::VALIDATED)
         ->and($import->format)->toBe('csv')
         ->and($import->total_rows)->toBe(1)
         ->and($import->failed_count)->toBe(0);

@@ -158,7 +158,7 @@ test('an upload stages the rows and reports the validation summary', function ()
 
     $response->assertCreated()
         ->assertJsonPath('success', true)
-        ->assertJsonPath('data.status', ProductImportStatus::VALIDATING)
+        ->assertJsonPath('data.status', ProductImportStatus::VALIDATED)
         ->assertJsonPath('data.kind', 'products')
         ->assertJsonPath('data.counts.total', 2)
         ->assertJsonPath('data.counts.valid', 1)
@@ -182,7 +182,8 @@ test('committing an import queues the chunk job which then applies the rows', fu
 
     $this->postJson('/api/v1/product-imports', [
         'file' => apiImportUpload([apiImportRow()]),
-    ])->assertCreated();
+    ])->assertCreated()
+        ->assertJsonPath('data.status', ProductImportStatus::VALIDATED);
 
     $import = ProductImport::query()->firstOrFail();
 
@@ -312,7 +313,7 @@ test('imports are scoped to the organizations the user belongs to', function () 
         'original_filename' => 'own.csv',
         'path' => 'imports/own.csv',
         'format' => 'csv',
-        'status' => ProductImportStatus::VALIDATING,
+        'status' => ProductImportStatus::VALIDATED,
     ]);
 
     $foreign = ProductImport::query()->create([
@@ -321,7 +322,7 @@ test('imports are scoped to the organizations the user belongs to', function () 
         'original_filename' => 'foreign.csv',
         'path' => 'imports/foreign.csv',
         'format' => 'csv',
-        'status' => ProductImportStatus::VALIDATING,
+        'status' => ProductImportStatus::VALIDATED,
     ]);
 
     $this->getJson('/api/v1/product-imports')

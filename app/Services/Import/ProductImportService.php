@@ -221,9 +221,9 @@ class ProductImportService
         }
 
         $import->update([
-            'status' => ProductImportStatus::VALIDATING,
+            'status' => ProductImportStatus::VALIDATED,
             'total_rows' => $total,
-            'processed_rows' => $invalid,
+            'processed_rows' => $total,
             'failed_count' => $invalid,
             'finished_at' => null,
         ]);
@@ -257,6 +257,9 @@ class ProductImportService
         $import->update([
             'status' => ProductImportStatus::IMPORTING,
             'started_at' => $import->started_at ?? now(),
+            // Validation already consumed the staging progress; application
+            // starts its own counter so the bar tracks rows actually written.
+            'processed_rows' => 0,
             'finished_at' => null,
         ]);
     }

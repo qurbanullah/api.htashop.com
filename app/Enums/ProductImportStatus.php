@@ -5,11 +5,12 @@ namespace App\Enums;
 /**
  * Lifecycle of a product file import.
  *
- *   pending → parsing → validating → importing → completed
- *                                             ↘ completed_with_errors
+ *   pending → parsing → validated → importing → completed
+ *                                    ↘ completed_with_errors
  *
  * A dry run stops after validating: rows are staged and checked, nothing is
- * written to the catalogue.
+ * written to the catalogue. `validated` is a resting state the operator commits
+ * from, so it is deliberately not "finished" and not "running" either.
  */
 class ProductImportStatus
 {
@@ -18,6 +19,9 @@ class ProductImportStatus
     public const PARSING = 'parsing';
 
     public const VALIDATING = 'validating';
+
+    /** Parsing finished with a reviewable report; waiting for a commit. */
+    public const VALIDATED = 'validated';
 
     public const IMPORTING = 'importing';
 
@@ -33,6 +37,7 @@ class ProductImportStatus
         self::PENDING,
         self::PARSING,
         self::VALIDATING,
+        self::VALIDATED,
         self::IMPORTING,
         self::COMPLETED,
         self::COMPLETED_WITH_ERRORS,
@@ -46,6 +51,7 @@ class ProductImportStatus
             self::PENDING => 'Pending',
             self::PARSING => 'Parsing file',
             self::VALIDATING => 'Validating rows',
+            self::VALIDATED => 'Validated — ready to import',
             self::IMPORTING => 'Importing',
             self::COMPLETED => 'Completed',
             self::COMPLETED_WITH_ERRORS => 'Completed with errors',
