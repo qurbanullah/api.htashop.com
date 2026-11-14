@@ -26,6 +26,7 @@ class ProductImportResource extends JsonResource
             'status' => $this->status,
             'status_label' => ProductImportStatus::label((string) $this->status),
             'is_finished' => ProductImportStatus::isFinished((string) $this->status),
+            'is_stalled' => $this->isStalled(),
             'progress' => $this->progressPercentage(),
             'options' => (object) ($this->options ?? []),
             'counts' => [

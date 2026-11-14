@@ -106,4 +106,19 @@ class ProductImport extends Model
 
         return (int) min(100, round(((int) $this->processed_rows / $total) * 100));
     }
+
+    /**
+     * True when an import has been "importing" without any progress for longer
+     * than the recovery window: its worker died or never picked the job up.
+     */
+    public function isStalled(): bool
+    {
+        if ($this->status !== ProductImportStatus::IMPORTING || $this->updated_at === null) {
+            return false;
+        }
+
+        $minutes = (int) config('queue.imports_stale_minutes', 10);
+
+        return $this->updated_at->lt(now()->subMinutes($minutes));
+    }
 }

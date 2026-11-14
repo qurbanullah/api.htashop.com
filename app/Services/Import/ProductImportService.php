@@ -364,6 +364,27 @@ class ProductImportService
     }
 
     /**
+     * Row id after which an interrupted apply should resume.
+     *
+     * Rows are applied in ascending id order, and an applied row leaves the
+     * `valid` state, so the highest attempted row is a precise cursor: every
+     * row above it is untouched, every row below it is settled. That lets a
+     * recovered import continue where its dead worker stopped instead of
+     * reprocessing the whole file.
+     */
+    public function resumeCursor(ProductImport $import): int
+    {
+        return (int) ProductImportRow::query()
+            ->where('import_id', $import->id)
+            ->whereIn('status', [
+                ProductImportRowStatus::IMPORTED,
+                ProductImportRowStatus::SKIPPED,
+                ProductImportRowStatus::FAILED,
+            ])
+            ->max('id');
+    }
+
+    /**
      * Stop an import that has not settled yet. Rows already applied stay applied.
      */
     public function cancel(ProductImport $import): void

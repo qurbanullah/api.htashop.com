@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Import;
 
+use App\Enums\ProductImportRowStatus;
 use App\Enums\ProductImportStatus;
 use App\Http\Middleware\ApiAuthenticate;
 use App\Jobs\Import\ApplyProductImportChunkJob;
@@ -196,6 +197,10 @@ test('committing an import queues the chunk job which then applies the rows', fu
         fn (ApplyProductImportChunkJob $job): bool => $job->importId === $import->id && $job->afterRowId === 0,
     );
 
+    // A queue no worker subscribes to stalls the import silently, so chunks go
+    // to `default` unless a dedicated queue has been opted into.
+    Queue::assertPushedOn('default', ApplyProductImportChunkJob::class);
+
     (new ApplyProductImportChunkJob($import->id))->handle(app(ProductImportService::class));
 
     $import->refresh();
@@ -213,6 +218,69 @@ test('committing an import queues the chunk job which then applies the rows', fu
     // a silent no-op.
     $this->postJson("/api/v1/product-imports/{$import->uuid}/commit")
         ->assertStatus(422)
+        ->assertJsonPath('success', false);
+});
+
+test('a stalled import can be retried from the last applied row', function () {
+    Queue::fake();
+
+    $this->postJson('/api/v1/product-imports', [
+        'file' => apiImportUpload([
+            apiImportRow(),
+            apiImportRow(['external_id' => 'HTA-ARDUINO-NANO', 'name' => 'Arduino Nano']),
+        ]),
+    ])->assertCreated();
+
+    $import = ProductImport::query()->firstOrFail();
+
+    $this->postJson("/api/v1/product-imports/{$import->uuid}/commit")->assertStatus(202);
+
+    // One row was written before the worker stopped; the record is still
+    // "importing" because the status is only settled after the last chunk.
+    $applied = $import->rows()->orderBy('id')->firstOrFail();
+    $applied->update(['status' => ProductImportRowStatus::IMPORTED]);
+
+    $this->postJson("/api/v1/product-imports/{$import->uuid}/retry")
+        ->assertStatus(202)
+        ->assertJsonPath('data.status', ProductImportStatus::IMPORTING);
+
+    Queue::assertPushed(
+        ApplyProductImportChunkJob::class,
+        fn (ApplyProductImportChunkJob $job): bool => $job->importId === $import->id
+            && $job->afterRowId === (int) $applied->id,
+    );
+});
+
+test('retrying settles an import whose rows were all applied', function () {
+    Queue::fake();
+
+    $this->postJson('/api/v1/product-imports', [
+        'file' => apiImportUpload([apiImportRow()]),
+    ])->assertCreated();
+
+    $import = ProductImport::query()->firstOrFail();
+
+    $this->postJson("/api/v1/product-imports/{$import->uuid}/commit")->assertStatus(202);
+
+    $import->rows()->update(['status' => ProductImportRowStatus::IMPORTED]);
+
+    $this->postJson("/api/v1/product-imports/{$import->uuid}/retry")
+        ->assertOk()
+        ->assertJsonPath('data.status', ProductImportStatus::COMPLETED);
+
+    // Only the commit queued work; the retry had nothing left to apply.
+    Queue::assertPushed(ApplyProductImportChunkJob::class, 1);
+});
+
+test('only an import that is still running can be retried', function () {
+    $this->postJson('/api/v1/product-imports', [
+        'file' => apiImportUpload([apiImportRow()]),
+    ])->assertCreated();
+
+    $import = ProductImport::query()->firstOrFail();
+
+    $this->postJson("/api/v1/product-imports/{$import->uuid}/retry")
+        ->assertStatus(409)
         ->assertJsonPath('success', false);
 });
 

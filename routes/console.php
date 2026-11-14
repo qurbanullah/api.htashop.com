@@ -85,6 +85,16 @@ Schedule::command('quotes:expire')
     ->withoutOverlapping(10)
     ->onOneServer();
 
+// Safety net for product imports: a worker that dies (or is never subscribed to
+// the import queue) leaves the record at "importing" forever. Resuming is
+// idempotent — applied rows are no longer `valid` — so running this regularly is
+// safe. Ten minutes is far longer than a healthy chunk, so a slow-but-alive
+// worker is never queued twice.
+Schedule::command('products:imports:recover')
+    ->everyTenMinutes()
+    ->withoutOverlapping(5)
+    ->onOneServer();
+
 // Safety net: replies are emailed even when the PDF service is down. Rebuild
 // any quotation document missing from storage so the buyer portal always has
 // the canonical PDF.

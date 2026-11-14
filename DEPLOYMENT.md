@@ -8,7 +8,7 @@ separate applications with their own pipelines.
 |---|---|
 | Your machine | `./release.sh` — runs the checks, commits, pushes |
 | GitHub Actions | `.github/workflows/deploy.yml` — connects to the manager, hands `deploy.sh` to it |
-| The manager | `deploy.sh` — updates the checkout, builds the image, rolls the service |
+| The manager | `deploy.sh` — updates the checkout, builds the image, rolls the API services |
 
 ## Releasing
 
@@ -86,12 +86,15 @@ stopped:
 2. **Checkout** — `git fetch` + `--ff-only`. The manager builds what was pushed.
 3. **Build** — the image, tagged both `htashop-api:latest` and
    `htashop-api:<short sha>`.
-4. **Roll** — `docker service update --image`, which blocks until the rollout
-   converges. The service's own `update_config` governs it: one task at a time, 30s
-   apart, monitored for 60s, **rolling back on failure**. A non-zero exit means
-   Swarm gave up and reverted.
-5. **Verify** — the replica count, then `SMOKE_URL` (retried, because the routing
-   mesh takes a moment to notice new tasks).
+4. **Roll** — `docker service update --force --image` for **`api`, `worker` and
+   `scheduler`**. All three run the same image, and rolling only `api` leaves the
+   others executing an older build: queued jobs then fail to unserialize a job
+   class they do not have, and scheduled commands stop being updated. Each roll
+   blocks until the rollout converges; the service's own `update_config` governs
+   it (one task at a time, 30s apart, monitored for 60s, **rolling back on
+   failure**). A non-zero exit means Swarm gave up and reverted.
+5. **Verify** — the replica count of every rolled service, then `SMOKE_URL`
+   (retried, because the routing mesh takes a moment to notice new tasks).
 6. **Housekeeping** — `docker image prune -f` for the previous build's dangling
    layers. Images in use are untouched, so a rollback target survives.
 
@@ -103,8 +106,27 @@ The previous image is still on the node and still tagged:
 docker service update --force --image htashop-api:<short sha> htashop_api
 ```
 
-`deploy.sh --no-build` rolls the current `latest` without rebuilding, which is the
+The `worker` and `scheduler` services serve the same image, so roll them back
+the same way if the release they picked up is the problem.
+
+deploy.sh --no-build rolls the current `latest` without rebuilding, which is the
 quick way back after a bad build.
+
+### Recovering a stalled product import
+
+An import that sits on "importing" without progress has lost its worker. The
+scheduler runs `products:imports:recover` every ten minutes and resumes it
+automatically; to do it immediately:
+
+```bash
+docker exec "$(docker ps -qf name=htashop_api | head -1)" \
+  php artisan products:imports:recover
+```
+
+`--dry-run` reports what it would do without queueing anything. The same action
+is the **Retry import** button beside a stalled import in the admin and manage
+portals. Nothing is applied twice: rows already written are no longer `valid`,
+so the resumed job starts after the last one it finished.
 
 ## Swarm specifics worth knowing
 
@@ -125,6 +147,13 @@ quick way back after a bad build.
   typesense, gotenberg and haproxy. The image build is the peak memory moment:
   there is deliberately no `--memory` cap on `docker build`, because BuildKit
   ignores it and a fixed ceiling hurts more than it protects.
+- **The worker's `--queue` list is service configuration.** `deploy.sh` rolls the
+  image underneath every service, but it does not edit their command: adding a
+  queue to `docker-swarm.yml` takes effect only on a `docker stack deploy`. A job
+  pushed to a queue no worker subscribes to is never picked up and never fails —
+  it just waits. Product imports therefore default to the `default` queue (see
+  `config/queue.php`); set `IMPORT_QUEUE=imports` only once every worker consumes
+  `imports`.
 - **Secrets.** `docker-swarm.yml` mounts Passport keys and the database password
   from Swarm secrets, but `APP_KEY` and `DB_PASSWORD` are also inline in that file,
   in a repository. Worth moving to secrets before the repo is shared further.

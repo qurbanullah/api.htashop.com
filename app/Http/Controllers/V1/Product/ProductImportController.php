@@ -223,11 +223,57 @@ class ProductImportController extends Controller
         }
 
         $this->imports->beginApply($import);
-        ApplyProductImportChunkJob::dispatch($import->id)->onQueue(ApplyProductImportChunkJob::QUEUE);
+        ApplyProductImportChunkJob::dispatch($import->id)->onQueue(ApplyProductImportChunkJob::queueName());
 
         return ApiResponse::success(
             new ProductImportResource($this->withCounts($import->refresh())),
             "Import queued: {$valid} rows will be applied.",
+            202,
+        );
+    }
+
+    /**
+     * Resume an import whose worker stopped before finishing.
+     *
+     * The queue holds the only copy of the work, so a worker that exits (or was
+     * never subscribed to the queue) leaves the record at "importing" with rows
+     * still staged. Re-queueing from the last applied row is safe and resumes
+     * exactly where it stopped.
+     */
+    public function retry(string $uuid): JsonResponse
+    {
+        $import = $this->findImport($uuid);
+        $this->authorize('update', $import);
+
+        if ($import->status !== ProductImportStatus::IMPORTING) {
+            return ApiResponse::error(
+                'Only an import that is still running can be retried. Upload the file again if it has already finished.',
+                null,
+                409,
+            );
+        }
+
+        $valid = $import->rows()->where('status', ProductImportRowStatus::VALID)->count();
+
+        if ($valid === 0) {
+            // The worker applied every row but died before settling the record.
+            $this->imports->finishApply($import);
+
+            return ApiResponse::success(
+                new ProductImportResource($this->withCounts($import->refresh())),
+                'Nothing was left to apply; the import has been marked as finished.',
+            );
+        }
+
+        $cursor = $this->imports->resumeCursor($import);
+
+        ApplyProductImportChunkJob::dispatch($import->id, $cursor)->onQueue(ApplyProductImportChunkJob::queueName());
+        // Move the staleness clock so the watchdog does not queue it again.
+        $import->touch();
+
+        return ApiResponse::success(
+            new ProductImportResource($this->withCounts($import->refresh())),
+            "Import re-queued: {$valid} rows remain.",
             202,
         );
     }

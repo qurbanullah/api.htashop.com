@@ -25,8 +25,18 @@ class ApplyProductImportChunkJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /** The `imports` queue keeps catalogue writes away from mail/notification traffic. */
-    public const QUEUE = 'imports';
+    /**
+     * Queue the chunks run on.
+     *
+     * `default` unless an operator opts into a dedicated queue, because the
+     * worker's `--queue` list is deployment configuration: a queue no worker
+     * subscribes to leaves the import sitting at "importing" forever. See
+     * config/queue.php.
+     */
+    public static function queueName(): string
+    {
+        return (string) config('queue.imports_queue', 'default');
+    }
 
     /** Must stay below `queue.connections.*.retry_after` (90s). */
     public int $timeout = 60;
@@ -53,7 +63,7 @@ class ApplyProductImportChunkJob implements ShouldQueue
         $chunk = $service->applyChunk($import, $this->afterRowId);
 
         if ($chunk['has_more']) {
-            self::dispatch($import->id, $chunk['next_row_id'])->onQueue(self::QUEUE);
+            self::dispatch($import->id, $chunk['next_row_id'])->onQueue(self::queueName());
 
             return;
         }

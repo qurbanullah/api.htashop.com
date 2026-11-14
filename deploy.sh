@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Build the API image and roll the Swarm service onto it.
+# Build the API image and roll the Swarm services that run it.
 #
 # This runs ON THE SWARM MANAGER, normally arriving over stdin from
 # .github/workflows/deploy.yml:
@@ -9,8 +9,15 @@
 #
 # The manager keeps the checkout this builds from; the script updates it first, so
 # what is built is what was pushed. The stack itself (networks, secrets, db, redis,
-# typesense, haproxy) is deployed separately — see deploy/ — and this only moves one
-# service.
+# typesense, haproxy) is deployed separately — see deploy/ — and this only moves the
+# services below.
+#
+# `api`, `worker` and `scheduler` all run this image, so all three are rolled. A
+# deploy that rolled `api` alone left the others on whatever image they last
+# resolved: queued jobs then ran stale code (a job class that no longer exists is
+# silently dropped), and scheduled commands — including the product-import
+# watchdog — never saw the release at all. That is how a product import could sit
+# at "importing" forever on production while the same import worked locally.
 #
 # Migrations are NOT run here. The image's entrypoint runs them on boot, which
 # means each replica does it once at startup; see DEPLOYMENT.md for what that
@@ -25,7 +32,7 @@
 #   APP_DIR              checkout to build from (defaults to this script's directory)
 #   BRANCH               branch to deploy (default: main)
 #   STACK_NAME           (default: htashop)
-#   SERVICE_NAME         (default: api)
+#   SERVICE_NAME         service that must exist (default: api)
 #   SMOKE_URL            e.g. https://api.htashop.com/up
 #
 set -euo pipefail
@@ -36,6 +43,10 @@ SERVICE_NAME="${SERVICE_NAME:-api}"
 
 SWARM_SERVICE_NAME="${STACK_NAME}_${SERVICE_NAME}"
 IMAGE_NAME="${STACK_NAME}-${SERVICE_NAME}:latest"
+
+# Every service that serves this image. Keep in step with docker-swarm.yml: a
+# service missing here silently keeps running an older build.
+APP_SERVICES=(api worker scheduler)
 
 DO_BUILD=1
 DO_SMOKE=1
@@ -59,14 +70,14 @@ trap 'report_error "$LINENO" "$BASH_COMMAND" "$?"' ERR
 
 usage() {
     cat <<'USAGE'
-Build the API image and roll the Swarm service onto it.
+Build the API image and roll the Swarm services onto it (api, worker, scheduler).
 
   --no-build   skip the build and roll the existing image
   --no-smoke   skip the post-rollout smoke test
   -h, --help   show this message
 
-With no options this updates the checkout, builds, rolls the service and checks it.
-See DEPLOYMENT.md.
+With no options this updates the checkout, builds, rolls every service that runs
+the image and checks the web tier. See DEPLOYMENT.md.
 USAGE
     exit 0
 }
@@ -186,26 +197,49 @@ fi
 # governs how. A non-zero exit here means Swarm gave up and rolled back.
 # ---------------------------------------------------------------------------
 
-step "Rolling $SWARM_SERVICE_NAME"
+step "Rolling the API services"
 
-docker service update --force --image "$IMAGE_NAME" "$SWARM_SERVICE_NAME"
+ROLLED=0
 
-docker service ps "$SWARM_SERVICE_NAME" \
-    --filter desired-state=running \
-    --format 'table {{.Name}}\t{{.Node}}\t{{.CurrentState}}' \
-    || warn "could not read the service's tasks"
+for service in "${APP_SERVICES[@]}"; do
+    SWARM_SERVICE_NAME="${STACK_NAME}_${service}"
 
-RUNNING="$(docker service ps "$SWARM_SERVICE_NAME" \
-    --filter desired-state=running --format '{{.CurrentState}}' 2>/dev/null \
-    | grep -c '^Running' || true)"
+    if ! docker service inspect "$SWARM_SERVICE_NAME" >/dev/null 2>&1; then
+        warn "no service named '$SWARM_SERVICE_NAME'; skipping"
+        continue
+    fi
 
-info "$RUNNING of ${EXPECTED_REPLICAS} replicas running"
+    SERVICE_REPLICAS="$(docker service inspect "$SWARM_SERVICE_NAME" \
+        --format '{{.Spec.Mode.Replicated.Replicas}}' 2>/dev/null || echo '?')"
 
-if [ "$EXPECTED_REPLICAS" != "?" ] && [ "$RUNNING" -lt "$EXPECTED_REPLICAS" ]; then
-    die "only $RUNNING of $EXPECTED_REPLICAS replicas are running.
+    info "$SWARM_SERVICE_NAME: $SERVICE_REPLICAS replicas -> $IMAGE_NAME"
+
+    docker service update --force --image "$IMAGE_NAME" "$SWARM_SERVICE_NAME"
+
+    docker service ps "$SWARM_SERVICE_NAME" \
+        --filter desired-state=running \
+        --format 'table {{.Name}}\t{{.Node}}\t{{.CurrentState}}' \
+        || warn "could not read the service's tasks"
+
+    RUNNING="$(docker service ps "$SWARM_SERVICE_NAME" \
+        --filter desired-state=running --format '{{.CurrentState}}' 2>/dev/null \
+        | grep -c '^Running' || true)"
+
+    info "$RUNNING of ${SERVICE_REPLICAS} replicas running"
+
+    if [ "$SERVICE_REPLICAS" != "?" ] && [ "$RUNNING" -lt "$SERVICE_REPLICAS" ]; then
+        die "only $RUNNING of $SERVICE_REPLICAS replicas are running on $SWARM_SERVICE_NAME.
   The rollout reported success but the service is short — check:
     docker service ps $SWARM_SERVICE_NAME
     docker service logs $SWARM_SERVICE_NAME --tail 100"
+    fi
+
+    ROLLED=$((ROLLED + 1))
+done
+
+if [ "$ROLLED" -eq 0 ]; then
+    die "none of the API services exist (looked for ${STACK_NAME}_{api,worker,scheduler}).
+  The stack must be deployed first (see deploy/)."
 fi
 
 # ---------------------------------------------------------------------------
@@ -249,4 +283,4 @@ fi
 step "Pruning dangling images"
 docker image prune -f || warn "could not prune images"
 
-step "Deployed ${SWARM_SERVICE_NAME} at ${SHORT_SHA}"
+step "Deployed ${STACK_NAME}_{api,worker,scheduler} at ${SHORT_SHA}"

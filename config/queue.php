@@ -17,6 +17,30 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Product Import Queue
+    |--------------------------------------------------------------------------
+    |
+    | Chunked product-import jobs are queued here. Which queues a worker
+    | consumes is deployment configuration (`docker-swarm.yml`, the dev
+    | supervisor config), not application code, so a dedicated queue that is
+    | missing from a worker's `--queue` list stalls imports silently: rows are
+    | staged, the record says "importing", and nothing ever applies them.
+    |
+    | `default` is consumed by every worker in both topologies, so it is the
+    | safe choice. Set IMPORT_QUEUE=imports only once `imports` has been added
+    | to every worker's `--queue` list.
+    |
+    */
+    'imports_queue' => env('IMPORT_QUEUE', 'default'),
+
+    /*
+    | An import that has not changed for this long is considered abandoned by
+    | its worker, and `products:imports:recover` resumes it.
+    */
+    'imports_stale_minutes' => (int) env('IMPORT_STALE_MINUTES', 10),
+
+    /*
+    |--------------------------------------------------------------------------
     | Queue Connections
     |--------------------------------------------------------------------------
     |

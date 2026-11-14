@@ -669,13 +669,14 @@ Route::prefix('v1')->group(function () {
         Route::put('/products/{uuid}/shipping', [ProductShippingController::class, 'update']);
 
         // Bulk product imports (CSV/XLSX/ODS). The file is parsed on upload;
-        // applying the staged rows is queued in chunks on the `imports` queue.
+        // applying the staged rows is queued in chunks (see config/queue.php).
         Route::get('/product-imports', [ProductImportController::class, 'index']);
         Route::post('/product-imports', [ProductImportController::class, 'store'])->middleware('throttle:10,1');
         Route::get('/product-imports/{uuid}', [ProductImportController::class, 'show']);
         Route::get('/product-imports/{uuid}/rows', [ProductImportController::class, 'rows']);
         Route::get('/product-imports/{uuid}/errors.csv', [ProductImportController::class, 'errorsCsv']);
         Route::post('/product-imports/{uuid}/commit', [ProductImportController::class, 'commit']);
+        Route::post('/product-imports/{uuid}/retry', [ProductImportController::class, 'retry']);
         Route::post('/product-imports/{uuid}/cancel', [ProductImportController::class, 'cancel']);
 
         Route::get('/features', [FeatureController::class, 'index']);
