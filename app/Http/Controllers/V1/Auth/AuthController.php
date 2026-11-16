@@ -124,6 +124,28 @@ class AuthController extends Controller
             ], 403);
         }
 
+        // The admin portal is for platform administrators only. The management
+        // portal and the storefront share this endpoint, so the restriction is
+        // keyed on the client: a vendor signing in at /admin is refused here,
+        // before a session (and its refresh token) is minted.
+        if ($this->clientIsAdminPanel($request) && ! $user->isAdmin()) {
+            Auth::logout();
+
+            $this->auditAuth('auth.login_denied', $user, $request, [
+                'description' => 'Non-admin attempted to sign in to the admin panel',
+                'meta' => [
+                    'client' => 'admin',
+                    'roles' => $user->getRoleNames()->all(),
+                ],
+            ]);
+
+            return ApiResponse::error(
+                'This account does not have access to the admin panel. Administrators sign in here; everyone else uses the management portal.',
+                ['code' => 'admin_access_required', 'can_access_admin' => false],
+                403,
+            );
+        }
+
         // Load relationships for complete user data
         $user->load(['roles', 'avatars']);
 
@@ -328,6 +350,15 @@ class AuthController extends Controller
     private function clientIsStorefront(Request $request): bool
     {
         return strtolower((string) $request->header('X-Client', '')) === 'storefront';
+    }
+
+    /**
+     * Whether the caller is the admin SPA, which is restricted to super-admins
+     * and admins. The same account may be a perfectly valid merchant elsewhere.
+     */
+    private function clientIsAdminPanel(Request $request): bool
+    {
+        return strtolower((string) $request->header('X-Client', '')) === 'admin';
     }
 
     /**
@@ -703,6 +734,18 @@ class AuthController extends Controller
                 'success' => false,
                 'message' => 'Unauthenticated',
             ], 401);
+        }
+
+        // A token minted elsewhere (manage, storefront, native) may be replayed
+        // at the admin SPA. Refuse the session bootstrap so a non-admin cannot
+        // keep the portal open, and so a demoted administrator is signed out on
+        // their next load.
+        if ($this->clientIsAdminPanel($request) && ! $user->isAdmin()) {
+            return ApiResponse::error(
+                'This account does not have access to the admin panel.',
+                ['code' => 'admin_access_required', 'can_access_admin' => false],
+                403,
+            );
         }
 
         // Load relationships
