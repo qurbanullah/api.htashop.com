@@ -15,6 +15,7 @@ use App\Models\Product;
 use App\Models\PunchoutSession;
 use App\Models\Tenant;
 use App\Services\Catalog\CatalogService;
+use App\Services\Punchout\ResolveBuyerPartNumberService;
 use App\Services\Search\ProductSearchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -28,6 +29,7 @@ class PunchoutCatalogController extends Controller
         protected ResolvePunchoutPriceAction $resolvePunchoutPriceAction,
         protected SearchPunchoutProductsAction $searchPunchoutProductsAction,
         protected ProductSearchService $productSearchService,
+        protected ResolveBuyerPartNumberService $resolveBuyerPartNumberService,
     ) {}
 
     public function products(PunchoutCatalogIndexRequest $request): JsonResponse
@@ -44,10 +46,19 @@ class PunchoutCatalogController extends Controller
             $session->buyer,
             $products->items(),
         );
+        $buyerPartNumbers = $this->resolveBuyerPartNumberService->forProductIds(
+            $session->buyer,
+            (int) $session->tenant_id,
+            array_map(static fn ($product): int => (int) $product->id, $products->items()),
+        );
 
         return ApiResponse::success([
             'data' => collect($products->items())
-                ->map(fn ($product) => (new PunchoutProductResource($product, $pricing[$product->id] ?? []))->resolve())
+                ->map(fn ($product) => (new PunchoutProductResource(
+                    $product,
+                    $pricing[$product->id] ?? [],
+                    $buyerPartNumbers[$product->id] ?? null,
+                ))->resolve())
                 ->all(),
             'meta' => [
                 'current_page' => $products->currentPage(),
@@ -171,8 +182,29 @@ class PunchoutCatalogController extends Controller
             $variants,
         );
 
+        $buyerPartNumber = $this->resolveBuyerPartNumberService->handle(
+            $session->buyer,
+            (int) $session->tenant_id,
+            $product,
+        );
+
+        $variantBuyerPartNumbers = [];
+
+        foreach ($variants as $variant) {
+            $code = $this->resolveBuyerPartNumberService->handle(
+                $session->buyer,
+                (int) $session->tenant_id,
+                $product,
+                $variant,
+            );
+
+            if ($code !== null) {
+                $variantBuyerPartNumbers[(int) $variant->id] = $code;
+            }
+        }
+
         return ApiResponse::success(
-            new PunchoutProductDetailResource($product, $pricing, $variantPricing),
+            new PunchoutProductDetailResource($product, $pricing, $variantPricing, $buyerPartNumber, $variantBuyerPartNumbers),
             'Punchout product retrieved successfully',
         );
     }

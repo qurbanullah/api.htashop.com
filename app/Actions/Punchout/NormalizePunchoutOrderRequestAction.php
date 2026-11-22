@@ -46,6 +46,7 @@ class NormalizePunchoutOrderRequestAction
                 'line_number' => $this->nullableString($itemOut['lineNumber'] ?? null),
                 'supplier_part_id' => $this->nullableString($itemId?->SupplierPartID ?? null),
                 'customer_part_number' => $this->nullableString($itemId?->BuyerPartID ?? null),
+                'manufacturer_part_id' => $this->nullableString($itemDetail?->ManufacturerPartID ?? null),
                 'description' => $this->nullableString($itemDetail?->Description ?? null),
                 'quantity' => max(1.0, (float) ($itemOut['quantity'] ?? 1)),
                 'unit_price' => $money !== null ? (float) $money : null,

@@ -11,11 +11,14 @@ class PunchoutProductDetailResource extends CatalogProductDetailResource
      * @param  mixed  $resource
      * @param  array<string, mixed>  $pricing
      * @param  array<int, array<string, mixed>>  $variantPricing  Keyed by variant id.
+     * @param  array<int, string>  $variantBuyerPartNumbers  Keyed by variant id.
      */
     public function __construct(
         $resource,
         protected array $pricing = [],
         protected array $variantPricing = [],
+        protected ?string $buyerPartNumber = null,
+        protected array $variantBuyerPartNumbers = [],
     ) {
         parent::__construct($resource);
     }
@@ -35,20 +38,30 @@ class PunchoutProductDetailResource extends CatalogProductDetailResource
             $data['min_quantity'] = $this->pricing['min_quantity'];
         }
 
+        if ($this->buyerPartNumber !== null) {
+            $data['buyer_part_number'] = $this->buyerPartNumber;
+            $data['customer_part_number'] = $this->buyerPartNumber;
+        }
+
         if (isset($data['variants']) && is_array($data['variants'])) {
             $data['variants'] = array_map(function (array $variant): array {
                 $pricing = $this->variantPricing[(int) ($variant['id'] ?? 0)] ?? [];
 
-                if ($pricing === []) {
-                    return $variant;
+                if ($pricing !== []) {
+                    $variant['price'] = $pricing['base_price'] ?? $pricing['unit_price'];
+                    $variant['sale_price'] = $pricing['sale_price'];
+                    $variant['unit_price'] = $pricing['unit_price'];
+                    $variant['currency'] = $pricing['currency'];
+                    $variant['customer_part_number'] = $pricing['customer_part_number'];
+                    $variant['unit_of_measure'] = $pricing['unit_of_measure'];
                 }
 
-                $variant['price'] = $pricing['base_price'] ?? $pricing['unit_price'];
-                $variant['sale_price'] = $pricing['sale_price'];
-                $variant['unit_price'] = $pricing['unit_price'];
-                $variant['currency'] = $pricing['currency'];
-                $variant['customer_part_number'] = $pricing['customer_part_number'];
-                $variant['unit_of_measure'] = $pricing['unit_of_measure'];
+                $code = $this->variantBuyerPartNumbers[(int) ($variant['id'] ?? 0)] ?? null;
+
+                if ($code !== null) {
+                    $variant['buyer_part_number'] = $code;
+                    $variant['customer_part_number'] = $code;
+                }
 
                 return $variant;
             }, $data['variants']);

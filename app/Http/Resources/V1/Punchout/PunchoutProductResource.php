@@ -11,8 +11,11 @@ class PunchoutProductResource extends CatalogProductResource
      * @param  mixed  $resource
      * @param  array<string, mixed>  $pricing  Resolved buyer pricing; empty when none matched.
      */
-    public function __construct($resource, protected array $pricing = [])
-    {
+    public function __construct(
+        $resource,
+        protected array $pricing = [],
+        protected ?string $buyerPartNumber = null,
+    ) {
         parent::__construct($resource);
     }
 
@@ -20,21 +23,25 @@ class PunchoutProductResource extends CatalogProductResource
     {
         $data = parent::toArray($request);
 
-        if ($this->pricing === []) {
-            return $data;
+        if ($this->pricing !== []) {
+            $data['price'] = $this->pricing['base_price'] ?? $this->pricing['unit_price'];
+            $data['sale_price'] = $this->pricing['sale_price'];
+            $data['unit_price'] = $this->pricing['unit_price'];
+            $data['currency'] = $this->pricing['currency'];
+            $data['price_source'] = $this->pricing['source'];
+            $data['customer_part_number'] = $this->pricing['customer_part_number'];
+            $data['unit_of_measure'] = $this->pricing['unit_of_measure'];
+            $data['min_quantity'] = $this->pricing['min_quantity'];
+
+            if (($this->pricing['lead_time_days'] ?? null) !== null) {
+                $data['lead_time_days'] = $this->pricing['lead_time_days'];
+            }
         }
 
-        $data['price'] = $this->pricing['base_price'] ?? $this->pricing['unit_price'];
-        $data['sale_price'] = $this->pricing['sale_price'];
-        $data['unit_price'] = $this->pricing['unit_price'];
-        $data['currency'] = $this->pricing['currency'];
-        $data['price_source'] = $this->pricing['source'];
-        $data['customer_part_number'] = $this->pricing['customer_part_number'];
-        $data['unit_of_measure'] = $this->pricing['unit_of_measure'];
-        $data['min_quantity'] = $this->pricing['min_quantity'];
-
-        if (($this->pricing['lead_time_days'] ?? null) !== null) {
-            $data['lead_time_days'] = $this->pricing['lead_time_days'];
+        if ($this->buyerPartNumber !== null) {
+            $data['buyer_part_number'] = $this->buyerPartNumber;
+            // Kept as an alias for the SPA and older consumers.
+            $data['customer_part_number'] = $this->buyerPartNumber;
         }
 
         return $data;

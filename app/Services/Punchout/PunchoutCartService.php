@@ -30,6 +30,7 @@ class PunchoutCartService
         protected CompletePunchoutSessionAction $completePunchoutSessionAction,
         protected ValidatePunchoutReturnUrlAction $validatePunchoutReturnUrlAction,
         protected ResolvePunchoutPriceAction $resolvePunchoutPriceAction,
+        protected ResolveBuyerPartNumberService $resolveBuyerPartNumberService,
     ) {}
 
     public function read(PunchoutSession $session): array
@@ -69,11 +70,19 @@ class PunchoutCartService
             $session->buyer,
         );
 
+        $buyerPartNumber = $this->resolveBuyerPartNumberService->handle(
+            $session->buyer,
+            (int) $session->tenant_id,
+            $product,
+            $variant,
+            data_get($pricing, 'customer_part_number'),
+        );
+
         $cart = $this->addItemAction->handle(
             $cart,
             $data,
             $pricing,
-            $this->pricingMetadata($pricing),
+            $this->pricingMetadata($pricing, $buyerPartNumber),
         );
 
         return $this->readAction->handle($cart);
@@ -88,6 +97,11 @@ class PunchoutCartService
         // evaluated against the new quantity. The cart action still owns the
         // existence and minimum-quantity checks.
         if ($item?->product) {
+            // Keep the code the shopper was shown; only resolve it when the line
+            // predates buyer part numbers or had none.
+            $buyerPartNumber = trim((string) (data_get($item->metadata, 'buyer_part_number')
+                ?: data_get($item->metadata, 'customer_part_number')));
+
             $pricing = $this->resolvePunchoutPriceAction->handle(
                 $session->tenant ?? $session->tenant()->firstOrFail(),
                 $item->product,
@@ -96,11 +110,21 @@ class PunchoutCartService
                 $session->buyer,
             );
 
+            if ($buyerPartNumber === '') {
+                $buyerPartNumber = $this->resolveBuyerPartNumberService->handle(
+                    $session->buyer,
+                    (int) $session->tenant_id,
+                    $item->product,
+                    $item->variant,
+                    data_get($pricing, 'customer_part_number'),
+                );
+            }
+
             $item->update([
                 'unit_price' => $pricing['unit_price'],
                 'base_price' => $pricing['base_price'],
                 'currency' => $pricing['currency'],
-                'metadata' => array_merge((array) $item->metadata, $this->pricingMetadata($pricing)),
+                'metadata' => array_merge((array) $item->metadata, $this->pricingMetadata($pricing, $buyerPartNumber)),
             ]);
         }
 
@@ -150,6 +174,28 @@ class PunchoutCartService
             ]);
         }
 
+        if ($this->requiresBuyerPartNumber($session)) {
+            $missing = $lines
+                ->filter(fn ($line) => trim((string) (
+                    data_get($line->metadata, 'buyer_part_number')
+                    ?: data_get($line->metadata, 'customer_part_number')
+                )) === '')
+                ->map(fn ($line) => (string) (
+                    data_get($line->metadata, 'sku')
+                    ?: $line->product?->sku
+                    ?: $line->product?->name
+                    ?: 'line'
+                ))
+                ->values()
+                ->all();
+
+            if ($missing !== []) {
+                throw ValidationException::withMessages([
+                    'cart' => ['A buyer part number is required for: '.implode(', ', $missing)],
+                ]);
+            }
+        }
+
         $items = [];
 
         foreach ($lines as $line) {
@@ -164,7 +210,8 @@ class PunchoutCartService
             $items[] = [
                 'supplier_part_id' => (string) (data_get($line->metadata, 'sku') ?: $product->sku ?: $product->part_number ?: $product->uuid),
                 'supplier_auxiliary_id' => (string) ($line->variant?->uuid ?: $product->uuid),
-                'customer_part_number' => data_get($line->metadata, 'customer_part_number'),
+                'customer_part_number' => data_get($line->metadata, 'buyer_part_number')
+                    ?: data_get($line->metadata, 'customer_part_number'),
                 'description' => (string) (data_get($line->metadata, 'name') ?: $product->name),
                 'quantity' => (float) $line->quantity,
                 'price' => number_format((float) $line->unit_price, 2, '.', ''),
@@ -220,16 +267,23 @@ class PunchoutCartService
      * @param  array<string, mixed>  $pricing
      * @return array<string, mixed>
      */
-    private function pricingMetadata(array $pricing): array
+    private function pricingMetadata(array $pricing, ?string $buyerPartNumber = null): array
     {
         return array_filter([
-            'customer_part_number' => data_get($pricing, 'customer_part_number'),
+            'buyer_part_number' => $buyerPartNumber,
+            // Kept as an alias for consumers and older cart rows.
+            'customer_part_number' => $buyerPartNumber ?: data_get($pricing, 'customer_part_number'),
             'unit_of_measure' => data_get($pricing, 'unit_of_measure') ?: 'EA',
             'price_source' => data_get($pricing, 'source'),
             'price_id' => data_get($pricing, 'price_id'),
             'contract_id' => data_get($pricing, 'contract_id'),
             'lead_time_days' => data_get($pricing, 'lead_time_days'),
         ], fn ($value) => $value !== null);
+    }
+
+    private function requiresBuyerPartNumber(PunchoutSession $session): bool
+    {
+        return (bool) data_get($session->buyer?->settings, 'require_buyer_part_number', false);
     }
 
     private function assertProductAvailable(PunchoutSession $session, int $productId): void

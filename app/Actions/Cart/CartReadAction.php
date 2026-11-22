@@ -22,6 +22,8 @@ class CartReadAction
             'name' => data_get($item->metadata, 'name') ?? $item->product?->name,
             'slug' => data_get($item->metadata, 'slug') ?? $item->product?->slug,
             'sku' => data_get($item->metadata, 'sku'),
+            'buyer_part_number' => data_get($item->metadata, 'buyer_part_number')
+                ?: data_get($item->metadata, 'customer_part_number'),
             'customer_part_number' => data_get($item->metadata, 'customer_part_number'),
             'unit_of_measure' => data_get($item->metadata, 'unit_of_measure'),
             'price_source' => data_get($item->metadata, 'price_source'),

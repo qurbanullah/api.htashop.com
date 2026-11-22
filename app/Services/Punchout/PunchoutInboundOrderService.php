@@ -9,6 +9,8 @@ use App\Actions\Punchout\ResolvePunchoutTenantAction;
 use App\Actions\Punchout\ValidatePunchoutSetupCredentialsAction;
 use App\Enums\OrderStatus;
 use App\Enums\SalesChannel;
+use App\Models\BuyerItem;
+use App\Models\BuyerItemMapping;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Price;
@@ -177,11 +179,17 @@ class PunchoutInboundOrderService
         $currency = $data->currency;
 
         foreach ($data->lines as $line) {
-            [$product, $variant] = $this->matchLine($tenant, $line);
+            [$product, $variant, $matchedBy] = $this->matchLine($tenant, $buyer, $line);
 
             if (! $product) {
+                $identifiers = array_filter([
+                    $line['supplier_part_id'] ?? null,
+                    $line['customer_part_number'] ?? null,
+                    $line['manufacturer_part_id'] ?? null,
+                ]);
+
                 throw ValidationException::withMessages([
-                    'items' => ["No punchout product matches part '".($line['supplier_part_id'] ?: $line['customer_part_number'] ?: 'unknown')."'."],
+                    'items' => ["No punchout product matches part '".($identifiers === [] ? 'unknown' : implode(', ', $identifiers))."'."],
                 ]);
             }
 
@@ -203,6 +211,7 @@ class PunchoutInboundOrderService
                 'pricing' => $pricing,
                 'line' => $line,
                 'total' => $lineTotal,
+                'matched_by' => $matchedBy,
             ];
         }
 
@@ -259,11 +268,14 @@ class PunchoutInboundOrderService
                 'currency' => $pricing['currency'],
                 'metadata' => array_filter([
                     'supplier_part_id' => $line['supplier_part_id'],
+                    'buyer_part_number' => $line['customer_part_number'] ?: $pricing['customer_part_number'],
                     'customer_part_number' => $line['customer_part_number'] ?: $pricing['customer_part_number'],
+                    'manufacturer_part_id' => $line['manufacturer_part_id'] ?? null,
                     'unit_of_measure' => $line['unit_of_measure'] ?: $pricing['unit_of_measure'],
                     'line_number' => $line['line_number'],
                     'price_source' => $pricing['source'],
                     'declared_unit_price' => $line['unit_price'],
+                    'matched_by' => $entry['matched_by'],
                 ], fn ($value) => $value !== null),
             ]);
         }
@@ -272,22 +284,120 @@ class PunchoutInboundOrderService
     }
 
     /**
-     * Match a buyer part number against the seller's SKU/UUID, then against
-     * negotiated customer part numbers stored on price records.
+     * Resolve an inbound line to our product.
+     *
+     * Precedence: the buyer's own item number (BuyerPartID), then SupplierPartID,
+     * then ManufacturerPartID, then the raw identifiers as a last resort, then
+     * the transitional price metadata. Buyers occasionally put their own code in
+     * SupplierPartID, and a PO may legitimately reference a code we superseded,
+     * so the item-master lookup ignores `is_active` on the mapping while still
+     * requiring an active punchout product.
      *
      * @param  array<string, mixed>  $line
+     * @return array{0: Product|null, 1: Variant|null, 2: string|null}
+     */
+    private function matchLine(Tenant $tenant, ?PunchoutBuyer $buyer, array $line): array
+    {
+        $supplierPart = trim((string) ($line['supplier_part_id'] ?? ''));
+        $buyerPart = trim((string) ($line['customer_part_number'] ?? ''));
+        $manufacturerPart = trim((string) ($line['manufacturer_part_id'] ?? ''));
+
+        if ($buyerPart !== '') {
+            [$product, $variant] = $this->matchBuyerItem($tenant, $buyer, $buyerPart);
+
+            if ($product) {
+                return [$product, $variant, 'buyer_item'];
+            }
+        }
+
+        if ($supplierPart !== '') {
+            [$product, $variant] = $this->matchSupplierCode($tenant, $supplierPart);
+
+            if ($product) {
+                return [$product, $variant, 'supplier_part'];
+            }
+        }
+
+        if ($manufacturerPart !== '') {
+            $product = Product::query()
+                ->where('tenant_id', $tenant->id)
+                ->where('is_active', true)
+                ->where('status', 'active')
+                ->forChannel(SalesChannel::PUNCHOUT)
+                ->where('model_number', $manufacturerPart)
+                ->first();
+
+            if ($product) {
+                return [$product, null, 'manufacturer_part'];
+            }
+        }
+
+        // A buyer may echo its code in SupplierPartID, or send a code that has no
+        // mapping yet; try it against our own identifiers before giving up.
+        if ($buyerPart !== '') {
+            [$product, $variant] = $this->matchSupplierCode($tenant, $buyerPart);
+
+            if ($product) {
+                return [$product, $variant, 'supplier_part'];
+            }
+        }
+
+        foreach (array_unique(array_filter([$buyerPart, $supplierPart])) as $code) {
+            [$product, $variant] = $this->matchLegacyPrice($tenant, $code);
+
+            if ($product) {
+                return [$product, $variant, 'legacy_price'];
+            }
+        }
+
+        return [null, null, null];
+    }
+
+    /**
      * @return array{0: Product|null, 1: Variant|null}
      */
-    private function matchLine(Tenant $tenant, array $line): array
+    private function matchBuyerItem(Tenant $tenant, ?PunchoutBuyer $buyer, string $code): array
     {
-        $partNumber = trim((string) ($line['supplier_part_id'] ?: $line['customer_part_number']));
-
-        if ($partNumber === '') {
+        if ($buyer?->buyer_party_id === null) {
             return [null, null];
         }
 
+        $item = BuyerItem::query()
+            ->where('buyer_party_id', $buyer->buyer_party_id)
+            ->where('code_key', BuyerItem::keyFor($code))
+            ->first();
+
+        if ($item === null) {
+            return [null, null];
+        }
+
+        $mapping = BuyerItemMapping::query()
+            ->with(['product', 'variant'])
+            ->where('tenant_id', $tenant->id)
+            ->where('buyer_item_id', $item->id)
+            ->whereHas('product', fn ($query) => $query
+                ->where('tenant_id', $tenant->id)
+                ->where('is_active', true)
+                ->where('status', 'active')
+                ->forChannel(SalesChannel::PUNCHOUT))
+            ->orderByDesc('is_active')
+            ->orderByDesc('is_primary')
+            ->first();
+
+        if ($mapping === null || $mapping->product === null) {
+            return [null, null];
+        }
+
+        return [$mapping->product, $mapping->variant];
+    }
+
+    /**
+     * @return array{0: Product|null, 1: Variant|null}
+     */
+    private function matchSupplierCode(Tenant $tenant, string $code): array
+    {
         $variant = Variant::query()
-            ->where('sku', $partNumber)
+            ->where('sku', $code)
             ->whereHas('product', fn ($query) => $query
                 ->where('tenant_id', $tenant->id)
                 ->where('is_active', true)
@@ -305,19 +415,25 @@ class PunchoutInboundOrderService
             ->where('status', 'active')
             ->forChannel(SalesChannel::PUNCHOUT)
             ->where(fn ($query) => $query
-                ->where('sku', $partNumber)
-                ->orWhere('uuid', $partNumber)
-                ->orWhere('part_number', $partNumber))
+                ->where('sku', $code)
+                ->orWhere('uuid', $code)
+                ->orWhere('part_number', $code))
             ->first();
 
-        if ($product) {
-            return [$product, null];
-        }
+        return [$product, null];
+    }
 
+    /**
+     * Transitional: codes that still live only on price rows.
+     *
+     * @return array{0: Product|null, 1: Variant|null}
+     */
+    private function matchLegacyPrice(Tenant $tenant, string $code): array
+    {
         $price = Price::query()
             ->with('priceable')
             ->where('tenant_id', $tenant->id)
-            ->where('metadata->customer_part_number', $partNumber)
+            ->where('metadata->customer_part_number', $code)
             ->where('is_active', true)
             ->first();
 

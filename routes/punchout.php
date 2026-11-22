@@ -1,8 +1,11 @@
 <?php
 
+use App\Http\Controllers\V1\Punchout\AdminBuyerPartyController;
 use App\Http\Controllers\V1\Punchout\AdminPunchoutBuyerController;
+use App\Http\Controllers\V1\Punchout\AdminPunchoutBuyerPartNumberController;
 use App\Http\Controllers\V1\Punchout\AdminPunchoutSessionController;
 use App\Http\Controllers\V1\Punchout\ManagerPunchoutBuyerController;
+use App\Http\Controllers\V1\Punchout\ManagerPunchoutBuyerPartNumberController;
 use App\Http\Controllers\V1\Punchout\PunchoutCartController;
 use App\Http\Controllers\V1\Punchout\PunchoutCatalogController;
 use App\Http\Controllers\V1\Punchout\PunchoutController;
@@ -96,6 +99,21 @@ Route::prefix('v1/punchout')->group(function (): void {
     });
 });
 
+Route::prefix('v1/admin/buyer-parties')
+    ->middleware(['auth.api', 'admin'])
+    ->group(function (): void {
+        Route::get('/', [AdminBuyerPartyController::class, 'index'])
+            ->name('buyer-parties.admin.index');
+        Route::post('/', [AdminBuyerPartyController::class, 'store'])
+            ->name('buyer-parties.admin.store');
+        Route::get('/{uuid}', [AdminBuyerPartyController::class, 'show'])
+            ->name('buyer-parties.admin.show');
+        Route::put('/{uuid}', [AdminBuyerPartyController::class, 'update'])
+            ->name('buyer-parties.admin.update');
+        Route::post('/{uuid}/link', [AdminBuyerPartyController::class, 'link'])
+            ->name('buyer-parties.admin.link');
+    });
+
 Route::prefix('v1/admin/punchout')
     ->middleware(['auth.api', 'admin'])
     ->group(function (): void {
@@ -111,6 +129,19 @@ Route::prefix('v1/admin/punchout')
             ->name('punchout.admin.buyers.options');
         Route::post('/buyers', [AdminPunchoutBuyerController::class, 'store'])
             ->name('punchout.admin.buyers.store');
+
+        Route::get('/buyers/{buyer}/part-numbers', [AdminPunchoutBuyerPartNumberController::class, 'index'])
+            ->name('punchout.admin.buyers.part-numbers.index');
+        Route::post('/buyers/{buyer}/part-numbers', [AdminPunchoutBuyerPartNumberController::class, 'store'])
+            ->name('punchout.admin.buyers.part-numbers.store');
+        Route::put('/buyers/{buyer}/part-numbers/{uuid}', [AdminPunchoutBuyerPartNumberController::class, 'update'])
+            ->name('punchout.admin.buyers.part-numbers.update');
+        Route::delete('/buyers/{buyer}/part-numbers/{uuid}', [AdminPunchoutBuyerPartNumberController::class, 'destroy'])
+            ->name('punchout.admin.buyers.part-numbers.destroy');
+        Route::post('/buyers/{buyer}/part-numbers/import', [AdminPunchoutBuyerPartNumberController::class, 'import'])
+            ->name('punchout.admin.buyers.part-numbers.import');
+        Route::get('/buyers/{buyer}/part-numbers/template.csv', [AdminPunchoutBuyerPartNumberController::class, 'template'])
+            ->name('punchout.admin.buyers.part-numbers.template');
         Route::get('/buyers/{uuid}', [AdminPunchoutBuyerController::class, 'show'])
             ->name('punchout.admin.buyers.show');
         Route::put('/buyers/{uuid}', [AdminPunchoutBuyerController::class, 'update'])
@@ -139,6 +170,19 @@ Route::prefix('v1/manage/punchout')
             ->name('punchout.manager.buyers.options');
         Route::post('/buyers', [ManagerPunchoutBuyerController::class, 'store'])
             ->name('punchout.manager.buyers.store');
+
+        Route::get('/buyers/{buyer}/part-numbers', [ManagerPunchoutBuyerPartNumberController::class, 'index'])
+            ->name('punchout.manager.buyers.part-numbers.index');
+        Route::post('/buyers/{buyer}/part-numbers', [ManagerPunchoutBuyerPartNumberController::class, 'store'])
+            ->name('punchout.manager.buyers.part-numbers.store');
+        Route::put('/buyers/{buyer}/part-numbers/{uuid}', [ManagerPunchoutBuyerPartNumberController::class, 'update'])
+            ->name('punchout.manager.buyers.part-numbers.update');
+        Route::delete('/buyers/{buyer}/part-numbers/{uuid}', [ManagerPunchoutBuyerPartNumberController::class, 'destroy'])
+            ->name('punchout.manager.buyers.part-numbers.destroy');
+        Route::post('/buyers/{buyer}/part-numbers/import', [ManagerPunchoutBuyerPartNumberController::class, 'import'])
+            ->name('punchout.manager.buyers.part-numbers.import');
+        Route::get('/buyers/{buyer}/part-numbers/template.csv', [ManagerPunchoutBuyerPartNumberController::class, 'template'])
+            ->name('punchout.manager.buyers.part-numbers.template');
         Route::get('/buyers/{uuid}', [ManagerPunchoutBuyerController::class, 'show'])
             ->name('punchout.manager.buyers.show');
         Route::put('/buyers/{uuid}', [ManagerPunchoutBuyerController::class, 'update'])

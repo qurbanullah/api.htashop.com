@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Actions\Punchout\EnsureBuyerPartyAction;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,6 +16,7 @@ class PunchoutBuyer extends Model
     protected $fillable = [
         'uuid',
         'tenant_id',
+        'buyer_party_id',
         'organization_id',
         'contract_id',
         'name',
@@ -57,11 +59,23 @@ class PunchoutBuyer extends Model
                 $buyer->uuid = (string) Str::uuid();
             }
         });
+
+        // Every relationship gets a party immediately, so the item master has
+        // an owner from the first request. Buyers carrying a network id share
+        // the party with other tenants onboarding the same buyer.
+        static::created(function (PunchoutBuyer $buyer): void {
+            app(EnsureBuyerPartyAction::class)->handle($buyer);
+        });
     }
 
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function party(): BelongsTo
+    {
+        return $this->belongsTo(BuyerParty::class, 'buyer_party_id');
     }
 
     public function organization(): BelongsTo
