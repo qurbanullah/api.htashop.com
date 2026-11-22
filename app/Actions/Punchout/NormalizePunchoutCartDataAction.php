@@ -2,6 +2,7 @@
 
 namespace App\Actions\Punchout;
 
+use App\Support\Punchout\BuyerCookie;
 use App\Support\Punchout\Data\PunchoutCartData;
 use InvalidArgumentException;
 
@@ -45,7 +46,7 @@ class NormalizePunchoutCartDataAction
                     sessionUuid: $sessionUuid,
                     sessionToken: $sessionToken,
                     returnUrl: trim((string) data_get($input, 'return_url', 'about:blank')),
-                    buyerCookie: $this->nullableString($orderMessage->BuyerCookie ?? null),
+                    buyerCookie: BuyerCookie::normalize($orderMessage->BuyerCookie ?? null),
                     items: $xmlItems,
                     payload: ['source' => 'xml'],
                 );
@@ -64,7 +65,7 @@ class NormalizePunchoutCartDataAction
             sessionUuid: $sessionUuid,
             sessionToken: $sessionToken,
             returnUrl: $returnUrl,
-            buyerCookie: $this->nullableString(data_get($input, 'buyer_cookie')),
+            buyerCookie: BuyerCookie::normalize(data_get($input, 'buyer_cookie')),
             items: $this->normalizeItems(data_get($input, 'items', [])),
             payload: ['source' => 'array'],
         );
@@ -86,7 +87,7 @@ class NormalizePunchoutCartDataAction
             sessionUuid: $sessionUuid,
             sessionToken: $sessionToken,
             returnUrl: $returnUrl,
-            buyerCookie: $this->nullableString(data_get($input, 'BUYER_COOKIE', data_get($input, 'buyer_cookie'))),
+            buyerCookie: BuyerCookie::normalize(data_get($input, 'BUYER_COOKIE', data_get($input, 'buyer_cookie'))),
             items: $this->normalizeItems(data_get($input, 'items', [])),
             payload: ['source' => 'array'],
         );

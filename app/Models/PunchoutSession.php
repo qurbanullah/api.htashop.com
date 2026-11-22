@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\Punchout\BuyerCookie;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -74,6 +76,20 @@ class PunchoutSession extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    /**
+     * Surrounding whitespace is transport noise, never part of the value. See
+     * App\Support\Punchout\BuyerCookie for the rationale.
+     *
+     * @return Attribute<string|null, string|null>
+     */
+    protected function buyerCookie(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value): ?string => BuyerCookie::normalize($value),
+            set: fn (?string $value): ?string => BuyerCookie::normalize($value),
+        );
     }
 
     public function buyer(): BelongsTo

@@ -58,7 +58,7 @@ XML;
     expect(PunchoutSession::query()->first()?->buyer_cookie)->toBe('buyer-cookie-123');
 });
 
-it('preserves whitespace in the buyer cookie and emits a cxml doctype', function () {
+it('strips surrounding whitespace from the buyer cookie and emits a cxml doctype', function () {
     config()->set('app.url', 'https://supplier.example');
 
     $tenant = Tenant::create([
@@ -91,7 +91,34 @@ XML;
 
     $response->assertOk();
     $response->assertSee('<!DOCTYPE cXML SYSTEM', false);
-    expect(PunchoutSession::query()->first()?->buyer_cookie)->toBe(' tester-1');
+    expect(PunchoutSession::query()->first()?->buyer_cookie)->toBe('tester-1');
+});
+
+it('strips non-breaking and zero-width characters around the buyer cookie', function () {
+    config()->set('app.url', 'https://supplier.example');
+
+    $tenant = Tenant::create([
+        'name' => 'Cookie Nbsp Tenant',
+        'slug' => 'cookie-nbsp-tenant',
+        'is_active' => true,
+        'settings' => [
+            'punchout' => [
+                'default_protocol' => 'cxml',
+                'supported_protocols' => ['cxml'],
+            ],
+        ],
+    ]);
+
+    $payload = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+        .'<cXML><Request><PunchOutSetupRequest>'
+        ."<BuyerCookie>\u{00A0}tester-2\u{200B}</BuyerCookie>"
+        .'<BrowserFormPost><URL>https://buyer.example/punchout/return</URL></BrowserFormPost>'
+        .'</PunchOutSetupRequest></Request></cXML>';
+
+    $response = $this->call('POST', '/api/v1/punchout/'.$tenant->uuid.'/setup?protocol=cxml', [], [], [], ['CONTENT_TYPE' => 'text/xml'], $payload);
+
+    $response->assertOk();
+    expect(PunchoutSession::query()->first()?->buyer_cookie)->toBe('tester-2');
 });
 
 it('rejects a cxml setup request with invalid configured credentials', function () {

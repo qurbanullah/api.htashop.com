@@ -2,6 +2,7 @@
 
 namespace App\Actions\Punchout;
 
+use App\Support\Punchout\BuyerCookie;
 use App\Support\Punchout\Data\PunchoutSetupData;
 use InvalidArgumentException;
 use SimpleXMLElement;
@@ -40,7 +41,7 @@ class NormalizePunchoutSetupDataAction
             protocol: 'cxml',
             operation: 'PunchOutSetupRequest',
             returnUrl: $returnUrl,
-            buyerCookie: $this->rawString($setupRequest?->BuyerCookie ?? null),
+            buyerCookie: BuyerCookie::normalize($setupRequest?->BuyerCookie ?? null),
             payload: [
                 'from' => [
                     // Ariba puts From/To in the cXML Header; some buyers nest them
@@ -77,7 +78,7 @@ class NormalizePunchoutSetupDataAction
             protocol: 'oci',
             operation: 'OCI_LOGIN',
             returnUrl: $returnUrl,
-            buyerCookie: $this->nullableString(data_get($input, 'BUYER_COOKIE', data_get($input, 'buyer_cookie'))),
+            buyerCookie: BuyerCookie::normalize(data_get($input, 'BUYER_COOKIE', data_get($input, 'buyer_cookie'))),
             payload: [
                 'username' => data_get($input, 'USERNAME', data_get($input, 'username')),
                 'password' => data_get($input, 'PASSWORD', data_get($input, 'password')),
@@ -106,22 +107,6 @@ class NormalizePunchoutSetupDataAction
     private function nullableString(mixed $value): ?string
     {
         $stringValue = trim((string) $value);
-
-        return $stringValue === '' ? null : $stringValue;
-    }
-
-    /**
-     * BuyerCookie is echoed back verbatim in the PunchOutOrderMessage. Leading
-     * or trailing whitespace is part of the buyer's value and must survive, or
-     * strict buying systems reject the cart as belonging to another session.
-     */
-    private function rawString(mixed $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $stringValue = (string) $value;
 
         return $stringValue === '' ? null : $stringValue;
     }
