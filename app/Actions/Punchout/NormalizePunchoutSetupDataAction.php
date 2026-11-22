@@ -40,7 +40,7 @@ class NormalizePunchoutSetupDataAction
             protocol: 'cxml',
             operation: 'PunchOutSetupRequest',
             returnUrl: $returnUrl,
-            buyerCookie: $this->nullableString($setupRequest?->BuyerCookie ?? null),
+            buyerCookie: $this->rawString($setupRequest?->BuyerCookie ?? null),
             payload: [
                 'from' => [
                     // Ariba puts From/To in the cXML Header; some buyers nest them
@@ -106,6 +106,22 @@ class NormalizePunchoutSetupDataAction
     private function nullableString(mixed $value): ?string
     {
         $stringValue = trim((string) $value);
+
+        return $stringValue === '' ? null : $stringValue;
+    }
+
+    /**
+     * BuyerCookie is echoed back verbatim in the PunchOutOrderMessage. Leading
+     * or trailing whitespace is part of the buyer's value and must survive, or
+     * strict buying systems reject the cart as belonging to another session.
+     */
+    private function rawString(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $stringValue = (string) $value;
 
         return $stringValue === '' ? null : $stringValue;
     }

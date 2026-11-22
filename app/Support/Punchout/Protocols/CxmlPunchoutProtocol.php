@@ -52,6 +52,7 @@ class CxmlPunchoutProtocol implements PunchoutProtocolInterface
 
         $content = implode("\n", [
             '<?xml version="1.0" encoding="UTF-8"?>',
+            '<!DOCTYPE cXML SYSTEM "http://xml.cxml.org/schemas/cXML/1.2.014/cXML.dtd">',
             '<cXML payloadID="'.e($payloadId).'" timestamp="'.now()->toIso8601String().'">',
             '  <Response>',
             '    <Status code="200" text="OK">Success</Status>',
@@ -71,24 +72,39 @@ class CxmlPunchoutProtocol implements PunchoutProtocolInterface
     {
         $cartPayloadId = $tenant->uuid.'-cart-'.now()->format('YmdHis').'-'.Str::random(8);
 
+        $currency = (string) (data_get($cartData->items, '0.currency') ?: 'USD');
+        $total = collect($cartData->items)->sum(
+            fn (array $item): float => (float) $item['quantity'] * (float) $item['price']
+        );
+        $totalFormatted = number_format((float) $total, 2, '.', '');
+
         $messageXml = implode('', [
             '<?xml version="1.0" encoding="UTF-8"?>',
+            '<!DOCTYPE cXML SYSTEM "http://xml.cxml.org/schemas/cXML/1.2.014/cXML.dtd">',
             '<cXML payloadID="'.e($cartPayloadId).'" timestamp="'.now()->toIso8601String().'">',
             '<Message>',
             '<PunchOutOrderMessage>',
             '<BuyerCookie>'.e((string) $cartData->buyerCookie).'</BuyerCookie>',
-            '<PunchOutOrderMessageHeader operationAllowed="create"/>',
+            '<PunchOutOrderMessageHeader operationAllowed="create">'
+                .'<Total><Money currency="'.e($currency).'">'.e($totalFormatted).'</Money></Total>'
+            .'</PunchOutOrderMessageHeader>',
             collect($cartData->items)->map(function (array $item, int $index): string {
                 $buyerPartId = trim((string) ($item['customer_part_number'] ?? ''));
+                $auxiliaryId = trim((string) ($item['supplier_auxiliary_id'] ?? ''));
+                $classification = trim((string) ($item['classification'] ?? ''));
+                $manufacturerPartId = trim((string) ($item['manufacturer_part_id'] ?? ''));
 
                 return '<ItemIn quantity="'.e((string) $item['quantity']).'" lineNumber="'.($index + 1).'">'
                     .'<ItemID><SupplierPartID>'.e($item['supplier_part_id']).'</SupplierPartID>'
+                    .($auxiliaryId !== '' ? '<SupplierPartAuxiliaryID>'.e($auxiliaryId).'</SupplierPartAuxiliaryID>' : '')
                     .($buyerPartId !== '' ? '<BuyerPartID>'.e($buyerPartId).'</BuyerPartID>' : '')
                     .'</ItemID>'
                     .'<ItemDetail>'
                     .'<UnitPrice><Money currency="'.e($item['currency']).'">'.e($item['price']).'</Money></UnitPrice>'
                     .'<Description xml:lang="en">'.e($item['description']).'</Description>'
                     .'<UnitOfMeasure>'.e($item['unit_of_measure']).'</UnitOfMeasure>'
+                    .($classification !== '' ? '<Classification domain="UNSPSC">'.e($classification).'</Classification>' : '')
+                    .($manufacturerPartId !== '' ? '<ManufacturerPartID>'.e($manufacturerPartId).'</ManufacturerPartID>' : '')
                     .'</ItemDetail>'
                     .'</ItemIn>';
             })->implode(''),

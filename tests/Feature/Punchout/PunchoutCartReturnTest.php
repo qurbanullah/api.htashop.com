@@ -18,7 +18,9 @@ it('adds an item and returns a cxml cart to the setup url', function () {
     $tenant = punchoutTenant('cart-return-tenant');
     $organization = punchoutOrganization($tenant, 'cart-return-org');
     $product = punchoutProduct($tenant, $organization, 'Cart Return Product', ['punchout'], ['price' => 12.50]);
+    $product->update(['sku' => 'CR-1', 'unspsc' => '43211503', 'model_number' => 'MPU-6050']);
     $session = punchoutSession($tenant);
+    $session->update(['buyer_cookie' => ' tester-1']);
     $token = punchoutCartToken($this, $session);
 
     $headers = ['Authorization' => 'Punchout '.$token];
@@ -37,7 +39,17 @@ it('adds an item and returns a cxml cart to the setup url', function () {
     $response->assertOk();
     expect($response->headers->get('content-type'))->toContain('text/html');
     $response->assertSee('cXML-urlencoded', false);
-    $response->assertSee($product->uuid, false);
+
+    preg_match('/name="cXML-urlencoded" value="([^"]*)"/', $response->getContent(), $matches);
+    $xml = html_entity_decode($matches[1] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+    expect($xml)->toContain('<!DOCTYPE cXML SYSTEM');
+    expect($xml)->toContain('<BuyerCookie> tester-1</BuyerCookie>');
+    expect($xml)->toContain('<Total><Money currency="USD">25.00</Money></Total>');
+    expect($xml)->toContain('<SupplierPartID>CR-1</SupplierPartID>');
+    expect($xml)->toContain('<SupplierPartAuxiliaryID>'.$product->uuid.'</SupplierPartAuxiliaryID>');
+    expect($xml)->toContain('<Classification domain="UNSPSC">43211503</Classification>');
+    expect($xml)->toContain('<ManufacturerPartID>MPU-6050</ManufacturerPartID>');
     $response->assertSee('https://buyer.example/return', false);
 
     expect($session->fresh()->status)->toBe('completed');

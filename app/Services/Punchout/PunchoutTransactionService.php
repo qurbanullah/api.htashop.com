@@ -94,7 +94,7 @@ class PunchoutTransactionService
             sessionUuid: $cartData->sessionUuid,
             sessionToken: $cartData->sessionToken,
             returnUrl: $session->return_url,
-            buyerCookie: $cartData->buyerCookie,
+            buyerCookie: $session->buyer_cookie ?? $cartData->buyerCookie,
             items: $cartData->items,
             payload: $cartData->payload,
         );

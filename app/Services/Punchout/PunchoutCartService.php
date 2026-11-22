@@ -131,7 +131,7 @@ class PunchoutCartService
     public function returnCart(PunchoutSession $session, ?string $note = null): PunchoutResponseData
     {
         $cart = $this->resolve($session);
-        $lines = $cart->items()->with('product')->get();
+        $lines = $cart->items()->with(['product', 'variant'])->get();
         $maxLineItems = max(1, (int) data_get(
             $session->tenant?->settings,
             'punchout.max_line_items',
@@ -163,12 +163,17 @@ class PunchoutCartService
 
             $items[] = [
                 'supplier_part_id' => (string) (data_get($line->metadata, 'sku') ?: $product->sku ?: $product->part_number ?: $product->uuid),
+                'supplier_auxiliary_id' => (string) ($line->variant?->uuid ?: $product->uuid),
                 'customer_part_number' => data_get($line->metadata, 'customer_part_number'),
                 'description' => (string) (data_get($line->metadata, 'name') ?: $product->name),
                 'quantity' => (float) $line->quantity,
                 'price' => number_format((float) $line->unit_price, 2, '.', ''),
                 'currency' => (string) ($line->currency ?: 'USD'),
                 'unit_of_measure' => (string) data_get($line->metadata, 'unit_of_measure', 'EA'),
+                'classification' => (string) ($product->unspsc
+                    ?: data_get($session->tenant?->settings, 'punchout.default_unspsc', '')),
+                'manufacturer_part_id' => (string) ($product->model_number
+                    ?: data_get($product->metadata, 'manufacturer_part_number', '')),
             ];
         }
 
